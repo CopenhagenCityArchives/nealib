@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using HardHorn.ArchiveVersion;
 
-namespace TableDataAnalyzer.Models
+namespace HardHorn.Analysis
 {
     public enum AnalysisErrorType
     {
@@ -18,7 +17,7 @@ namespace TableDataAnalyzer.Models
         NULL_NOT_EMPTY
     }
 
-    class AnalysisError
+    public class AnalysisError
     {
         int _count = 0;
         public int Count { get { return _count; } }
@@ -50,7 +49,7 @@ namespace TableDataAnalyzer.Models
         }
     }
 
-    class AnalysisReport
+    public class AnalysisReport
     {
         public int ErrorCount { get; private set; }
         public Column Column { get; set; }
@@ -99,7 +98,7 @@ namespace TableDataAnalyzer.Models
         }
     }
 
-    class DataAnalyzer
+    public class DataAnalyzer
     {
         public IEnumerable<Table> Tables { get; set; }
 

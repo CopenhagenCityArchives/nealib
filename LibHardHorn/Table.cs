@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace TableDataAnalyzer.Models
+namespace HardHorn.ArchiveVersion
 {
-    class Table
+    public class Table
     {
         List<Column> _columns;
         public List<Column> Columns { get { return _columns; } }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace TableDataAnalyzer.Models
+namespace HardHorn.ArchiveVersion
 {
     public enum DataType
     {
@@ -33,7 +33,7 @@ namespace TableDataAnalyzer.Models
         INTERVAL
     }
 
-    class Column
+    public class Column
     {
         string _name;
         public string Name { get { return _name; } }
