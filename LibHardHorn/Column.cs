@@ -33,6 +33,38 @@ namespace HardHorn.ArchiveVersion
         INTERVAL
     }
 
+    public class DataTypeParam
+    {
+        int[] _param;
+
+        public int Length { get { if (_param == null) { return 0; } else { return _param.Length; } } }
+
+        public int this[int index]
+        {
+            get { return _param[index]; }
+            set { _param[index] = value; }
+        }
+
+        public override string ToString()
+        {
+            if (_param == null)
+            {
+                return "";
+            }
+            else
+            {
+                return "(" + string.Join(", ", _param.Select(p => p.ToString())) + ")";
+            }
+        }
+
+        public DataTypeParam(params int[] param)
+        {
+            _param = param;
+        }
+
+       
+    }
+
     public class Column
     {
         string _name;
@@ -44,8 +76,8 @@ namespace HardHorn.ArchiveVersion
         bool _nullable;
         public bool Nullable { get { return _nullable; } }
 
-        int[] _param;
-        public int[] Param { get { return _param; } }
+        DataTypeParam _param;
+        public DataTypeParam Param { get { return _param; } }
 
         static Regex paramRegex = new Regex(@"^\((\d+(,\d+)*)\)$");
         static Regex commaNumRegex = new Regex(@",?(\d+)");
@@ -54,7 +86,7 @@ namespace HardHorn.ArchiveVersion
         {
             _name = name;
             _type = type;
-            _param = param;
+            _param = param != null ? new DataTypeParam(param) : null;
             _nullable = nullable;
         }
 

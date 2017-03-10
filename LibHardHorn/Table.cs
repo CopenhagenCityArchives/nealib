@@ -9,28 +9,29 @@ namespace HardHorn.ArchiveVersion
 {
     public class Table
     {
-        List<Column> _columns;
-        public List<Column> Columns { get { return _columns; } }
+        public List<Column> Columns { get; private set; }
 
-        string _name;
-        public string Name { get { return _name; } }
+        public string Name { get; private set; }
 
-        string _folder;
-        public string Folder { get { return _folder; } }
+        public string Folder { get; private set; }
 
-        public Table(string name, string folder, List<Column> columns)
+        public int Rows { get; private set; }
+
+        public Table(string name, string folder, int rows, List<Column> columns)
         {
-            _name = name;
-            _folder = folder;
-            _columns = columns;
+            Name = name;
+            Folder = folder;
+            Columns = columns;
+            Rows = rows;
         }
 
         public static bool TryParse(XNamespace ns, XElement xtable, out Table table)
         {
             string name = xtable.Element(ns + "name").Value;
             string folder = xtable.Element(ns + "folder").Value;
+            int rows = int.Parse(xtable.Element(ns + "rows").Value);
 
-            table = new Table(name, folder, new List<Column>());
+            table = new Table(name, folder, rows, new List<Column>());
 
             var xcolumns = xtable.Element(ns + "columns");
             foreach (var xcolumn in xcolumns.Elements(ns + "column"))
