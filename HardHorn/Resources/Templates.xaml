@@ -12,9 +12,9 @@
         <TextBlock>
             <TextBlock.Text>
                 <MultiBinding StringFormat="{}({0}, {1}) &#187;{2}&#171;">
-                    <Binding Path="Item1"></Binding>
-                    <Binding Path="Item2"></Binding>
-                    <Binding Path="Item3"></Binding>
+                    <Binding Path="Line"></Binding>
+                    <Binding Path="Pos"></Binding>
+                    <Binding Path="Data"></Binding>
                 </MultiBinding>
             </TextBlock.Text>
         </TextBlock>
@@ -54,7 +54,14 @@
     <HierarchicalDataTemplate x:Key="ReportItemTemplate" ItemsSource="{Binding Errors.Values}" ItemContainerStyle="{StaticResource ErrorContainerStyle}">
         <StackPanel Margin="0 2 0 0">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{Binding Column.Name}" FontWeight="Bold" Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}"></TextBlock>
+                <TextBlock FontWeight="Bold" Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0} &lt;{1}&gt;">
+                            <Binding Path="Column.Name" />
+                            <Binding Path="Column.ColumnId" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
                 <TextBlock Margin="5 0 0 0" Text="{Binding ErrorCount}"  Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}"></TextBlock>
             </StackPanel>
             <TextBlock Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
@@ -88,10 +95,17 @@
     <HierarchicalDataTemplate x:Key="ReportSelectedTemplate" ItemsSource="{Binding Errors.Values}" ItemContainerStyle="{StaticResource ErrorContainerStyle}">
         <StackPanel Margin="0 2 0 0">
             <StackPanel Orientation="Horizontal">
-                <TextBlock FontWeight="ExtraBold" Text="{Binding Column.Name}" Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}"></TextBlock>
+                <TextBlock FontWeight="Bold" Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0} &lt;{1}&gt;">
+                            <Binding Path="Column.Name" />
+                            <Binding Path="Column.ColumnId" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
                 <TextBlock Margin="5 0 0 0" Text="{Binding ErrorCount}"  Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}"></TextBlock>
             </StackPanel>
-            <TextBlock FontWeight="Bold" Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}">
+            <TextBlock Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0}{1}">
                         <Binding Path="Column.Type" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
@@ -99,7 +113,7 @@
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
-            <TextBlock x:Name="SuggestTypeTextBlock" FontWeight="Bold" Foreground="Green">
+            <TextBlock x:Name="SuggestTypeTextBlock" Foreground="SpringGreen">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0}{1}">
                         <Binding Path="SuggestedType.Item1" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
@@ -169,7 +183,16 @@
                     <Style.Triggers>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.NORMAL}" />
+                                <Condition  Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.NORMAL}" />
+                                <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=IsSelected}" Value="true" />
+                            </MultiDataTrigger.Conditions>
+                            <MultiDataTrigger.Setters>
+                                <Setter Property="Foreground" Value="{StaticResource {x:Static SystemColors.HighlightTextBrushKey}}" />
+                            </MultiDataTrigger.Setters>
+                        </MultiDataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition  Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.SECTION}" />
                                 <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=IsSelected}" Value="true" />
                             </MultiDataTrigger.Conditions>
                             <MultiDataTrigger.Setters>
@@ -181,6 +204,9 @@
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.SUGGEST}">
                             <Setter Property="Foreground" Value="Green" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.SECTION}">
+                            <Setter Property="FontWeight" Value="Bold" />
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

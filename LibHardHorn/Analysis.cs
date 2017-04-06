@@ -5,25 +5,28 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using HardHorn.ArchiveVersion;
+using System.Text.RegularExpressions;
+using System.Dynamic;
 
 namespace HardHorn.Analysis
 {
     public enum AnalysisErrorType
     {
-        TOO_LONG,
-        NOT_EXACT,
+        OVERFLOW,
+        UNDERFLOW,
         MISMATCH,
-        NOT_NULLABLE,
-        NULL_NOT_EMPTY
+        FORMAT,
+        NULL,
+        BLANK
     }
 
     public class AnalysisError
     {
         int _count = 0;
         public int Count { get { return _count; } }
-        List<Tuple<int, int, string>> _instances = new List<Tuple<int, int, string>>();
+        List<ExpandoObject> _instances = new List<ExpandoObject>();
 
-        public IEnumerable<Tuple<int, int, string>> Instances { get { return _instances as IEnumerable<Tuple<int, int, string>>; } }
+        public IEnumerable<ExpandoObject> Instances { get { return _instances as IEnumerable<ExpandoObject>; } }
         public AnalysisErrorType Type { get; private set; }
 
         public AnalysisError(AnalysisErrorType type)
@@ -31,11 +34,15 @@ namespace HardHorn.Analysis
             Type = type;
         }
 
-        public void Add(int line, int pos,string instance)
+        public void Add(int line, int pos, string data)
         {
             if (_count < AnalysisReport.MAX_ERROR_INSTANCES)
             {
-                _instances.Add(new Tuple<int, int, string>(line, pos, instance));
+                dynamic instance = new ExpandoObject();
+                instance.Data = data;
+                instance.Line = line;
+                instance.Pos = pos;
+                _instances.Add(instance);
             }
             _count++;
         }
@@ -43,9 +50,9 @@ namespace HardHorn.Analysis
         public override string ToString()
         {
             string repr = string.Format("{{{0}, count={1}}}", Type, Count);
-            foreach (var instance in _instances)
+            foreach (dynamic instance in _instances)
             {
-                repr += Environment.NewLine + string.Format("[{0},{1}]({2})", instance.Item1, instance.Item2, instance.Item3);
+                repr += Environment.NewLine + string.Format("[{0},{1}]({2})", instance.Line, instance.Pos, instance.Data);
             }
             return repr;
         }
@@ -60,11 +67,11 @@ namespace HardHorn.Analysis
         public int[] MaxLengths { get; set; }
         public static readonly int MAX_ERROR_INSTANCES = 10;
         public Tuple<DataType, DataTypeParam> SuggestedType { get; set; }
-        public bool AnalysisStarted { get; set; }
+        public bool AnalysisFirstRow { get; set; }
 
         public AnalysisReport(Column column)
         {
-            AnalysisStarted = false;
+            AnalysisFirstRow = false;
             Column = column;
             ErrorCount = 0;
             MinLengths = new int[column.Param != null ? column.Param.Length : 1];
@@ -144,7 +151,7 @@ namespace HardHorn.Analysis
     public class DataAnalyzer
     {
         public IEnumerable<Table> Tables { get; set; }
-        public HashSet<AnalysisErrorType> Tests { get; set; }
+        public Dictionary<DataType, HashSet<AnalysisErrorType>> TestSelection { get; set; }
 
         string _location;
         XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
@@ -154,11 +161,16 @@ namespace HardHorn.Analysis
         FileStream tableStream;
         XmlReader tableReader;
 
+        Regex timestamp_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?");
+        Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)");
+        Regex time_regex = new Regex(@"(\d\d):(\d\d):(\d\d)(?:.(\d+))?");
+        static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
+
         public Dictionary<string, Dictionary<string, AnalysisReport>> Report { get; private set; }
 
         public DataAnalyzer(string location)
         {
-            Tests = new HashSet<AnalysisErrorType>();
+            TestSelection = new Dictionary<DataType, HashSet<AnalysisErrorType>>();
             _location = location;
             var tableIndexDocument = XDocument.Load(Path.Combine(_location, "Indices", "tableIndex.xml"));
 
@@ -195,7 +207,7 @@ namespace HardHorn.Analysis
 
         public int AnalyzeRows(int n = 100000)
         {
-            var rows = new Tuple<int, int, bool, string>[currentTable.Columns.Count, n];
+            dynamic rows = new ExpandoObject[currentTable.Columns.Count, n];
             int row = 0;
 
             while (tableReader.Read() && row < n)
@@ -223,7 +235,12 @@ namespace HardHorn.Analysis
                                     var xnull = xdata.Attribute(xmlnsxsi + "nil");
                                     bool.TryParse(xnull.Value, out isNull);
                                 }
-                                rows[i, row] = new Tuple<int, int, bool, string>(xmlInfo.LineNumber, xmlInfo.LinePosition, isNull, xdata.Value);
+                                dynamic instance = new ExpandoObject();
+                                instance.Line = xmlInfo.LineNumber;
+                                instance.Pos = xmlInfo.LinePosition;
+                                instance.IsNull = isNull;
+                                instance.Data = xdata.Value;
+                                rows[i, row] = instance;
                                 i++;
                             }
 
@@ -238,11 +255,12 @@ namespace HardHorn.Analysis
             {
                 for (int j = 0; j < currentTable.Columns.Count; j++)
                 {
-                    AnalyzeData(rows[j, i].Item1, 
-                        rows[j, i].Item2,
+                    AnalyzeLengths(Report[currentTable.Name][currentTable.Columns[j].Name], rows[j, i].Data);
+                    AnalyzeData(rows[j, i].Line, 
+                        rows[j, i].Pos,
                         currentTable.Columns[j],
-                        rows[j, i].Item4,
-                        rows[j, i].Item3, 
+                        rows[j, i].Data,
+                        rows[j, i].IsNull, 
                         Report[currentTable.Name][currentTable.Columns[j].Name]);
                 }
             }
@@ -265,13 +283,13 @@ namespace HardHorn.Analysis
             tableStream.Dispose();
         }
 
-        void AnalyzeData(int line, int pos, Column column, string data, bool isNull, AnalysisReport report)
+        void AnalyzeLengths(AnalysisReport report, string data)
         {
-            switch (column.Type)
+            switch (report.Column.Type)
             {
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.CHARACTER:
-                    if (report.AnalysisStarted)
+                    if (report.AnalysisFirstRow)
                     {
                         report.MinLengths[0] = Math.Min(report.MinLengths[0], data.Length);
                         report.MaxLengths[0] = Math.Max(report.MaxLengths[0], data.Length);
@@ -280,17 +298,11 @@ namespace HardHorn.Analysis
                     {
                         report.MinLengths[0] = data.Length;
                         report.MaxLengths[0] = data.Length;
-                    }
-
-                    // Data not exactly the right length
-                    if (Tests.Contains(AnalysisErrorType.NOT_EXACT) && data.Length != column.Param[0])
-                    {
-                        report.ReportError(line, pos, AnalysisErrorType.NOT_EXACT, data);
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
                 case DataType.CHARACTER_VARYING:
-                    if (report.AnalysisStarted)
+                    if (report.AnalysisFirstRow)
                     {
                         report.MinLengths[0] = Math.Min(report.MinLengths[0], data.Length);
                         report.MaxLengths[0] = Math.Max(report.MaxLengths[0], data.Length);
@@ -300,16 +312,10 @@ namespace HardHorn.Analysis
                         report.MinLengths[0] = data.Length;
                         report.MaxLengths[0] = data.Length;
                     }
-
-                    // Data too long
-                    if (Tests.Contains(AnalysisErrorType.TOO_LONG) && data.Length > column.Param[0])
-                    {
-                        report.ReportError(line, pos, AnalysisErrorType.TOO_LONG, data);
-                    }
                     break;
                 case DataType.DECIMAL:
                     var components = data.Split('.');
-                    if (report.AnalysisStarted)
+                    if (report.AnalysisFirstRow)
                     {
                         report.MinLengths[0] = Math.Min(report.MinLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
                         report.MaxLengths[0] = Math.Max(report.MaxLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
@@ -323,17 +329,60 @@ namespace HardHorn.Analysis
                         report.MinLengths[1] = components.Length == 1 ? 0 : components[1].Length;
                         report.MaxLengths[1] = components.Length == 1 ? 0 : components[1].Length;
                     }
+                    break;
+                case DataType.TIME:
+                case DataType.DATE:
+                case DataType.TIMESTAMP:
+                    break;
+            }
+        }
 
-                    // No separator
-                    if (Tests.Contains(AnalysisErrorType.TOO_LONG) && components.Length == 1)
+        void AnalyzeData(int line, int pos, Column column, string data, bool isNull, AnalysisReport report)
+        {
+            Match match;
+            if (!TestSelection.ContainsKey(column.Type))
+            {
+                return;
+            }
+            var currentTests = TestSelection[column.Type];
+            if (currentTests.Count == 0)
+            {
+                return;
+            }
+
+            switch (column.Type)
+            {
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.CHARACTER:
+                    if (currentTests.Contains(AnalysisErrorType.UNDERFLOW) && data.Length < column.Param[0])
                     {
-                        if (Tests.Contains(AnalysisErrorType.TOO_LONG) && components[0].Length > column.Param[0])
+                        report.ReportError(line, pos, AnalysisErrorType.UNDERFLOW, data);
+                    }
+                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && data.Length > column.Param[0])
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                    }
+                    break;
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                case DataType.CHARACTER_VARYING:
+                    // Data too long
+                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && data.Length > column.Param[0])
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                    }
+                    break;
+                case DataType.DECIMAL:
+                    var components = data.Split('.');
+                    // No separator
+                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && components.Length == 1)
+                    {
+                        if (components[0].Length > column.Param[0])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.TOO_LONG, data);
+                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
                         }
                     }
                     // With separator
-                    else if (Tests.Contains(AnalysisErrorType.MISMATCH) && components.Length == 2)
+                    else if (currentTests.Contains(AnalysisErrorType.MISMATCH) && components.Length == 2)
                     {
                         if (components[0].Length + components[1].Length > column.Param[0] || components[1].Length > column.Param[1])
                         {
@@ -341,19 +390,110 @@ namespace HardHorn.Analysis
                         }
                     }
                     break;
+                case DataType.TIME:
+                    match = date_regex.Match(data);
+                    if (match.Success)
+                    {
+                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
+                            column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0])
+                        {
+                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                        }
+                        int year = int.Parse(match.Groups[1].Value);
+                        int month = int.Parse(match.Groups[2].Value);
+                        int day = int.Parse(match.Groups[3].Value);
+                        if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
+                        {
+                            report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        }
+                    }
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                    }
+                    break;
+                case DataType.DATE:
+                    match = date_regex.Match(data);
+                    if (match.Success)
+                    {
+                        int year = int.Parse(match.Groups[1].Value);
+                        int month = int.Parse(match.Groups[2].Value);
+                        int day = int.Parse(match.Groups[3].Value);
+                        if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
+                        {
+                            report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        }
+                    }
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                    }
+                    break;
+                case DataType.TIMESTAMP:
+                    match = timestamp_regex.Match(data);
+                    if (match.Success)
+                    {
+                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
+                            column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0])
+                        {
+                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                        }
+
+                        if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                        {
+                            // validate datetime
+                            int year = int.Parse(match.Groups[1].Value);
+                            int month = int.Parse(match.Groups[2].Value);
+                            int day = int.Parse(match.Groups[3].Value);
+                            int hour = int.Parse(match.Groups[4].Value);
+                            int minute = int.Parse(match.Groups[5].Value);
+                            int second = int.Parse(match.Groups[6].Value);
+
+                            if (invalidDate(year, month, day) || invalidTime(hour, minute, second))
+                            {
+                                report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                            }
+                        }
+                    }
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                    }
+                    break;
             }
 
-            if (Tests.Contains(AnalysisErrorType.NOT_NULLABLE) && isNull && !column.Nullable)
+            if (currentTests.Contains(AnalysisErrorType.BLANK) && data.Length > 0 && 
+                (data[0] == ' ' ||
+                 data[0] == '\n' ||
+                 data[0] == '\t' ||
+                 data[data.Length-1] == ' ' ||
+                 data[data.Length - 1] == '\n' ||
+                 data[data.Length - 1] == '\t'))
             {
-                report.ReportError(line, pos, AnalysisErrorType.NOT_NULLABLE, data);
+                report.ReportError(line, pos, AnalysisErrorType.BLANK, data);
             }
 
-            if (Tests.Contains(AnalysisErrorType.NULL_NOT_EMPTY) && isNull && data.Length > 0)
-            {
-                report.ReportError(line, pos, AnalysisErrorType.NULL_NOT_EMPTY, data);
-            }
+            report.AnalysisFirstRow = true;
+        }
 
-            report.AnalysisStarted = true;
+        bool invalidTime(int hour, int minute, int second)
+        {
+            return hour > 23 ||
+                   hour < 0 ||
+                   minute > 59 ||
+                   minute < 0 ||
+                   second > 60 ||
+                   second < 0;
+        }
+
+        bool invalidDate(int year, int month, int day)
+        {
+            bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+            return year <= 0 ||
+                   month > 12 && month < 1 ||
+                   day < 1 ||
+                   month == 2 && leap && day > months[2] - 1 ||
+                   day > months[month - 1];
         }
     }
 }
