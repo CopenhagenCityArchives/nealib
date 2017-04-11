@@ -119,9 +119,19 @@ namespace HardHorn.Analysis
                     {
                         SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.CHARACTER, new DataTypeParam(MaxLengths[0]));
                     }
-                    else if (MaxLengths[0] > Column.Param[0])
+                    else if (MaxLengths[0] != Column.Param[0])
                     {
                         SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.CHARACTER_VARYING, new DataTypeParam(MaxLengths[0]));
+                    }
+                    break;
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                    if (MinLengths[0] == MaxLengths[0])
+                    {
+                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.NATIONAL_CHARACTER, new DataTypeParam(MaxLengths[0]));
+                    }
+                    else if (MaxLengths[0] != Column.Param[0])
+                    {
+                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.NATIONAL_CHARACTER_VARYING, new DataTypeParam(MaxLengths[0]));
                     }
                     break;
             }
