@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace HardHorn.Statistics
 {
-    public class Statistics
+    public class DataStatistics
     {
         public Dictionary<DataType, dynamic> DataTypeStatistics { get; private set; }
 
-        public Statistics(params Table[] tables)
+        public DataStatistics(params Table[] tables)
         {
             DataTypeStatistics = new Dictionary<DataType, dynamic>();
 

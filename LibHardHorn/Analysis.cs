@@ -134,6 +134,12 @@ namespace HardHorn.Analysis
                         SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.NATIONAL_CHARACTER_VARYING, new DataTypeParam(MaxLengths[0]));
                     }
                     break;
+                case DataType.DECIMAL:
+                    if (MaxLengths[0] + MaxLengths[1] != Column.Param[0] || MaxLengths[1] != Column.Param[1])
+                    {
+                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.DECIMAL, new DataTypeParam(new int[] { MaxLengths[0] + MaxLengths[1], MaxLengths[1] }));
+                    }
+                    break;
             }
         }
 
@@ -392,11 +398,11 @@ namespace HardHorn.Analysis
                         }
                     }
                     // With separator
-                    else if (currentTests.Contains(AnalysisErrorType.MISMATCH) && components.Length == 2)
+                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && components.Length == 2)
                     {
                         if (components[0].Length + components[1].Length > column.Param[0] || components[1].Length > column.Param[1])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.MISMATCH, data);
+                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
                         }
                     }
                     break;
@@ -417,7 +423,7 @@ namespace HardHorn.Analysis
                             report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
                     {
                         report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
                     }
@@ -434,7 +440,7 @@ namespace HardHorn.Analysis
                             report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
                     {
                         report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
                     }
@@ -465,7 +471,7 @@ namespace HardHorn.Analysis
                             }
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
                     {
                         report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
                     }

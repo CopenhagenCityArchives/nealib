@@ -62,7 +62,7 @@ namespace HardHorn.ArchiveVersion
             _param = param;
         }
 
-       
+
     }
 
     public class Column
@@ -85,11 +85,15 @@ namespace HardHorn.ArchiveVersion
         DataTypeParam _param;
         public DataTypeParam Param { get { return _param; } }
 
-        static Regex paramRegex = new Regex(@"^\((\d+(,\d+)*)\)$");
+        Table _table;
+        public Table Table { get { return _table; } }
+
+        static Regex paramRegex = new Regex(@"^ *\((\d+(,\d+)*)\)$");
         static Regex commaNumRegex = new Regex(@",?(\d+)");
 
-        public Column(string name, DataType type, bool nullable, int[] param, string desc, string colId)
+        public Column(Table table, string name, DataType type, bool nullable, int[] param, string desc, string colId)
         {
+            _table = table;
             _name = name;
             _type = type;
             _param = param != null ? new DataTypeParam(param) : null;
@@ -98,7 +102,7 @@ namespace HardHorn.ArchiveVersion
             _colId = colId;
         }
 
-        public static bool TryParse(XNamespace ns, XElement xcolumn, out Column column)
+        public static bool TryParse(Table table, XNamespace ns, XElement xcolumn, out Column column)
         {
             string xml = xcolumn.ToString();
             column = null;
@@ -141,50 +145,50 @@ namespace HardHorn.ArchiveVersion
 
             int[] param;
             // Text / string / hexadecimal types
-            if ((stype.StartsWith("CHARACTER VARYING") && ParseParam(1, stype.Substring(16), out param)) ||
+            if ((stype.StartsWith("CHARACTER VARYING") && ParseParam(1, stype.Substring(17), out param)) ||
                 (stype.StartsWith("VARCHAR") && ParseParam(1, stype.Substring(7), out param)))
-                column = new Column(name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
             else if ((stype.StartsWith("CHARACTER") && ParseParam(1, stype.Substring(8), out param)) ||
                      (stype.StartsWith("CHAR") && ParseParam(1, stype.Substring(4), out param)))
-                column = new Column(name, DataType.CHARACTER, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.CHARACTER, nullable, param, desc, colId);
             else if ((stype.StartsWith("NATIONAL CHARACTER VARYING") && ParseParam(1, stype.Substring(26), out param)) ||
                      (stype.StartsWith("NATIONAL VARCHAR") && ParseParam(1, stype.Substring(16), out param)) ||
                      (stype.StartsWith("NVARCHAR") && ParseParam(1, stype.Substring(8), out param)))
-                column = new Column(name, DataType.NATIONAL_CHARACTER_VARYING, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.NATIONAL_CHARACTER_VARYING, nullable, param, desc, colId);
             else if ((stype.StartsWith("NATIONAL CHARACTER") && ParseParam(1, stype.Substring(18), out param)) ||
                      (stype.StartsWith("NATIONAL CHAR") && ParseParam(1, stype.Substring(13), out param)) ||
                      (stype.StartsWith("NCHAR") && ParseParam(1, stype.Substring(5), out param)))
-                column = new Column(name, DataType.NATIONAL_CHARACTER, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.NATIONAL_CHARACTER, nullable, param, desc, colId);
             // Integer types
             else if (stype.StartsWith("INTEGER"))
-                column = new Column(name, DataType.INTEGER, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.INTEGER, nullable, null, desc, colId);
             else if (stype.StartsWith("SMALL INTEGER"))
-                column = new Column(name, DataType.SMALL_INTEGER, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.SMALL_INTEGER, nullable, null, desc, colId);
             // Decimal types
             else if (stype.StartsWith("NUMERIC") && ParseParam(1, 2, stype.Substring(7), out param))
-                column = new Column(name, DataType.NUMERIC, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.NUMERIC, nullable, param, desc, colId);
             else if (stype.StartsWith("DECIMAL") && ParseParam(1, 2, stype.Substring(7), out param))
-                column = new Column(name, DataType.DECIMAL, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.DECIMAL, nullable, param, desc, colId);
             else if (stype.StartsWith("FLOAT") && ParseParam(1, stype.Substring(5), out param))
-                column = new Column(name, DataType.FLOAT, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.FLOAT, nullable, param, desc, colId);
             else if (stype.StartsWith("DOUBLE PRECISION") && ParseParam(1, stype.Substring(16), out param))
-                column = new Column(name, DataType.DOUBLE_PRECISION, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.DOUBLE_PRECISION, nullable, param, desc, colId);
             else if (stype.StartsWith("REAL") && ParseParam(1, 2, stype.Substring(4), out param))
-                column = new Column(name, DataType.REAL, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.REAL, nullable, param, desc, colId);
             // Boolean types
             else if (stype.StartsWith("BOOLEAN"))
-                column = new Column(name, DataType.BOOLEAN, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.BOOLEAN, nullable, null, desc, colId);
             // Date / time types
             else if (stype.StartsWith("DATE"))
-                column = new Column(name, DataType.DATE, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.DATE, nullable, null, desc, colId);
             else if (stype.StartsWith("TIMESTAMP"))
-                column = new Column(name, DataType.TIMESTAMP, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId);
             else if (stype.StartsWith("TIME"))
-                column = new Column(name, DataType.TIME, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId);
             //TIME_TIMEZONE
             //TIMESTAMP_TIMEZONE
             else if (stype.StartsWith("INTERVAL") && ParseParam(1, stype.Substring(16), out param))
-                column = new Column(name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
 
             return column != null;
         }

@@ -37,7 +37,7 @@ namespace HardHorn.ArchiveVersion
             foreach (var xcolumn in xcolumns.Elements(ns + "column"))
             {
                 Column column;
-                if (Column.TryParse(ns, xcolumn, out column))
+                if (Column.TryParse(table, ns, xcolumn, out column))
                 {
                     (table.Columns as List<Column>).Add(column);
                 }
