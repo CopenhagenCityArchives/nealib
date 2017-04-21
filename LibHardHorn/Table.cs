@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HardHorn.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,38 +18,43 @@ namespace HardHorn.ArchiveVersion
 
         public int Rows { get; private set; }
 
-        public Table(string name, string folder, int rows, List<Column> columns)
+        public string Description { get; private set; }
+
+        public Table(string name, string folder, int rows, string description, List<Column> columns)
         {
             Name = name;
             Folder = folder;
             Columns = columns;
             Rows = rows;
+            Description = description;
         }
 
-        public static bool TryParse(XNamespace ns, XElement xtable, out Table table)
+        public static Table Parse(XNamespace ns, XElement xtable, ILogger log)
         {
             string name = xtable.Element(ns + "name").Value;
             string folder = xtable.Element(ns + "folder").Value;
             int rows = int.Parse(xtable.Element(ns + "rows").Value);
+            string desc = xtable.Element(ns + "description").Value;
 
-            table = new Table(name, folder, rows, new List<Column>());
+            var table = new Table(name, folder, rows, desc, new List<Column>());
 
+            int dummyCount = 1;
             var xcolumns = xtable.Element(ns + "columns");
             foreach (var xcolumn in xcolumns.Elements(ns + "column"))
             {
-                Column column;
-                if (Column.TryParse(table, ns, xcolumn, out column))
+                try
                 {
+                    var column = Column.Parse(table, ns, xcolumn);
                     (table.Columns as List<Column>).Add(column);
                 }
-                else
+                catch (ArchiveVersionColumnParsingException ex)
                 {
-                    table = null;
-                    return false;
+                    log.Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", table.Name, ex.Message), LogLevel.ERROR);
+                    (table.Columns as List<Column>).Add(new Column(table, "DUMMY" + (dummyCount++).ToString(), DataType.NOT_DEFINED, false, null, "", ""));
                 }
             }
 
-            return true;
+            return table;
         }
     }
 }

@@ -37,8 +37,13 @@ namespace HardHorn.Statistics
                     {
                         dynamic dataTypeStat = new ExpandoObject();
                         dataTypeStat.Count = 1;
-                        dataTypeStat.MaxParams = column.Param;
-                        dataTypeStat.MinParams = column.Param;
+                        dataTypeStat.MaxParams = column.Param == null ? null : new DataTypeParam(new int[column.Param.Length]);
+                        dataTypeStat.MinParams = column.Param == null ? null : new DataTypeParam(new int[column.Param.Length]);
+                        for (int i = 0; i < (column.Param == null ? 0 : column.Param.Length); i++)
+                        {
+                            dataTypeStat.MaxParams[i] = column.Param[i];
+                            dataTypeStat.MinParams[i] = column.Param[i];
+                        }
                         DataTypeStatistics.Add(column.Type, dataTypeStat);
                     }
                 }

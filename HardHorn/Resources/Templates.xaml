@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:HardHorn"
                     xmlns:vm="clr-namespace:HardHorn.ViewModels"
+                    xmlns:log="clr-namespace:HardHorn.Logging;assembly=LibHardHorn"
                     xmlns:cal="http://www.caliburnproject.org"
                     xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn">
     <local:HasErrorsColorConverter x:Key="HasErrorsColorConverter" />
@@ -9,6 +10,14 @@
     <local:DataTypeToStringConverter x:Key="DataTypeToStringConverter" />
     <local:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
     <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+    <DataTemplate x:Key="RegexTableTemplate">
+        <TextBlock Text="{Binding Table.Name}"/>
+    </DataTemplate>
+
+    <DataTemplate x:Key="RegexColumnTemplate">
+        <TextBlock Text="{Binding Name}" />
+    </DataTemplate>
 
     <DataTemplate x:Key="TestTypeItemTemplate">
         <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType}" />
@@ -21,15 +30,20 @@
     </DataTemplate>
 
     <DataTemplate x:Key="TestSuiteCategoryItemTemplate">
-        <Expander Margin="5">
-            <Expander.Header>
-                <StackPanel>
-                <TextBlock FontWeight="Bold" Text="{Binding Name}" />
-                <ItemsControl Margin="5" ItemsSource="{Binding Tests}" ItemTemplate="{StaticResource TestTypeItemTemplate}" />
-                </StackPanel>
-            </Expander.Header>
-            <ItemsControl ItemsSource="{Binding Children}" ItemTemplate="{StaticResource TestSuiteTestItemTemplate}" />
-        </Expander>
+        <StackPanel>
+            <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+            <ItemsControl Margin="5" ItemsSource="{Binding Tests}" ItemTemplate="{StaticResource TestTypeItemTemplate}" />
+            <TreeView ItemsSource="{Binding Children}">
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteTestType}">
+                        <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType}" />
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteDataTypeTest}" ItemsSource="{Binding Tests}">
+                        <TextBlock Text="{Binding DataType}" />
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+        </StackPanel>
     </DataTemplate>
     
     <DataTemplate x:Key="StatisticsItemTemplate">
@@ -247,7 +261,7 @@
                     <Style.Triggers>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
-                                <Condition  Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.NORMAL}" />
+                                <Condition  Binding="{Binding Item1}" Value="{x:Static log:LogLevel.NORMAL}" />
                                 <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=IsSelected}" Value="true" />
                             </MultiDataTrigger.Conditions>
                             <MultiDataTrigger.Setters>
@@ -256,20 +270,20 @@
                         </MultiDataTrigger>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
-                                <Condition  Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.SECTION}" />
+                                <Condition  Binding="{Binding Item1}" Value="{x:Static log:LogLevel.SECTION}" />
                                 <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=IsSelected}" Value="true" />
                             </MultiDataTrigger.Conditions>
                             <MultiDataTrigger.Setters>
                                 <Setter Property="Foreground" Value="{StaticResource {x:Static SystemColors.HighlightTextBrushKey}}" />
                             </MultiDataTrigger.Setters>
                         </MultiDataTrigger>
-                        <DataTrigger Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.ERROR}">
+                        <DataTrigger Binding="{Binding Item1}" Value="{x:Static log:LogLevel.ERROR}">
                             <Setter Property="Foreground" Value="Red" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.SUGGEST}">
+                        <DataTrigger Binding="{Binding Item1}" Value="{x:Static log:LogLevel.SUGGEST}">
                             <Setter Property="Foreground" Value="Green" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Item1}" Value="{x:Static vm:LogLevel.SECTION}">
+                        <DataTrigger Binding="{Binding Item1}" Value="{x:Static log:LogLevel.SECTION}">
                             <Setter Property="FontWeight" Value="Bold" />
                         </DataTrigger>
                     </Style.Triggers>

@@ -12,6 +12,8 @@ using System.IO;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 using System.Collections;
+using HardHorn.Logging;
+using System.Dynamic;
 
 namespace HardHorn.ViewModels
 {
@@ -22,14 +24,6 @@ namespace HardHorn.ViewModels
         TEST_DONE,
         COLUMN_REPORT,
         TABLE_REPORT
-    }
-
-    public enum LogLevel
-    {
-        NORMAL,
-        ERROR,
-        SUGGEST,
-        SECTION
     }
 
     class ListTable : PropertyChangedBase
@@ -53,82 +47,177 @@ namespace HardHorn.ViewModels
         bool _errors;
     }
 
-    class TestSuiteTest : PropertyChangedBase
+    class TestSuiteDataTypeTest : PropertyChangedBase
     {
-        public AnalysisErrorType TestType { get; private set; }
-        public IEnumerable<TestSuiteTest> ChildTests { get; private set; }
+        public DataType DataType { get; private set; }
+        public TestSuiteTestType ParentTest { get; set; }
 
-        bool _selected = false;
-        public bool Selected
+        bool? _selected = true;
+        public bool? Selected
         {
             get { return _selected; }
             set
             {
                 _selected = value;
-                foreach (var child in ChildTests)
+                if (ParentTest != null)
                 {
-                    child.Selected = value;
+                    ParentTest.ChildSetTo(value);
                 }
                 NotifyOfPropertyChange("Selected");
             }
         }
 
-        public TestSuiteTest(AnalysisErrorType testType, IEnumerable<TestSuiteTest> children)
+        public TestSuiteDataTypeTest(DataType dataType, TestSuiteTestType parentTest)
         {
-            TestType = testType;
-            ChildTests = children;
-        }
-
-        public TestSuiteTest(AnalysisErrorType testType)
-        {
-            TestType = testType;
-            ChildTests = Enumerable.Empty<TestSuiteTest>();
+            DataType = dataType;
+            ParentTest = parentTest;
         }
     }
 
-    class TestSuiteDataTypeTest : PropertyChangedBase
+    class TestSuiteTestType : PropertyChangedBase
     {
-        public DataType DataType { get; private set; }
-        public ObservableCollection<TestSuiteTest> Tests { get; private set; }
+        public AnalysisErrorType TestType { get; private set; }
+        public IEnumerable<TestSuiteDataTypeTest> DataTypeTests { get; set; }
+        public TestSuiteCategory Category { get; private set; }
 
-        public TestSuiteDataTypeTest(DataType dataType)
+        bool? _selected = true;
+        public bool? Selected
         {
-            DataType = dataType;
-            Tests = new ObservableCollection<TestSuiteTest>();
+            get { return _selected; }
+            set
+            {
+                _selected = value;
+                if (Category != null)
+                {
+                    Category.ChildSetTo(value);
+                }
+                foreach (var test in DataTypeTests)
+                {
+                    test.Selected = value;
+                }
+                NotifyOfPropertyChange("Selected");
+            }
+        }
+
+        public void ChildSetTo(bool? value)
+        {
+            if (!value.HasValue || (Selected.HasValue && value.HasValue && Selected.Value != value.Value))
+            {
+                _selected = null;
+            }
+            else if (!Selected.HasValue && value.HasValue)
+            {
+                bool? newValue = null;
+                bool init = true;
+                foreach (var test in DataTypeTests)
+                {
+                    if (init)
+                    {
+                        newValue = test.Selected;
+                        init = false;
+                    }
+                    else
+                    {
+                        if (test.Selected.HasValue && newValue.HasValue && test.Selected.Value == newValue.Value)
+                        {
+                            newValue = test.Selected.Value;
+                        }
+                        else
+                        {
+                            newValue = null;
+                            break;
+                        }
+                    }
+                }
+                _selected = newValue;
+            }
+            Category.ChildSetTo(_selected);
+            NotifyOfPropertyChange("Selected");
+        }
+
+        public TestSuiteTestType(AnalysisErrorType testType, TestSuiteCategory category)
+        {
+            Category = category;
+            TestType = testType;
+            DataTypeTests = Enumerable.Empty<TestSuiteDataTypeTest>();
         }
     }
 
     class TestSuiteCategory : PropertyChangedBase
     {
         public string Name { get; private set; }
-        public ObservableCollection<TestSuiteDataTypeTest> Children { get; private set; }
-        public ObservableCollection<TestSuiteTest> Tests { get; private set; }
+        public ObservableCollection<TestSuiteTestType> TestTypes { get; private set; }
+
+        bool? _selected = true;
+        public bool? Selected
+        {
+            get { return _selected; }
+            set
+            {
+                _selected = value;
+                foreach (var testType in TestTypes)
+                {
+                    testType.Selected = value;
+                }
+                NotifyOfPropertyChange("Selected");
+            }
+        }
+
+        public void ChildSetTo(bool? value)
+        {
+            if (!value.HasValue || (Selected.HasValue && value.HasValue && Selected.Value != value.Value))
+            {
+                _selected = null;
+            }
+            else if (!Selected.HasValue && value.HasValue)
+            {
+                bool? newValue = null;
+                bool init = true;
+                foreach (var test in TestTypes)
+                {
+                    if (init)
+                    {
+                        newValue = test.Selected;
+                        init = false;
+                    }
+                    else
+                    {
+                        if (test.Selected.HasValue && newValue.HasValue && test.Selected.Value == newValue.Value)
+                        {
+                            newValue = test.Selected.Value;
+                        }
+                        else
+                        {
+                            newValue = null;
+                            break;
+                        }
+                    }
+                }
+                _selected = newValue;
+            }
+            NotifyOfPropertyChange("Selected");
+        }
+
 
         public TestSuiteCategory(string name, DataType[] dataTypes, AnalysisErrorType[] testTypes)
         {
             Name = name;
-            Children = new ObservableCollection<TestSuiteDataTypeTest>();
 
-            foreach (var dataType in dataTypes)
-            {
-                Children.Add(new TestSuiteDataTypeTest(dataType));
-            }
-
-            Tests = new ObservableCollection<TestSuiteTest>();
+            TestTypes = new ObservableCollection<TestSuiteTestType>();
 
             foreach (var testType in testTypes)
             {
-                var childTests = new List<TestSuiteTest>();
-                
-                foreach (var child in Children)
+                var test = new TestSuiteTestType(testType, this);
+                var dataTypeTests = new List<TestSuiteDataTypeTest>();
+
+                foreach (var dataType in dataTypes)
                 {
-                    var childTest = new TestSuiteTest(testType);
-                    child.Tests.Add(childTest);
-                    childTests.Add(childTest);
+                    var dataTypeTest = new TestSuiteDataTypeTest(dataType, test);
+                    dataTypeTests.Add(dataTypeTest);
                 }
 
-                var test = new TestSuiteTest(testType, childTests.Cast<TestSuiteTest>());
-                Tests.Add(test);
+                test.DataTypeTests = dataTypeTests.Cast<TestSuiteDataTypeTest>();
+                TestTypes.Add(test);
             }
         }
     }
@@ -141,7 +230,7 @@ namespace HardHorn.ViewModels
         {
             testCategories.Add(new TestSuiteCategory("Strengtyper",
                 new DataType[] { DataType.CHARACTER, DataType.CHARACTER_VARYING, DataType.NATIONAL_CHARACTER, DataType.NATIONAL_CHARACTER_VARYING },
-                new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW, AnalysisErrorType.UNDERFLOW }));
+                new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW, AnalysisErrorType.UNDERFLOW, AnalysisErrorType.BLANK }));
             testCategories.Add(new TestSuiteCategory("Tidstyper",
                 new DataType[] { DataType.TIME, DataType.TIMESTAMP, DataType.INTERVAL },
                 new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW, AnalysisErrorType.FORMAT }));
@@ -156,17 +245,21 @@ namespace HardHorn.ViewModels
 
             foreach (var testCategory in testCategories)
             {
-                foreach (var categoryChild in testCategory.Children)
+                foreach (var testType in testCategory.TestTypes)
                 {
-                    if (!dict.ContainsKey(categoryChild.DataType))
+                    foreach (var dataType in testType.DataTypeTests)
                     {
-                        var testTypes = new HashSet<AnalysisErrorType>();
-                        foreach (var test in categoryChild.Tests)
+                        if (dataType.Selected.HasValue && dataType.Selected.Value)
                         {
-                            if (test.Selected)
-                                testTypes.Add(test.TestType);
+                            if (!dict.ContainsKey(dataType.DataType))
+                            {
+                                dict.Add(dataType.DataType, new HashSet<AnalysisErrorType>(new AnalysisErrorType[] { testType.TestType }));
+                            }
+                            else
+                            {
+                                dict[dataType.DataType].Add(testType.TestType);
+                            }
                         }
-                        dict.Add(categoryChild.DataType, testTypes);
                     }
                 }
             }
@@ -185,7 +278,27 @@ namespace HardHorn.ViewModels
         }
     }
 
-    class MainViewModel : PropertyChangedBase
+    class LoadWorkerLogger : ILogger
+    {
+        private BackgroundWorker _worker;
+
+        public void Log(string message, LogLevel level)
+        {
+            dynamic state = new ExpandoObject();
+
+            state.Message = message;
+            state.LogLevel = level;
+
+            _worker.ReportProgress(0, state);
+        }
+
+        public LoadWorkerLogger(BackgroundWorker worker)
+        {
+            _worker = worker;
+        }
+    }
+
+    class MainViewModel : PropertyChangedBase, ILogger
     {
         #region Properties
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
@@ -218,6 +331,8 @@ namespace HardHorn.ViewModels
             get { return _testRunning; }
             set { _testRunning = value; NotifyOfPropertyChange("TestRunning"); }
         }
+
+        public string RegexText { get; set; }
 
         private bool _testLoaded = false;
         public bool TestLoaded
@@ -312,6 +427,8 @@ namespace HardHorn.ViewModels
             }
         }
 
+        public Column RegexColumn { get; set; }
+
         #endregion
 
         #region Constructors
@@ -332,11 +449,15 @@ namespace HardHorn.ViewModels
 
             _loadWorker.DoWork += _loadWorker_DoWork;
             _loadWorker.RunWorkerCompleted += _loadWorker_RunWorkerCompleted;
+            _loadWorker.ProgressChanged += _loadWorker_ProgressChanged;
+            _loadWorker.WorkerReportsProgress = true;
+
+            RegexText = string.Empty;
         }
         #endregion
 
         #region Methods
-        void Log(string msg, LogLevel level = LogLevel.NORMAL)
+        public void Log(string msg, LogLevel level = LogLevel.NORMAL)
         {
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
         }
@@ -347,6 +468,13 @@ namespace HardHorn.ViewModels
         {
             Tables.Clear();
             ListTableLookup.Clear();
+
+            if (e.Error != null)
+            {
+                Log("En undtagelse forekom under indlæsningen af arkiveringsversionen, med følgende besked: " + e.Error.Message, LogLevel.ERROR);
+                return;
+            }
+
             foreach (var table in _analyzer.Tables)
             {
                 var listTable = new ListTable() { Table = table, Errors = false };
@@ -373,9 +501,16 @@ namespace HardHorn.ViewModels
             }
         }
 
+        private void _loadWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            dynamic state = e.UserState;
+            Log(state.Message, state.LogLevel);
+        }
+
         private void _loadWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            _analyzer = new DataAnalyzer(e.Argument as string);
+            var loadLogger = new LoadWorkerLogger(sender as BackgroundWorker);
+            _analyzer = new DataAnalyzer(e.Argument as string, loadLogger);
         }
 
         void _testWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -460,6 +595,10 @@ namespace HardHorn.ViewModels
         void _testWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             TestRunning = false;
+            foreach (var listTable in Tables)
+            {
+                listTable.Busy = false;
+            }
         }
 
         void _testWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -572,6 +711,14 @@ namespace HardHorn.ViewModels
             } else
             {
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
+                var dict = new Dictionary<string, HashSet<string>>();
+                var hset = new HashSet<string>();
+                if (RegexColumn != null)
+                {
+                    hset.Add(RegexColumn.Name);
+                    dict.Add(RegexColumn.Table.Name, hset);
+                }
+                _analyzer.RegexTests = new RegexTest[] { new RegexTest(RegexText, dict) };
                 TestProgress = 0;
                 _analyzer.TestSelection = TestSuite.GetTestDictionary();
 

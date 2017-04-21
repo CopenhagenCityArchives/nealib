@@ -6,6 +6,16 @@ using System.Xml.Linq;
 
 namespace HardHorn.ArchiveVersion
 {
+    public class ArchiveVersionColumnParsingException : Exception
+    {
+        public XElement Element { get; set; }
+
+        public ArchiveVersionColumnParsingException(string message, XElement element) : base(message)
+        {
+            Element = element;
+        }
+    }
+
     public enum DataType
     {
         // Text / string / hexadecimal types
@@ -30,7 +40,8 @@ namespace HardHorn.ArchiveVersion
         // TIME_TIMEZONE,
         TIMESTAMP,
         // TIMESTAMP_TIMEZONE,
-        INTERVAL
+        INTERVAL,
+        NOT_DEFINED
     }
 
     public class DataTypeParam
@@ -102,29 +113,57 @@ namespace HardHorn.ArchiveVersion
             _colId = colId;
         }
 
-        public static bool TryParse(Table table, XNamespace ns, XElement xcolumn, out Column column)
+        public static Column Parse(Table table, XNamespace ns, XElement xcolumn)
         {
             string xml = xcolumn.ToString();
-            column = null;
+            Column column = null;
             XElement xname, xtype, xnullable, xdesc, xcolid;
             try
             {
                 xname = xcolumn.Element(ns + "name");
+            }
+            catch (InvalidOperationException)
+            {
+                throw new ArchiveVersionColumnParsingException("Could not read column name.", xcolumn);
+            }
+            try
+            {
                 xtype = xcolumn.Element(ns + "type");
+            }
+            catch (InvalidOperationException)
+            {
+                throw new ArchiveVersionColumnParsingException("Could not read column datatype.", xcolumn);
+            }
+            try
+            {
                 xnullable = xcolumn.Element(ns + "nullable");
+            }
+            catch (InvalidOperationException)
+            {
+                throw new ArchiveVersionColumnParsingException("Could not read column nullable value.", xcolumn);
+            }
+            try
+            {
                 xdesc = xcolumn.Element(ns + "description");
+            }
+            catch (InvalidOperationException)
+            {
+                throw new ArchiveVersionColumnParsingException("Could not read column description.", xcolumn);
+            }
+            try
+            {
                 xcolid = xcolumn.Element(ns + "columnID");
             }
             catch (InvalidOperationException)
             {
-                return false;
+                throw new ArchiveVersionColumnParsingException("Could not read column ID.", xcolumn);
             }
 
             string name;
             if (xname.Value.Length > 0)
                 name = xname.Value;
             else
-                return false;
+                throw new ArchiveVersionColumnParsingException("Column name has length 0.", xcolumn);
 
             bool nullable;
             // parse nullable
@@ -134,7 +173,7 @@ namespace HardHorn.ArchiveVersion
                 nullable = false;
             else
             {
-                return false;
+                throw new ArchiveVersionColumnParsingException("Column has invalid nullable value.", xnullable);
             }
 
             string desc = xdesc.Value;
@@ -148,7 +187,7 @@ namespace HardHorn.ArchiveVersion
             if ((stype.StartsWith("CHARACTER VARYING") && ParseParam(1, stype.Substring(17), out param)) ||
                 (stype.StartsWith("VARCHAR") && ParseParam(1, stype.Substring(7), out param)))
                 column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
-            else if ((stype.StartsWith("CHARACTER") && ParseParam(1, stype.Substring(8), out param)) ||
+            else if ((stype.StartsWith("CHARACTER") && ParseParam(1, stype.Substring(9), out param)) ||
                      (stype.StartsWith("CHAR") && ParseParam(1, stype.Substring(4), out param)))
                 column = new Column(table, name, DataType.CHARACTER, nullable, param, desc, colId);
             else if ((stype.StartsWith("NATIONAL CHARACTER VARYING") && ParseParam(1, stype.Substring(26), out param)) ||
@@ -171,10 +210,10 @@ namespace HardHorn.ArchiveVersion
                 column = new Column(table, name, DataType.DECIMAL, nullable, param, desc, colId);
             else if (stype.StartsWith("FLOAT") && ParseParam(1, stype.Substring(5), out param))
                 column = new Column(table, name, DataType.FLOAT, nullable, param, desc, colId);
-            else if (stype.StartsWith("DOUBLE PRECISION") && ParseParam(1, stype.Substring(16), out param))
-                column = new Column(table, name, DataType.DOUBLE_PRECISION, nullable, param, desc, colId);
-            else if (stype.StartsWith("REAL") && ParseParam(1, 2, stype.Substring(4), out param))
-                column = new Column(table, name, DataType.REAL, nullable, param, desc, colId);
+            else if (stype.StartsWith("DOUBLE PRECISION"))
+                column = new Column(table, name, DataType.DOUBLE_PRECISION, nullable, null, desc, colId);
+            else if (stype.StartsWith("REAL"))
+                column = new Column(table, name, DataType.REAL, nullable, null, desc, colId);
             // Boolean types
             else if (stype.StartsWith("BOOLEAN"))
                 column = new Column(table, name, DataType.BOOLEAN, nullable, null, desc, colId);
@@ -190,7 +229,10 @@ namespace HardHorn.ArchiveVersion
             else if (stype.StartsWith("INTERVAL") && ParseParam(1, stype.Substring(16), out param))
                 column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
 
-            return column != null;
+            if (column == null)
+                throw new ArchiveVersionColumnParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", xtype);
+            else
+                return column;
         }
 
         static bool ParseParam(int n, string s, out int[] param)

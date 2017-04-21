@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HardHorn"
         xmlns:cal="http://www.caliburnproject.org"
+        xmlns:vm="clr-namespace:HardHorn.ViewModels"
         mc:Ignorable="d"
         Title="HardHorn" Height="720" Width="1280"
         Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
@@ -13,10 +14,13 @@
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="150"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
         
         <!-- Row 0 -->
         <Label FontWeight="Bold">Vælg arkiveringsversion</Label>
@@ -32,13 +36,40 @@
         <Label Grid.Row="2" FontWeight="Bold">Vælg tests</Label>
         
         <!-- Row 3 -->
-        <ItemsControl Grid.Row="3" Margin="5 0 5 5" ItemsSource="{Binding TestSuite}" ItemTemplate="{StaticResource TestSuiteCategoryItemTemplate}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="1" HorizontalAlignment="Left" />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <TreeView ItemsSource="{Binding TestSuite}">
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteCategory}" ItemsSource="{Binding TestTypes}">
+                        <CheckBox IsChecked="{Binding Selected}" Content="{Binding Name}" />
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteTestType}" ItemsSource="{Binding DataTypeTests}">
+                        <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType}" />
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteDataTypeTest}">
+                        <CheckBox IsChecked="{Binding Selected}" Content="{Binding DataType}" />
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto"  />
+                    <RowDefinition Height="Auto"  />
+                    <RowDefinition Height="Auto"  />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Label FontWeight="Bold">Regulære udtryk</Label>
+                <Label Grid.Row="1">Tabelnavn:</Label>
+                <ComboBox Grid.Row="1" x:Name="RegexTableListBox" Grid.Column="2" Width="300" Height="22" ItemsSource="{Binding Tables}" ItemTemplate="{StaticResource RegexTableTemplate}" />
+                <Label Grid.Row="2">Kolonnenavn:</Label>
+                <ComboBox Grid.Column="2" Grid.Row="2" Width="300" ItemsSource="{Binding Path=SelectedItem.Table.Columns, ElementName=RegexTableListBox}" SelectedItem="{Binding RegexColumn, Mode=OneWayToSource}" ItemTemplate="{StaticResource RegexColumnTemplate}" />
+                <Label Grid.Row="3">Regulært udtryk:</Label>
+                <TextBox Grid.Column="2" Grid.Row="3" Width="300" Text="{Binding RegexText}" />
+            </Grid>
+        </StackPanel>
 
         <!-- Row 4 -->
         <TabControl Grid.Row="4">

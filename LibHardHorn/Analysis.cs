@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using HardHorn.ArchiveVersion;
 using System.Text.RegularExpressions;
 using System.Dynamic;
+using HardHorn.Logging;
 
 namespace HardHorn.Analysis
 {
@@ -145,9 +146,9 @@ namespace HardHorn.Analysis
 
         public override string ToString()
         {
-            string repr = string.Format("[{0}, {1}{2}{3}]", 
+            string repr = string.Format("[{0}, {1}{2}{3}]",
                 Column.Name,
-                Column.Type.ToString(), 
+                Column.Type.ToString(),
                 Column.Param != null && Column.Param.Length > 0 ? "(" + string.Join(",", Column.Param) + ")" : string.Empty,
                 Column.Nullable ? ", nullable" : string.Empty,
                 ErrorCount);
@@ -168,6 +169,8 @@ namespace HardHorn.Analysis
     {
         public IEnumerable<Table> Tables { get; set; }
         public Dictionary<DataType, HashSet<AnalysisErrorType>> TestSelection { get; set; }
+        public IEnumerable<RegexTest> RegexTests { get; set; }
+        ILogger _log;
 
         string _location;
         XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
@@ -184,8 +187,9 @@ namespace HardHorn.Analysis
 
         public Dictionary<string, Dictionary<string, AnalysisReport>> Report { get; private set; }
 
-        public DataAnalyzer(string location)
+        public DataAnalyzer(string location, ILogger log)
         {
+            _log = log;
             TestSelection = new Dictionary<DataType, HashSet<AnalysisErrorType>>();
             _location = location;
             var tableIndexDocument = XDocument.Load(Path.Combine(_location, "Indices", "tableIndex.xml"));
@@ -197,11 +201,8 @@ namespace HardHorn.Analysis
             var xtables = tableIndexDocument.Descendants(xmlns + "tables").First();
             foreach (var xtable in xtables.Elements(xmlns + "table"))
             {
-                Table table;
-                if (Table.TryParse(xmlns, xtable, out table))
-                {
-                    (Tables as List<Table>).Add(table);
-                }
+                Table table = Table.Parse(xmlns, xtable, _log);
+                (Tables as List<Table>).Add(table);
             }
 
             PrepareReports();
@@ -272,11 +273,11 @@ namespace HardHorn.Analysis
                 for (int j = 0; j < currentTable.Columns.Count; j++)
                 {
                     AnalyzeLengths(Report[currentTable.Name][currentTable.Columns[j].Name], rows[j, i].Data);
-                    AnalyzeData(rows[j, i].Line, 
+                    AnalyzeData(rows[j, i].Line,
                         rows[j, i].Pos,
                         currentTable.Columns[j],
                         rows[j, i].Data,
-                        rows[j, i].IsNull, 
+                        rows[j, i].IsNull,
                         Report[currentTable.Name][currentTable.Columns[j].Name]);
                 }
             }
@@ -355,6 +356,17 @@ namespace HardHorn.Analysis
 
         void AnalyzeData(int line, int pos, Column column, string data, bool isNull, AnalysisReport report)
         {
+            if (RegexTests != null)
+            {
+                foreach (var regexTest in RegexTests)
+                {
+                    if (regexTest.ShouldPerformMatch(column) && !isNull && !regexTest.MatchData(data))
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                    }
+                }
+            }
+
             Match match;
             if (!TestSelection.ContainsKey(column.Type))
             {
@@ -478,11 +490,11 @@ namespace HardHorn.Analysis
                     break;
             }
 
-            if (currentTests.Contains(AnalysisErrorType.BLANK) && data.Length > 0 && 
+            if (currentTests.Contains(AnalysisErrorType.BLANK) && data.Length > 0 &&
                 (data[0] == ' ' ||
                  data[0] == '\n' ||
                  data[0] == '\t' ||
-                 data[data.Length-1] == ' ' ||
+                 data[data.Length - 1] == ' ' ||
                  data[data.Length - 1] == '\n' ||
                  data[data.Length - 1] == '\t'))
             {
@@ -510,6 +522,29 @@ namespace HardHorn.Analysis
                    day < 1 ||
                    month == 2 && leap && day > months[2] - 1 ||
                    day > months[month - 1];
+        }
+    }
+
+    public class RegexTest
+    {
+        public Regex Regex { get; private set; }
+        public Dictionary<string, HashSet<string>> Columns { get; private set; }
+
+        public RegexTest(string regex, Dictionary<string, HashSet<string>> columns)
+        {
+            Regex = new Regex(regex);
+            Columns = columns;
+        }
+
+        public bool ShouldPerformMatch(Column column)
+        {
+            return Columns.ContainsKey(column.Table.Name) && Columns[column.Table.Name].Contains(column.Name);
+        }
+
+        public bool MatchData(string data)
+        {
+            var match = Regex.Match(data);
+            return match.Success;
         }
     }
 }
