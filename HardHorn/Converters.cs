@@ -87,14 +87,12 @@ namespace HardHorn
 
             switch (error)
             {
-                case AnalysisErrorType.MISMATCH:
-                    return "Parameter uoverensstemmelse";
                 case AnalysisErrorType.UNDERFLOW:
-                    return "Længdematch";
+                    return "Underudfyldelse";
                 case AnalysisErrorType.OVERFLOW:
-                    return "For lang";
+                    return "Overskridelse";
                 case AnalysisErrorType.BLANK:
-                    return "Foran eller efterstillede blanktegn";
+                    return "Foran- eller efterstillede blanktegn";
                 case AnalysisErrorType.FORMAT:
                     return "Formateringsfejl";
                 default:

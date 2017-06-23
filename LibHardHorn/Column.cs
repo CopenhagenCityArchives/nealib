@@ -16,6 +16,18 @@ namespace HardHorn.ArchiveVersion
         }
     }
 
+    public class ArchiveVersionColumnTypeParsingException : ArchiveVersionColumnParsingException
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+
+        public ArchiveVersionColumnTypeParsingException(string message, string name, string type, XElement element) : base(message, element)
+        {
+            Name = name;
+            Type = type;
+        }
+    }
+
     public enum DataType
     {
         // Text / string / hexadecimal types
@@ -37,11 +49,11 @@ namespace HardHorn.ArchiveVersion
         // Date / time types
         DATE,
         TIME,
-        // TIME_TIMEZONE,
+        TIME_WITH_TIME_ZONE,
         TIMESTAMP,
-        // TIMESTAMP_TIMEZONE,
+        TIMESTAMP_WITH_TIME_ZONE,
         INTERVAL,
-        NOT_DEFINED
+        NOT_DEFINED,
     }
 
     public class DataTypeParam
@@ -220,17 +232,23 @@ namespace HardHorn.ArchiveVersion
             // Date / time types
             else if (stype.StartsWith("DATE"))
                 column = new Column(table, name, DataType.DATE, nullable, null, desc, colId);
+            else if (stype.StartsWith("TIMESTAMP WITH TIME ZONE"))
+                column = new Column(table, name, DataType.TIMESTAMP_WITH_TIME_ZONE, nullable, null, desc, colId);
+            else if (stype.StartsWith("TIMESTAMP WITHOUT TIME ZONE"))
+                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId);
             else if (stype.StartsWith("TIMESTAMP"))
                 column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId);
+            else if (stype.StartsWith("TIME WITHOUT TIME ZONE"))
+                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId);
+            else if (stype.StartsWith("TIME WITH TIME ZONE"))
+                column = new Column(table, name, DataType.TIME_WITH_TIME_ZONE, nullable, null, desc, colId);
             else if (stype.StartsWith("TIME"))
                 column = new Column(table, name, DataType.TIME, nullable, null, desc, colId);
-            //TIME_TIMEZONE
-            //TIMESTAMP_TIMEZONE
             else if (stype.StartsWith("INTERVAL") && ParseParam(1, stype.Substring(16), out param))
                 column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
 
             if (column == null)
-                throw new ArchiveVersionColumnParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", xtype);
+                throw new ArchiveVersionColumnTypeParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", name, stype, xtype);
             else
                 return column;
         }

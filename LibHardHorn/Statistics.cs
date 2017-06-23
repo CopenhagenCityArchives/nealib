@@ -31,6 +31,7 @@ namespace HardHorn.Statistics
                             {
                                 DataTypeStatistics[column.Type].MaxParams[i] = column.Param[i];
                             }
+                            DataTypeStatistics[column.Type].ParamValues[i].Add(column.Param[i]);
                         }
                     }
                     else
@@ -39,10 +40,19 @@ namespace HardHorn.Statistics
                         dataTypeStat.Count = 1;
                         dataTypeStat.MaxParams = column.Param == null ? null : new DataTypeParam(new int[column.Param.Length]);
                         dataTypeStat.MinParams = column.Param == null ? null : new DataTypeParam(new int[column.Param.Length]);
+                        if (column.Param != null && column.Param.Length > 0)
+                        {
+                            dataTypeStat.ParamValues = new List<int>[column.Param.Length];
+                        } else
+                        {
+                            dataTypeStat.ParamValues = new List<int>[0];
+                        }
                         for (int i = 0; i < (column.Param == null ? 0 : column.Param.Length); i++)
                         {
                             dataTypeStat.MaxParams[i] = column.Param[i];
                             dataTypeStat.MinParams[i] = column.Param[i];
+                            dataTypeStat.ParamValues[i] = new List<int>();
+                            dataTypeStat.ParamValues[i].Add(column.Param[i]);
                         }
                         DataTypeStatistics.Add(column.Type, dataTypeStat);
                     }

@@ -15,7 +15,6 @@ namespace HardHorn.Analysis
     {
         OVERFLOW,
         UNDERFLOW,
-        MISMATCH,
         FORMAT,
         NULL,
         BLANK
@@ -180,9 +179,11 @@ namespace HardHorn.Analysis
         FileStream tableStream;
         XmlReader tableReader;
 
-        Regex timestamp_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?");
-        Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)");
-        Regex time_regex = new Regex(@"(\d\d):(\d\d):(\d\d)(?:.(\d+))?");
+        Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
+        Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
+        Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
+        Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
+        Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
         static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
 
         public Dictionary<string, Dictionary<string, AnalysisReport>> Report { get; private set; }
@@ -418,8 +419,25 @@ namespace HardHorn.Analysis
                         }
                     }
                     break;
-                case DataType.TIME:
+                case DataType.DATE:
                     match = date_regex.Match(data);
+                    if (match.Success)
+                    {
+                        int year = int.Parse(match.Groups[1].Value);
+                        int month = int.Parse(match.Groups[2].Value);
+                        int day = int.Parse(match.Groups[3].Value);
+                        if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
+                        {
+                            report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        }
+                    }
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                    }
+                    break;
+                case DataType.TIME:
+                    match = time_regex.Match(data);
                     if (match.Success)
                     {
                         if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
@@ -440,10 +458,15 @@ namespace HardHorn.Analysis
                         report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
                     }
                     break;
-                case DataType.DATE:
-                    match = date_regex.Match(data);
+                case DataType.TIME_WITH_TIME_ZONE:
+                    match = time_timezone_regex.Match(data);
                     if (match.Success)
                     {
+                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
+                            column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0])
+                        {
+                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                        }
                         int year = int.Parse(match.Groups[1].Value);
                         int month = int.Parse(match.Groups[2].Value);
                         int day = int.Parse(match.Groups[3].Value);
@@ -459,6 +482,37 @@ namespace HardHorn.Analysis
                     break;
                 case DataType.TIMESTAMP:
                     match = timestamp_regex.Match(data);
+                    if (match.Success)
+                    {
+                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
+                            column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0])
+                        {
+                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                        }
+
+                        if (currentTests.Contains(AnalysisErrorType.FORMAT))
+                        {
+                            // validate datetime
+                            int year = int.Parse(match.Groups[1].Value);
+                            int month = int.Parse(match.Groups[2].Value);
+                            int day = int.Parse(match.Groups[3].Value);
+                            int hour = int.Parse(match.Groups[4].Value);
+                            int minute = int.Parse(match.Groups[5].Value);
+                            int second = int.Parse(match.Groups[6].Value);
+
+                            if (invalidDate(year, month, day) || invalidTime(hour, minute, second))
+                            {
+                                report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                            }
+                        }
+                    }
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
+                    {
+                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                    }
+                    break;
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                    match = timestamp_timezone_regex.Match(data);
                     if (match.Success)
                     {
                         if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
@@ -530,9 +584,9 @@ namespace HardHorn.Analysis
         public Regex Regex { get; private set; }
         public Dictionary<string, HashSet<string>> Columns { get; private set; }
 
-        public RegexTest(string regex, Dictionary<string, HashSet<string>> columns)
+        public RegexTest(Regex regex, Dictionary<string, HashSet<string>> columns)
         {
-            Regex = new Regex(regex);
+            Regex = regex;
             Columns = columns;
         }
 

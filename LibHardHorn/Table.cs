@@ -47,6 +47,11 @@ namespace HardHorn.ArchiveVersion
                     var column = Column.Parse(table, ns, xcolumn);
                     (table.Columns as List<Column>).Add(column);
                 }
+                catch (ArchiveVersionColumnTypeParsingException ex)
+                {
+                    log.Log(string.Format("En fejl opstod under afkodningen af kolonnen '{0}' i tabellen '{1}': Typen '{2}' er ikke valid.", ex.Name, table.Name, ex.Type), LogLevel.ERROR);
+                    (table.Columns as List<Column>).Add(new Column(table, "DUMMY" + (dummyCount++).ToString(), DataType.NOT_DEFINED, false, null, "", ""));
+                }
                 catch (ArchiveVersionColumnParsingException ex)
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", table.Name, ex.Message), LogLevel.ERROR);

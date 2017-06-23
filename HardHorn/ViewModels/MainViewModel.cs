@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Collections;
 using HardHorn.Logging;
 using System.Dynamic;
+using System.Text.RegularExpressions;
 
 namespace HardHorn.ViewModels
 {
@@ -36,6 +37,12 @@ namespace HardHorn.ViewModels
             set { _errors = value; NotifyOfPropertyChange("Errors"); }
         }
 
+        public bool Done
+        {
+            get { return _done; }
+            set { _done = value; NotifyOfPropertyChange("Done"); }
+        }
+
         public bool Busy
         {
             get { return _busy; }
@@ -43,8 +50,9 @@ namespace HardHorn.ViewModels
             set { _busy = value; NotifyOfPropertyChange("Busy"); }
         }
 
-        bool _busy;
-        bool _errors;
+        bool _busy = false;
+        bool _errors = false;
+        private bool _done = false;
     }
 
     class TestSuiteDataTypeTest : PropertyChangedBase
@@ -236,7 +244,7 @@ namespace HardHorn.ViewModels
                 new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW, AnalysisErrorType.FORMAT }));
             testCategories.Add(new TestSuiteCategory("Decimaltalstyper",
                 new DataType[] { DataType.DECIMAL, DataType.DOUBLE_PRECISION, DataType.FLOAT, DataType.REAL },
-                new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW, AnalysisErrorType.MISMATCH }));
+                new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW }));
         }
 
         public Dictionary<DataType, HashSet<AnalysisErrorType>> GetTestDictionary()
@@ -303,6 +311,7 @@ namespace HardHorn.ViewModels
         #region Properties
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
         public TestSuite TestSuite { get; set; }
+        public int[] BarChartValues { get; set; }
 
         bool _showErrorReports = true;
         public bool ShowErrorReports
@@ -331,8 +340,6 @@ namespace HardHorn.ViewModels
             get { return _testRunning; }
             set { _testRunning = value; NotifyOfPropertyChange("TestRunning"); }
         }
-
-        public string RegexText { get; set; }
 
         private bool _testLoaded = false;
         public bool TestLoaded
@@ -371,7 +378,7 @@ namespace HardHorn.ViewModels
         public ListTable CurrentTable
         {
             get { return _currentTable; }
-            set { _currentTable = value;  UpdateInteractiveReportView(); }
+            set { _currentTable = value;  UpdateInteractiveReportView(); NotifyOfPropertyChange("CurrentTable"); }
         }
 
         public void UpdateInteractiveReportView()
@@ -427,7 +434,10 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public Column RegexColumn { get; set; }
+        public ObservableCollection<dynamic> Regexes { get; private set; }
+
+        string _statusText = "";
+        public string StatusText { get { return _statusText; } set { _statusText = value; NotifyOfPropertyChange("StatusText"); } }
 
         #endregion
 
@@ -437,6 +447,7 @@ namespace HardHorn.ViewModels
             Tables = new ObservableCollection<ListTable>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
+            Regexes = new ObservableCollection<dynamic>();
             TestSuite = new TestSuite();
             Log("Så er det dælme tid til at teste datatyper!");
 
@@ -451,8 +462,6 @@ namespace HardHorn.ViewModels
             _loadWorker.RunWorkerCompleted += _loadWorker_RunWorkerCompleted;
             _loadWorker.ProgressChanged += _loadWorker_ProgressChanged;
             _loadWorker.WorkerReportsProgress = true;
-
-            RegexText = string.Empty;
         }
         #endregion
 
@@ -460,6 +469,11 @@ namespace HardHorn.ViewModels
         public void Log(string msg, LogLevel level = LogLevel.NORMAL)
         {
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
+
+            if (level == LogLevel.SECTION || level == LogLevel.ERROR)
+            {
+                StatusText = msg;
+            }
         }
         #endregion
 
@@ -484,6 +498,17 @@ namespace HardHorn.ViewModels
             TestLoaded = true;
 
             _stats = new DataStatistics(Tables.Select(lt => lt.Table).ToArray());
+            foreach (dynamic stat in _stats.DataTypeStatistics.Values)
+            {
+                stat.BarCharts = new ObservableCollection<ExpandoObject>();
+                foreach (var paramValues in stat.ParamValues)
+                {
+                    dynamic b = new ExpandoObject();
+                    b.Values = paramValues;
+                    b.BucketCount = 10;
+                    stat.BarCharts.Add(b);
+                }
+            }
             NotifyOfPropertyChange("DataTypeStatistics");
             Log("Statistik", LogLevel.SECTION);
             foreach (var dataType in _stats.DataTypeStatistics.Keys)
@@ -620,7 +645,7 @@ namespace HardHorn.ViewModels
                 {
                     if (worker.CancellationPending)
                         return;
-                    readRows = _analyzer.AnalyzeRows(50000);
+                    readRows = _analyzer.AnalyzeRows(1000);
                     worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.UPDATE_TABLE_STATUS, Data = table });
                     doneRows += readRows;
                 } while (readRows > 0);
@@ -634,12 +659,39 @@ namespace HardHorn.ViewModels
                     worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.COLUMN_REPORT, Data = report });
                 }
                 ListTableLookup[table.Name].Busy = false;
+                ListTableLookup[table.Name].Done = true;
             }
             worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.TEST_DONE, Data = (object)null });
         }
         #endregion
 
         #region Actions
+        public void AddRegex(string regexText, Column regexColumn)
+        {
+            if (regexColumn == null)
+            {
+                return;
+            }
+
+            dynamic regex = new ExpandoObject();
+            try
+            {
+                regex.Regex = new Regex(regexText);
+            }
+            catch (ArgumentException)
+            {
+                Log(string.Format("Det regulære udtryk \"{0}\" er ikke gyldigt.", regexText), LogLevel.ERROR);
+            }
+           
+            regex.Column = regexColumn;
+            Regexes.Add(regex);
+        }
+
+        public void RemoveRegex(dynamic regex)
+        {
+            Regexes.Remove(regex);
+        }
+
         public void ClearLog()
         {
             LogItems.Clear();
@@ -710,15 +762,22 @@ namespace HardHorn.ViewModels
                 _testWorker.CancelAsync();
             } else
             {
-                Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
-                var dict = new Dictionary<string, HashSet<string>>();
-                var hset = new HashSet<string>();
-                if (RegexColumn != null)
+                foreach (var listTable in Tables)
                 {
-                    hset.Add(RegexColumn.Name);
-                    dict.Add(RegexColumn.Table.Name, hset);
+                    listTable.Busy = false;
+                    listTable.Done = false;
                 }
-                _analyzer.RegexTests = new RegexTest[] { new RegexTest(RegexText, dict) };
+
+                Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
+                var regexList = new List<RegexTest>();
+                foreach (dynamic regex in Regexes)
+                {
+                    var dict = new Dictionary<string, HashSet<string>>();
+                    var hset = new HashSet<string>();
+                    dict.Add(regex.Column.Table.Name, new HashSet<string>() { regex.Column.Name });
+                    regexList.Add(new RegexTest(regex.Regex, dict));
+                }
+                _analyzer.RegexTests = regexList;
                 TestProgress = 0;
                 _analyzer.TestSelection = TestSuite.GetTestDictionary();
 

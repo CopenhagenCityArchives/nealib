@@ -4,19 +4,45 @@
                     xmlns:vm="clr-namespace:HardHorn.ViewModels"
                     xmlns:log="clr-namespace:HardHorn.Logging;assembly=LibHardHorn"
                     xmlns:cal="http://www.caliburnproject.org"
-                    xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn">
+                    xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
+                    xmlns:ctl="clr-namespace:HardHorn.Controls">
     <local:HasErrorsColorConverter x:Key="HasErrorsColorConverter" />
     <local:ErrorCountColorConverter x:Key="ErrorCountColorConverter" />
     <local:DataTypeToStringConverter x:Key="DataTypeToStringConverter" />
     <local:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
     <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
+    <DataTemplate x:Key="RegexItemTemplate">
+        <TextBlock>
+            <TextBlock.Text>
+                <MultiBinding StringFormat="{}{0}.{1}: &quot;{2}&quot;">
+                    <Binding Path="Column.Table.Name" />
+                    <Binding Path="Column.Name" />
+                    <Binding Path="Regex" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+    </DataTemplate>
+    
     <DataTemplate x:Key="RegexTableTemplate">
-        <TextBlock Text="{Binding Table.Name}"/>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding Table.Name}" FontWeight="Bold" />
+            <TextBlock Margin="5 0 0 0" Text="{Binding Table.Description}" FontStyle="Italic" />
+        </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="RegexColumnTemplate">
-        <TextBlock Text="{Binding Name}" />
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="{Binding Name}" />
+            <TextBlock Margin="5 0 0 0"  FontStyle="Italic">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} {1}">
+                        <Binding Path="Type" />
+                        <Binding Path="Param" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+        </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="TestTypeItemTemplate">
@@ -53,22 +79,44 @@
             </GroupBox.Header>
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Label>Antal kolonner:</Label>
-                <Label Grid.Row="1">Minimumsparametre:</Label>
-                <Label Grid.Row="2">Maksimumsparametre:</Label>
+                <Label x:Name="MinParamLabel" Grid.Row="1">Minimumsparametre:</Label>
+                <Label x:Name="MaxParamLabel" Grid.Row="2">Maksimumsparametre:</Label>
                 <Label Grid.Column="1" Content="{Binding Value.Count}"/>
                 <Label Grid.Column="1" Grid.Row="1" Content="{Binding Value.MinParams}"/>
                 <Label Grid.Column="1" Grid.Row="2" Content="{Binding Value.MaxParams}"/>
+                <Label x:Name="HistLabel" Grid.Row="3" Grid.ColumnSpan="2">Typeparameterhistogrammer:</Label>
+                <ItemsControl Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding Value.BarCharts}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical"></StackPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ctl:BarChart Height="150" Margin="5" BucketCount="{Binding BucketCount}" Values="{Binding Values}"></ctl:BarChart>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Grid>
         </GroupBox>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Value.MinParams}" Value="{x:Null}">
+                <Setter TargetName="MinParamLabel" Property="Visibility" Value="Hidden" />
+                <Setter TargetName="MaxParamLabel" Property="Visibility" Value="Hidden" />
+                <Setter TargetName="HistLabel" Property="Visibility" Value="Hidden" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
     </DataTemplate>
     
     <DataTemplate x:Key="InstanceItemTemplate">
@@ -219,27 +267,183 @@
         </Style.Triggers>
     </Style>
 
+    
+    <Color x:Key="FilledColor" A="255" B="155" R="155" G="155"/>
+    <Color x:Key="UnfilledColor" A="0" B="155" R="155" G="155"/>
+
+    <Style x:Key="BusyAnimationStyle" TargetType="Control">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Control">
+                    <ControlTemplate.Resources>
+                        <Storyboard x:Key="Animation0" BeginTime="00:00:00.0" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse0" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+
+                        <Storyboard x:Key="Animation1" BeginTime="00:00:00.1" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse1" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+
+                        <Storyboard x:Key="Animation2" BeginTime="00:00:00.2" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse2" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+
+                        <Storyboard x:Key="Animation3" BeginTime="00:00:00.3" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse3" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+
+                        <Storyboard x:Key="Animation4" BeginTime="00:00:00.4" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse4" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+
+                        <Storyboard x:Key="Animation5" BeginTime="00:00:00.5" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse5" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+
+                        <Storyboard x:Key="Animation6" BeginTime="00:00:0.6" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse6" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+
+                        <Storyboard x:Key="Animation7" BeginTime="00:00:00.7" RepeatBehavior="Forever">
+                            <ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse7" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+                                <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+                                <SplineColorKeyFrame KeyTime="00:00:00.8" Value="{StaticResource UnfilledColor}"/>
+                            </ColorAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </ControlTemplate.Resources>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsVisible" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Storyboard="{StaticResource Animation0}" x:Name="Storyboard0" />
+                                <BeginStoryboard Storyboard="{StaticResource Animation1}" x:Name="Storyboard1"/>
+                                <BeginStoryboard Storyboard="{StaticResource Animation2}" x:Name="Storyboard2"/>
+                                <BeginStoryboard Storyboard="{StaticResource Animation3}" x:Name="Storyboard3"/>
+                                <BeginStoryboard Storyboard="{StaticResource Animation4}" x:Name="Storyboard4"/>
+                                <BeginStoryboard Storyboard="{StaticResource Animation5}" x:Name="Storyboard5"/>
+                                <BeginStoryboard Storyboard="{StaticResource Animation6}" x:Name="Storyboard6"/>
+                                <BeginStoryboard Storyboard="{StaticResource Animation7}" x:Name="Storyboard7"/>
+                            </Trigger.EnterActions>
+
+                            <Trigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="Storyboard0"/>
+                                <StopStoryboard BeginStoryboardName="Storyboard1"/>
+                                <StopStoryboard BeginStoryboardName="Storyboard2"/>
+                                <StopStoryboard BeginStoryboardName="Storyboard3"/>
+                                <StopStoryboard BeginStoryboardName="Storyboard4"/>
+                                <StopStoryboard BeginStoryboardName="Storyboard5"/>
+                                <StopStoryboard BeginStoryboardName="Storyboard6"/>
+                                <StopStoryboard BeginStoryboardName="Storyboard7"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+
+                    <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                        <Grid>
+                            <Canvas Height="20" Width="20">
+                                <Canvas.Resources>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Width" Value="5"/>
+                                        <Setter Property="Height" Value="5" />
+                                        <Setter Property="Fill" Value="#009B9B9B" />
+                                    </Style>
+                                </Canvas.Resources>
+
+                                <Ellipse x:Name="ellipse0" Canvas.Left="0.6" Canvas.Top="7"/>
+                                <Ellipse x:Name="ellipse1" Canvas.Top="2.33" Canvas.Left="2.17"/>
+                                <Ellipse x:Name="ellipse2" Canvas.Left="6.83" Canvas.Top="0.25"/>
+                                <Ellipse x:Name="ellipse3" Canvas.Left="11.58" Canvas.Top="2.25"/>
+                                <Ellipse x:Name="ellipse4" Canvas.Left="13.5" Canvas.Top="6.92" />
+                                <Ellipse x:Name="ellipse5" Canvas.Left="11.58" Canvas.Top="11.5"/>
+                                <Ellipse x:Name="ellipse6" Canvas.Left="6.92" Canvas.Top="13.25"/>
+                                <Ellipse x:Name="ellipse7" Canvas.Top="11.42" Canvas.Left="2.33" />
+                                <Ellipse Width="13.17" Height="13.17" Canvas.Left="2.92" Canvas.Top="2.67" Visibility="Hidden"/>
+                            </Canvas>
+                            <Label Content="{Binding Path=Text}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--<ColorAnimationUsingKeyFrames Storyboard.TargetName="ellipse0" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)">
+        <SplineColorKeyFrame KeyTime="00:00:00.0" Value="{StaticResource FilledColor}"/>
+        <SplineColorKeyFrame KeyTime="00:00:01.6" Value="{StaticResource UnfilledColor}"/>
+    </ColorAnimationUsingKeyFrames>
+    <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ellipse0" Storyboard.TargetProperty="Width" >
+        <DoubleAnimationUsingKeyFrames.KeyFrames>
+            <SplineDoubleKeyFrame  KeyTime="00:00:00.0" Value="15" />
+            <SplineDoubleKeyFrame  KeyTime="00:00:01.0" Value="12" />
+            <SplineDoubleKeyFrame  KeyTime="00:00:01.6" Value="0" />
+        </DoubleAnimationUsingKeyFrames.KeyFrames>
+    </DoubleAnimationUsingKeyFrames>
+    <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ellipse0" Storyboard.TargetProperty="Height" >
+        <DoubleAnimationUsingKeyFrames.KeyFrames>
+            <SplineDoubleKeyFrame  KeyTime="00:00:00.0" Value="15" />
+            <SplineDoubleKeyFrame  KeyTime="00:00:01.0" Value="12" />
+            <SplineDoubleKeyFrame  KeyTime="00:00:01.6" Value="0" />
+        </DoubleAnimationUsingKeyFrames.KeyFrames>
+    </DoubleAnimationUsingKeyFrames>-->
+    
     <DataTemplate x:Key="TableListItemTemplate">
         <StackPanel x:Name="ListTable" Orientation="Horizontal">
-            <TextBlock x:Name="ListTableName" Text="{Binding Table.Name}" FontWeight="Bold" Foreground="{Binding Errors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
-            </TextBlock>
-            <TextBlock x:Name="ListTableFolder" Margin="5 0 0 0" Text="{Binding Table.Folder}" />
+            <Control x:Name="Spinner" Visibility="Collapsed" Style="{StaticResource BusyAnimationStyle}" Margin="0 0 5 0"/>
+            <Border x:Name="Checkmark" Visibility="Collapsed" Width="20" Height="20" Margin="0 0 5 0">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">✔</TextBlock>
+            </Border>
+            <TextBlock x:Name="ListTableName" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding Errors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}"
+                       VerticalAlignment="Center" />
+            <TextBlock x:Name="ListTableFolder" Margin="5 5 0 5" Text="{Binding Table.Folder}" VerticalAlignment="Center" />
         </StackPanel>
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding Busy}" Value="True">
-                <Setter TargetName="ListTable" Property="Background" Value="{StaticResource {x:Static SystemColors.HighlightBrushKey}}" />
-                <Setter TargetName="ListTableName" Property="Foreground" Value="{StaticResource {x:Static SystemColors.HighlightTextBrushKey}}" />
-                <Setter TargetName="ListTableFolder" Property="Foreground" Value="{StaticResource {x:Static SystemColors.HighlightTextBrushKey}}" />
+                <Setter TargetName="Spinner" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Done}" Value="True">
+                <Setter TargetName="Checkmark" Property="Visibility" Value="Visible" />
             </DataTrigger>
         </DataTemplate.Triggers>
     </DataTemplate>
 
     <DataTemplate x:Key="TableListSelectedTemplate">
         <StackPanel Orientation="Horizontal">
-            <TextBlock x:Name="ListTable" Text="{Binding Table.Name}" FontWeight="Bold" Foreground="{Binding Errors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}">
-            </TextBlock>
-            <TextBlock Margin="5 0 0 0" Text="{Binding Table.Folder}" />
+            <Control x:Name="Spinner" Visibility="Collapsed" Style="{StaticResource BusyAnimationStyle}" Margin="0 0 5 0"/>
+            <Border x:Name="Checkmark" Visibility="Collapsed" Width="20" Height="20" Margin="0 0 5 0">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20">✔</TextBlock>
+            </Border>
+            <TextBlock x:Name="ListTable" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding Errors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}" VerticalAlignment="Center" />
+            <TextBlock Margin="5 5 0 5" Text="{Binding Table.Folder}" VerticalAlignment="Center" />
         </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Busy}" Value="True">
+                <Setter TargetName="Spinner" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Done}" Value="True">
+                <Setter TargetName="Checkmark" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
     </DataTemplate>
 
     <Style TargetType="ListBoxItem" x:Key="TableListContainerStyle">
@@ -253,7 +457,7 @@
 
 
     <DataTemplate x:Key="LogListStatusCellTemplate">
-        <TextBlock Text="{Binding Item3}">
+        <TextBlock Text="{Binding Item3}" TextWrapping="Wrap">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
                     <Setter Property="FontFamily" Value="Consolas" />
