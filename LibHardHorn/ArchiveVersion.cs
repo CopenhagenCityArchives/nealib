@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,6 +25,17 @@ namespace HardHorn.ArchiveVersion
             _path = path;
         }
 
-        public 
+        public void Verify(dynamic av)
+        {
+            foreach (dynamic verifyTable in av.tableIndex)
+            {
+                var matchingTable = Tables.FirstOrDefault(t => verifyTable.name.ToLower() == t.Folder.ToLower());
+
+                if (matchingTable == null)
+                {
+                    // TODO: Houston, we have an error!
+                }
+            }
+        }
     }
 }
