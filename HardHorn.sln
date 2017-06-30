@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HardHornCLI", "HardHornCLI\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibHardHorn", "LibHardHorn\LibHardHorn.csproj", "{E4E71235-951C-4D4E-865D-50BB1A79653A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibHardHornTest", "LibHardHornTest\LibHardHornTest.csproj", "{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{E4E71235-951C-4D4E-865D-50BB1A79653A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4E71235-951C-4D4E-865D-50BB1A79653A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E4E71235-951C-4D4E-865D-50BB1A79653A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

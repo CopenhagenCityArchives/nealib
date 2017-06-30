@@ -7,10 +7,22 @@ using System.Threading.Tasks;
 
 namespace HardHorn.ArchiveVersion
 {
-    class ArchiveVersion
+    public class ArchiveVersionVerificationError
     {
-        List<Table> _tables = new List<Table>();
-        public IEnumerable<Table> Tables { get { return _tables; } }
+        public enum ErrorType {
+            TableNotKept,
+            TableKeptInError,
+            UnknownTable
+        }
+
+        public ErrorType Type { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class ArchiveVersion
+    {
+        List<Table> _tables;
+        public IEnumerable<Table> Tables { get { return _tables.Cast<Table>(); } }
 
         string _id;
         public string ID { get { return _id; } }
@@ -20,20 +32,54 @@ namespace HardHorn.ArchiveVersion
 
         public ArchiveVersion(string id, string path, IEnumerable<Table> tables)
         {
-            _tables = tables.ToList<Table>();
+            _tables = tables.ToList();
             _id = id;
             _path = path;
         }
 
-        public void Verify(dynamic av)
+        public IEnumerable<ArchiveVersionVerificationError> Verify(dynamic av)
         {
             foreach (dynamic verifyTable in av.tableIndex)
             {
-                var matchingTable = Tables.FirstOrDefault(t => verifyTable.name.ToLower() == t.Folder.ToLower());
+                bool match = false;
 
-                if (matchingTable == null)
+                foreach (var table in Tables)
                 {
-                    // TODO: Houston, we have an error!
+                    if (table.Name.ToLower() == verifyTable.name.ToLower())
+                    {
+                        if (!verifyTable.keep)
+                        {
+                            yield return new ArchiveVersionVerificationError() { Message = string.Format("{0} findes i {1}, men burde kasseres.", table.Name, ID), Type = ArchiveVersionVerificationError.ErrorType.TableKeptInError };
+                        }
+                        match = true;
+                        break;
+                    }
+                }
+
+                if (verifyTable.keep && !match)
+                {
+                    // Report error (Table missing from AV)
+                    yield return new ArchiveVersionVerificationError() { Message = string.Format("{0} findes ikke i {1}.", verifyTable.name, ID), Type = ArchiveVersionVerificationError.ErrorType.TableNotKept };
+                }
+            }
+
+            foreach (var table in Tables)
+            {
+                bool match = false;
+                 
+                foreach (dynamic verifyTable in av.tableIndex)
+                {
+                    if (table.Name.ToLower() == verifyTable.name.ToLower())
+                    {
+                        match = true;
+                        break;
+                    }
+                }
+
+                if (!match)
+                {
+                    yield return new ArchiveVersionVerificationError() { Message = string.Format("{0} findes i {1}, men er ukendt.", table.Name, ID), Type = ArchiveVersionVerificationError.ErrorType.UnknownTable };
+ 
                 }
             }
         }
