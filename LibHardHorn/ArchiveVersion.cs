@@ -4,6 +4,9 @@ using System.Linq;
 using Newtonsoft.Json;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using System.Net;
+using System.IO;
 
 namespace HardHorn.ArchiveVersion
 {
@@ -35,6 +38,38 @@ namespace HardHorn.ArchiveVersion
             _tables = tables.ToList();
             _id = id;
             _path = path;
+        }
+
+        public IEnumerable<ArchiveVersionVerificationError> VerifyURL(string url)
+        {
+            WebRequest request = WebRequest.CreateHttp(url);
+            using (var response = request.GetResponse() as HttpWebResponse)
+            {
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    string json = string.Empty;
+
+                    using (var reader = new StreamReader(response.GetResponseStream()))
+                    {
+                        json = reader.ReadToEnd();
+                    }
+
+                    foreach (var error in Verify(JObject.Parse(json)))
+                    {
+                        yield return error;
+                    }
+                }
+
+
+            }
+        }
+
+        public IEnumerable<ArchiveVersionVerificationError> VerifyJson(string json)
+        {
+            foreach (var error in Verify(JObject.Parse(json)))
+            {
+                yield return error;
+            }
         }
 
         public IEnumerable<ArchiveVersionVerificationError> Verify(dynamic av)
