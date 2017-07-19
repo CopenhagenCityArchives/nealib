@@ -10,8 +10,19 @@ namespace LibHardHornTest
     [TestClass]
     public class ArchiveVersionTest
     {
-        [TestMethod]
-        public void TestVerify()
+        ArchiveVersion AV;
+
+        dynamic VerifyAV1;
+        dynamic VerifyAV2;
+        dynamic VerifyAV3;
+        dynamic VerifyAV4;
+
+        string VerifyAV1JSON;
+        string VerifyAV2JSON;
+        string VerifyAV3JSON;
+        string VerifyAV4JSON;
+
+        public ArchiveVersionTest()
         {
             var testTables = new List<Table>();
             var table1 = new Table("TABLE1", "table1", 10, "A table.", new List<Column>());
@@ -21,28 +32,97 @@ namespace LibHardHornTest
             table2.Columns.Add(new Column(table2, "COLUMN1", DataType.INTEGER, false, null, "A column", "c1"));
             testTables.Add(table1);
             testTables.Add(table2);
-            var AV = new ArchiveVersion("avid.test.10", "path", testTables);
+            AV = new ArchiveVersion("avid.test.10", "path", testTables);
 
-            dynamic verifyTable1 = new ExpandoObject();
-            verifyTable1.name = "TABLE1";
-            verifyTable1.keep = true;
-            dynamic verifyTable2 = new ExpandoObject();
-            verifyTable2.name = "TABLE2";
-            verifyTable2.keep = true;
-            dynamic verifyTable3 = new ExpandoObject();
-            verifyTable3.name = "TABLE3";
-            verifyTable3.keep = true;
-            var verifyTableIndex = new List<dynamic>();
-            verifyTableIndex.Add(verifyTable1);
-            verifyTableIndex.Add(verifyTable2);
-            verifyTableIndex.Add(verifyTable3);
+            dynamic vTable1Keep = new ExpandoObject();
+            vTable1Keep.name = "TABLE1";
+            vTable1Keep.keep = true;
+            dynamic vTable2Keep = new ExpandoObject();
+            vTable2Keep.name = "TABLE2";
+            vTable2Keep.keep = true;
+            dynamic vTable2NoKeep = new ExpandoObject();
+            vTable2NoKeep.name = "TABLE2";
+            vTable2NoKeep.keep = false;
+            dynamic vTable3Keep = new ExpandoObject();
+            vTable3Keep.name = "TABLE3";
+            vTable3Keep.keep = true;
 
-            dynamic verifyAV = new ExpandoObject();
-            verifyAV.tableIndex = verifyTableIndex;
+            VerifyAV1 = new ExpandoObject();
+            VerifyAV1.tableIndex = new List<dynamic>(new dynamic[] { vTable1Keep, vTable2Keep });
+            VerifyAV2 = new ExpandoObject();
+            VerifyAV2.tableIndex = new List<dynamic>(new dynamic[] { vTable1Keep, vTable2Keep, vTable3Keep });
+            VerifyAV3 = new ExpandoObject();
+            VerifyAV3.tableIndex = new List<dynamic>(new dynamic[] { vTable1Keep, vTable2NoKeep });
+            VerifyAV4 = new ExpandoObject();
+            VerifyAV4.tableIndex = new List<dynamic>(new dynamic[] { vTable1Keep });
 
-            IEnumerable<ArchiveVersionVerificationError> errorList = AV.Verify(verifyAV);
+            VerifyAV1JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" }, { \"name\":\"table2\", \"keep\":\"true\" } ] }";
+            VerifyAV2JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" }, { \"name\":\"table2\", \"keep\":\"true\" }, { \"name\":\"table3\", \"keep\":\"true\" } ] }";
+            VerifyAV3JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" }, { \"name\":\"table2\", \"keep\":\"false\" } ] }";
+            VerifyAV4JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" } ] }";
+        }
+
+        [TestMethod]
+        public void TestVerifyPositive()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.Verify(VerifyAV1);
+            Assert.AreEqual(0, errorList.Count());
+        }
+
+        [TestMethod]
+        public void TestVerifyTableNotKept()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.Verify(VerifyAV2);
             Assert.AreEqual(1, errorList.Count());
             Assert.AreEqual(ArchiveVersionVerificationError.ErrorType.TableNotKept, errorList.First().Type);
+        }
+
+        [TestMethod]
+        public void TestVerifyTableKeptInError()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.Verify(VerifyAV3);
+            Assert.AreEqual(1, errorList.Count());
+            Assert.AreEqual(ArchiveVersionVerificationError.ErrorType.TableKeptInError, errorList.First().Type);
+        }
+
+        [TestMethod]
+        public void TestVerifyTableUnknown()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.Verify(VerifyAV4);
+            Assert.AreEqual(1, errorList.Count());
+            Assert.AreEqual(ArchiveVersionVerificationError.ErrorType.UnknownTable, errorList.First().Type);
+        }
+
+
+        [TestMethod]
+        public void TestVerifyJSONPositive()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.VerifyJSON(VerifyAV1JSON);
+            Assert.AreEqual(0, errorList.Count());
+        }
+
+        [TestMethod]
+        public void TestVerifyJSONTableNotKept()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.VerifyJSON(VerifyAV2JSON);
+            Assert.AreEqual(1, errorList.Count());
+            Assert.AreEqual(ArchiveVersionVerificationError.ErrorType.TableNotKept, errorList.First().Type);
+        }
+
+        [TestMethod]
+        public void TestVerifyJSONTableKeptInError()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.VerifyJSON(VerifyAV3JSON);
+            Assert.AreEqual(1, errorList.Count());
+            Assert.AreEqual(ArchiveVersionVerificationError.ErrorType.TableKeptInError, errorList.First().Type);
+        }
+
+        [TestMethod]
+        public void TestVerifyJSONTableUnknown()
+        {
+            IEnumerable<ArchiveVersionVerificationError> errorList = AV.VerifyJSON(VerifyAV4JSON);
+            Assert.AreEqual(1, errorList.Count());
+            Assert.AreEqual(ArchiveVersionVerificationError.ErrorType.UnknownTable, errorList.First().Type);
         }
     }
 }

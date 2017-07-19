@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
+using System.Dynamic;
 
 namespace HardHorn.ArchiveVersion
 {
@@ -64,9 +65,10 @@ namespace HardHorn.ArchiveVersion
             }
         }
 
-        public IEnumerable<ArchiveVersionVerificationError> VerifyJson(string json)
+        public IEnumerable<ArchiveVersionVerificationError> VerifyJSON(string json)
         {
-            foreach (var error in Verify(JObject.Parse(json)))
+            dynamic av = JsonConvert.DeserializeObject<ExpandoObject>(json);
+            foreach (var error in Verify(av))
             {
                 yield return error;
             }
