@@ -449,7 +449,7 @@ namespace HardHorn.ViewModels
             DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
             Regexes = new ObservableCollection<dynamic>();
             TestSuite = new TestSuite();
-            Log("Så er det dælme tid til at teste datatyper!");
+            Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
 
             // Setup test worker
             _testWorker.DoWork += _testWorker_DoWork;
@@ -524,6 +524,7 @@ namespace HardHorn.ViewModels
                     Log(string.Format("\tMaksimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MaxParams)));
                 }
             }
+            Log("Indlæsning fuldført.", LogLevel.SECTION);
         }
 
         private void _loadWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -612,7 +613,7 @@ namespace HardHorn.ViewModels
 
                     break;
                 case TestWorkerUpdate.TEST_DONE:
-                    Log("Testen er afsluttet.");
+                    Log("Testen er afsluttet.", LogLevel.SECTION);
                     break;
             }
         }
@@ -751,7 +752,7 @@ namespace HardHorn.ViewModels
             }
             else
             {
-                Log(string.Format("Lokationen '{0}' er ikke en gyldig arkiveringsversion.", TestLocation), LogLevel.ERROR);
+                Log(string.Format("Placeringen '{0}' er ikke en gyldig arkiveringsversion.", TestLocation), LogLevel.ERROR);
             }
         }
 
