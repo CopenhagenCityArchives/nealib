@@ -22,5 +22,16 @@ namespace HardHorn.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.ObjectModel.ObservableCollection<System.String> RecentLocations {
+            get {
+                return ((global::System.Collections.ObjectModel.ObservableCollection<System.String>)(this["RecentLocations"]));
+            }
+            set {
+                this["RecentLocations"] = value;
+            }
+        }
     }
 }

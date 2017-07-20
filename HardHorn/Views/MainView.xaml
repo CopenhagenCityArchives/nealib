@@ -7,6 +7,7 @@
         xmlns:cal="http://www.caliburnproject.org"
         xmlns:vm="clr-namespace:HardHorn.ViewModels"
         xmlns:ctl="clr-namespace:HardHorn.Controls"
+        xmlns:properties="clr-namespace:HardHorn.Properties"
         ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d"
         Title="HardHorn" Height="720" Width="1280"
@@ -22,96 +23,98 @@
         </Grid.ColumnDefinitions>
         
         <!-- Column 0 -->
-        <Grid Margin="5">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-            <GroupBox Padding="5">
-                <GroupBox.Header>
-                    <TextBlock FontWeight="Bold">Vælg arkiveringsversion</TextBlock>
-                </GroupBox.Header>
-                <StackPanel>
-                    <DockPanel>
-                        <Button Margin="5 0 0 0" DockPanel.Dock="Right" Width="30" cal:Message.Attach="SelectLocation(LocationTextBox)">...</Button>
-                        <TextBox DockPanel.Dock="Left" x:Name="LocationTextBox" Text="{Binding TestLocation}"></TextBox>
-                    </DockPanel>
+                <GroupBox Padding="5">
+                    <GroupBox.Header>
+                        <TextBlock FontWeight="Bold">Vælg arkiveringsversion</TextBlock>
+                    </GroupBox.Header>
+                    <StackPanel>
+                        <DockPanel>
+                            <Button Margin="5 0 0 0" DockPanel.Dock="Right" Width="30" cal:Message.Attach="SelectLocation(LocationTextBox)">...</Button>
+                            <ComboBox IsEditable="True" DockPanel.Dock="Left" x:Name="LocationTextBox" Text="{Binding TestLocation, Mode=TwoWay}" ItemsSource="{Binding Source={x:Static properties:Settings.Default}, Path=RecentLocations}"></ComboBox>
+                        </DockPanel>
 
-                    <Button  Margin="0 5 0 0" MinWidth="120" cal:Message.Attach="LoadTables()">Indlæs tabelindex</Button>
-                </StackPanel>
-            </GroupBox>
+                        <Button  Margin="0 5 0 0" MinWidth="120" cal:Message.Attach="LoadTables()">Indlæs tabelindex</Button>
+                    </StackPanel>
+                </GroupBox>
 
-            <GroupBox Grid.Row="1" Padding="5">
-                <GroupBox.Header>
-                    <TextBlock FontWeight="Bold">Vælg tests</TextBlock>
-                </GroupBox.Header>
+                <GroupBox Grid.Row="1" Padding="5">
+                    <GroupBox.Header>
+                        <TextBlock FontWeight="Bold">Vælg tests</TextBlock>
+                    </GroupBox.Header>
 
-                <StackPanel>
-                    <TreeView ItemsSource="{Binding TestSuite}" MinHeight="200">
-                        <TreeView.Resources>
-                            <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteCategory}" ItemsSource="{Binding TestTypes}">
-                                <CheckBox IsChecked="{Binding Selected}" Content="{Binding Name}" />
-                            </HierarchicalDataTemplate>
-                            <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteTestType}" ItemsSource="{Binding DataTypeTests}">
-                                <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType, Converter={StaticResource AnalysisErrorTypeToStringConverter}}" />
-                            </HierarchicalDataTemplate>
-                            <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteDataTypeTest}">
-                                <CheckBox IsChecked="{Binding Selected}" Content="{Binding DataType}" />
-                            </HierarchicalDataTemplate>
-                        </TreeView.Resources>
-                    </TreeView>
+                    <StackPanel>
+                        <TreeView ItemsSource="{Binding TestSuite}" MinHeight="200">
+                            <TreeView.Resources>
+                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteCategory}" ItemsSource="{Binding TestTypes}">
+                                    <CheckBox IsChecked="{Binding Selected}" Content="{Binding Name}" />
+                                </HierarchicalDataTemplate>
+                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteTestType}" ItemsSource="{Binding DataTypeTests}">
+                                    <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType, Converter={StaticResource AnalysisErrorTypeToStringConverter}}" />
+                                </HierarchicalDataTemplate>
+                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteDataTypeTest}">
+                                    <CheckBox IsChecked="{Binding Selected}" Content="{Binding DataType}" />
+                                </HierarchicalDataTemplate>
+                            </TreeView.Resources>
+                        </TreeView>
 
-                    <Button  Margin="0 5 0 0" DockPanel.Dock="Right" IsEnabled="{Binding TestLoaded}" cal:Message.Attach="ToggleTest()">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Content" Value="Begynd test" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding TestRunning}" Value="True">
-                                        <Setter Property="Content" Value="Stop test"></Setter>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                </StackPanel>
-            </GroupBox>
+                        <Button  Margin="0 5 0 0" DockPanel.Dock="Right" IsEnabled="{Binding TestLoaded}" cal:Message.Attach="ToggleTest()">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Content" Value="Begynd test" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TestRunning}" Value="True">
+                                            <Setter Property="Content" Value="Stop test"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                </GroupBox>
 
-            <GroupBox Grid.Row="2" Padding="5">
-                <GroupBox.Header>
-                    <TextBlock FontWeight="Bold">Regulære udtryk</TextBlock>
-                </GroupBox.Header>
-                <Grid Grid.Row="3">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"  />
-                        <RowDefinition Height="Auto"  />
-                        <RowDefinition Height="Auto"  />
-                        <RowDefinition Height="*"  />
-                        <RowDefinition Height="Auto"  />
-                        <RowDefinition Height="*"  />
-                        <RowDefinition Height="*"  />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <GroupBox Grid.Row="2" Padding="5">
+                    <GroupBox.Header>
+                        <TextBlock FontWeight="Bold">Regulære udtryk</TextBlock>
+                    </GroupBox.Header>
+                    <Grid Grid.Row="3">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"  />
+                            <RowDefinition Height="Auto"  />
+                            <RowDefinition Height="Auto"  />
+                            <RowDefinition Height="*"  />
+                            <RowDefinition Height="Auto"  />
+                            <RowDefinition Height="*"  />
+                            <RowDefinition Height="*"  />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
                     
-                    <Label Grid.Row="0">Tabel:</Label>
-                    <ComboBox Grid.Row="0" x:Name="RegexTableListBox" Grid.Column="1" Height="22" ItemsSource="{Binding Tables}" ItemTemplate="{StaticResource RegexTableTemplate}" IsEnabled="{Binding TestLoaded}"/>
-                    <Label Grid.Row="1">Kolonne:</Label>
-                    <ComboBox x:Name="RegexColumnListBox" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Path=SelectedItem.Table.Columns, ElementName=RegexTableListBox}" ItemTemplate="{StaticResource RegexColumnTemplate}" IsEnabled="{Binding TestLoaded}"/>
-                    <Label Grid.Row="2">Udtryk:</Label>
-                    <TextBox x:Name="RegexTextBox" FontFamily="Consolas" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" IsEnabled="{Binding TestLoaded}"/>
+                        <Label Grid.Row="0">Tabel:</Label>
+                        <ComboBox Grid.Row="0" x:Name="RegexTableListBox" Grid.Column="1" Height="22" ItemsSource="{Binding Tables}" ItemTemplate="{StaticResource RegexTableTemplate}" IsEnabled="{Binding TestLoaded}"/>
+                        <Label Grid.Row="1">Kolonne:</Label>
+                        <ComboBox x:Name="RegexColumnListBox" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Path=SelectedItem.Table.Columns, ElementName=RegexTableListBox}" ItemTemplate="{StaticResource RegexColumnTemplate}" IsEnabled="{Binding TestLoaded}"/>
+                        <Label Grid.Row="2">Udtryk:</Label>
+                        <TextBox x:Name="RegexTextBox" FontFamily="Consolas" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch" IsEnabled="{Binding TestLoaded}"/>
 
-                    <Button Margin="0 5 0 0" Grid.Row="3" Grid.ColumnSpan="2" cal:Message.Attach="AddRegex(RegexTextBox.Text, RegexColumnListBox.SelectedItem)" IsEnabled="{Binding TestLoaded}">Tilføj udtryk</Button>
-                    <ListBox Margin="0 5 0 5" x:Name="RegexListBox" Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding Regexes}" ItemTemplate="{StaticResource RegexItemTemplate}" Height="150" IsEnabled="{Binding TestLoaded}"></ListBox>
-                    <Button Grid.Row="5" Grid.ColumnSpan="2" cal:Message.Attach="RemoveRegex(RegexListBox.SelectedItem)" IsEnabled="{Binding TestLoaded}">Fjern valgte</Button>
-                </Grid>
-            </GroupBox>
-        </Grid>
-
+                        <Button Margin="0 5 0 0" Grid.Row="3" Grid.ColumnSpan="2" cal:Message.Attach="AddRegex(RegexTextBox.Text, RegexColumnListBox.SelectedItem)" IsEnabled="{Binding TestLoaded}">Tilføj udtryk</Button>
+                        <ListBox Margin="0 5 0 5" x:Name="RegexListBox" Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding Regexes}" ItemTemplate="{StaticResource RegexItemTemplate}" Height="150" IsEnabled="{Binding TestLoaded}"></ListBox>
+                        <Button Grid.Row="5" Grid.ColumnSpan="2" cal:Message.Attach="RemoveRegex(RegexListBox.SelectedItem)" IsEnabled="{Binding TestLoaded}">Fjern valgte</Button>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+        </ScrollViewer>
+        
         <TabControl Margin="5" Grid.Column="1">
             <TabItem Header="Interaktiv visning">
                 <Grid>
@@ -121,14 +124,38 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" MaxHeight="50"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <WrapPanel Grid.Column="2" Orientation="Horizontal">
-                        <TextBlock FontWeight="Black" Text="{Binding CurrentTable.Table.Name}"></TextBlock>
-                        <TextBlock TextWrapping="Wrap" Margin="5 0 0 0" FontStyle="Italic" Text="{Binding CurrentTable.Table.Description}"></TextBlock>
-                    </WrapPanel>
+                    <StackPanel Grid.Column="2">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Margin="0 5 0 5" cal:Message.Attach="OpenCurrentTable()">
+                                <Button.Content>
+                                    <TextBlock>
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}Åbn {0}.xml">
+                                                <Binding Path="CurrentTable.Table.Folder" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Button.Content>
+                            </Button>
+                            <TextBlock Margin="5 0 0 0"  FontWeight="Black" Text="{Binding CurrentTable.Table.Name}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBox Height="28" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding CurrentTable.Table.Description, Mode=OneWay}" />
+                        <StackPanel.Style>
+                            <Style>
+                                <Setter Property="StackPanel.Visibility" Value="Visible"></Setter>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                        <Setter Property="StackPanel.Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                    </StackPanel>
+
                     <ListBox Grid.RowSpan="3" DockPanel.Dock="Left" ItemsSource="{Binding Tables}" SelectedItem="{Binding CurrentTable, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"></ListBox>
                     <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch"></GridSplitter>
                     <TreeView Grid.Row="1" x:Name="ReportTreeView" Grid.Column="2" DockPanel.Dock="Right" ItemsSource="{Binding TableReports, Mode=OneWay}" ItemContainerStyle="{StaticResource ReportTreeContainerStyle}"></TreeView>

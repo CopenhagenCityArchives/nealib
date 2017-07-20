@@ -475,6 +475,15 @@ namespace HardHorn.ViewModels
                 StatusText = msg;
             }
         }
+
+        public void OpenCurrentTable()
+        {
+            if (CurrentTable == null)
+                return;
+
+            var path = Path.Combine(TestLocation, "tables", CurrentTable.Table.Folder, CurrentTable.Table.Folder + ".xml");
+            System.Diagnostics.Process.Start(path);
+        }
         #endregion
 
         #region Background workers
@@ -525,6 +534,41 @@ namespace HardHorn.ViewModels
                 }
             }
             Log("Indlæsning fuldført.", LogLevel.SECTION);
+
+            // Add to recent locations
+            if (Properties.Settings.Default.RecentLocations == null)
+            {
+                Properties.Settings.Default.RecentLocations = new ObservableCollection<string>();
+            }
+            var location = TestLocation;
+            var index = -1;
+            for (int i = 0; i < Properties.Settings.Default.RecentLocations.Count; i++)
+            {
+                var loc = Properties.Settings.Default.RecentLocations[i];
+                if (loc.ToLower() == TestLocation.ToLower())
+                {
+                    index = i;
+                    break;
+                }
+            }
+            if (index != -1)
+            {
+                Properties.Settings.Default.RecentLocations.RemoveAt(index);
+            }
+            if (Properties.Settings.Default.RecentLocations.Count < 5)
+            {
+                Properties.Settings.Default.RecentLocations.Add(null);
+            }
+            TestLocation = location;
+
+            for (int i = Properties.Settings.Default.RecentLocations.Count - 1; i > 0; i--)
+            {
+                Properties.Settings.Default.RecentLocations[i] = Properties.Settings.Default.RecentLocations[i - 1];
+            }
+            Properties.Settings.Default.RecentLocations[0] = TestLocation;
+
+            Properties.Settings.Default.Save();
+            NotifyOfPropertyChange("RecentLocations");
         }
 
         private void _loadWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -613,7 +657,12 @@ namespace HardHorn.ViewModels
 
                     break;
                 case TestWorkerUpdate.TEST_DONE:
-                    Log("Testen er afsluttet.", LogLevel.SECTION);
+                    var totalErrors = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Aggregate(0, (m, columnReport) => columnReport.ErrorCount + m) + n);
+                    var errorTables = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Any(columnReport => columnReport.ErrorCount > 0) ? n + 1 : n);
+                    var totalSuggestions = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Aggregate(0, (m, columnReport) => columnReport.SuggestedType != null ? 1 : 0));
+                    var suggestionTables = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Any(columnReport => columnReport.SuggestedType != null) ? n + 1 : n);
+
+                    Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
                     break;
             }
         }
@@ -646,7 +695,7 @@ namespace HardHorn.ViewModels
                 {
                     if (worker.CancellationPending)
                         return;
-                    readRows = _analyzer.AnalyzeRows(1000);
+                    readRows = _analyzer.AnalyzeRows(10000);
                     worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.UPDATE_TABLE_STATUS, Data = table });
                     doneRows += readRows;
                 } while (readRows > 0);
@@ -815,6 +864,8 @@ namespace HardHorn.ViewModels
                     TestLocation = dialog.SelectedPath;
                 }
             }
+
+            LoadTables();
         }
         #endregion
     }
