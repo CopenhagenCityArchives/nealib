@@ -23,8 +23,8 @@
         </Grid.ColumnDefinitions>
         
         <!-- Column 0 -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <Grid Margin="5">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="5">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -143,7 +143,7 @@
                             </Button>
                             <TextBlock Margin="5 0 0 0"  FontWeight="Black" Text="{Binding CurrentTable.Table.Name}" VerticalAlignment="Center" />
                         </StackPanel>
-                        <TextBox Height="28" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding CurrentTable.Table.Description, Mode=OneWay}" />
+                        <TextBox Height="35" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding CurrentTable.Table.Description, Mode=OneWay}" />
                         <StackPanel.Style>
                             <Style>
                                 <Setter Property="StackPanel.Visibility" Value="Visible"></Setter>
