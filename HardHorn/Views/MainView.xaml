@@ -167,7 +167,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Statistik" Margin="-2,0,-2,-4">
+            <TabItem Header="Statistik">
                 <ScrollViewer>
                     <ItemsControl ItemsSource="{Binding DataTypeStatistics}" ItemTemplate="{StaticResource StatisticsItemTemplate}">
                         <ItemsControl.ItemsPanel>
