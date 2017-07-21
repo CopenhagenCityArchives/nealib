@@ -381,6 +381,64 @@ namespace HardHorn.ViewModels
             set { _currentTable = value;  UpdateInteractiveReportView(); NotifyOfPropertyChange("CurrentTable"); }
         }
 
+        public string SpecTables
+        {
+            set
+            {
+                SpecMatchingTables.Clear();
+                SpecMissingTables.Clear();
+                SpecUndefinedTables.Clear();
+
+                bool matched;
+
+                foreach (var name in value.Split('\n'))
+                {
+                    if (name.Trim().Length > 0)
+                    {
+                        matched = false;
+                        foreach (var table in Tables)
+                        {
+                            if (table.Table.Name.ToLower() == name.Trim().ToLower())
+                            {
+                                SpecMatchingTables.Add(name.Trim());
+                                matched = true;
+                            }
+                        }
+
+                        if (!matched)
+                        {
+                            SpecMissingTables.Add(name.Trim());
+                        }
+                    }
+                }
+
+                foreach (var table in Tables)
+                {
+                    matched = false;
+                    foreach (var name in value.Split('\n'))
+                    {
+                        if (name.Trim().Length > 0)
+                        {
+                            if (table.Table.Name.ToLower() == name.Trim().ToLower())
+                            {
+                                matched = true;
+                            }
+                        }
+                    }
+
+                    if (!matched)
+                    {
+                        SpecUndefinedTables.Add(table.Table.Name);
+                    }
+                }
+            }
+        }
+
+        public ObservableCollection<string> SpecMatchingTables { get; set; }
+        public ObservableCollection<string> SpecMissingTables { get; set; }
+        public ObservableCollection<string> SpecUndefinedTables { get; set; }
+      
+
         public void UpdateInteractiveReportView()
         {
             var table = CurrentTable == null ? null : CurrentTable.Table;
@@ -449,6 +507,10 @@ namespace HardHorn.ViewModels
             DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
             Regexes = new ObservableCollection<dynamic>();
             TestSuite = new TestSuite();
+            SpecMatchingTables = new ObservableCollection<string>();
+            SpecMissingTables = new ObservableCollection<string>();
+            SpecUndefinedTables = new ObservableCollection<string>();
+
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
 
             // Setup test worker
