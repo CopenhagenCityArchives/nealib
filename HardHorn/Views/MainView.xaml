@@ -211,16 +211,16 @@
                     </Grid.ColumnDefinitions>
 
                     <GroupBox Header="Specificerede tabeller" Padding="5">
-                        <TextBox AcceptsReturn="True" Text="{Binding SpecTables, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TestLoaded}" />
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" Text="{Binding SpecTables, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TestLoaded}" />
                     </GroupBox>
                     <GroupBox Header="Findes i specifikation og tableIndex" Padding="5" Margin="5 0 0 0" Grid.Column="1">
-                        <ListBox ItemsSource="{Binding SpecMatchingTables}" IsEnabled="{Binding TestLoaded}" />
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMatching}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
                     </GroupBox>
                     <GroupBox Header="Findes i specifikation, men ikke tableIndex" Padding="5" Margin="5 0 0 0"  Grid.Column="2">
-                        <ListBox ItemsSource="{Binding SpecMissingTables}" IsEnabled="{Binding TestLoaded}" />
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMissing}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
                     </GroupBox>
                     <GroupBox Header="Findes ikke i specifikation, men i tableIndex" Padding="5" Margin="5 0 0 0"  Grid.Column="3">
-                        <ListBox ItemsSource="{Binding SpecUndefinedTables}" IsEnabled="{Binding TestLoaded}" />
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesUndefined}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
                     </GroupBox>
                 </Grid>
             </TabItem>

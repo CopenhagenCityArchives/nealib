@@ -309,6 +309,7 @@ namespace HardHorn.ViewModels
     class MainViewModel : PropertyChangedBase, ILogger
     {
         #region Properties
+        public object Item { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
         public TestSuite TestSuite { get; set; }
         public int[] BarChartValues { get; set; }
@@ -385,9 +386,9 @@ namespace HardHorn.ViewModels
         {
             set
             {
-                SpecMatchingTables.Clear();
-                SpecMissingTables.Clear();
-                SpecUndefinedTables.Clear();
+                SpecTablesMatching = "";
+                SpecTablesMissing = "";
+                SpecTablesUndefined = "";
 
                 bool matched;
 
@@ -400,14 +401,14 @@ namespace HardHorn.ViewModels
                         {
                             if (table.Table.Name.ToLower() == name.Trim().ToLower())
                             {
-                                SpecMatchingTables.Add(name.Trim());
+                                SpecTablesMatching += name.Trim() + "\n";
                                 matched = true;
                             }
                         }
 
                         if (!matched)
                         {
-                            SpecMissingTables.Add(name.Trim());
+                            SpecTablesMissing += name.Trim() + "\n";
                         }
                     }
                 }
@@ -428,15 +429,19 @@ namespace HardHorn.ViewModels
 
                     if (!matched)
                     {
-                        SpecUndefinedTables.Add(table.Table.Name);
+                        SpecTablesUndefined += table.Table.Name + "\n";
                     }
                 }
+
+                NotifyOfPropertyChange("SpecTablesMatching");
+                NotifyOfPropertyChange("SpecTablesMissing");
+                NotifyOfPropertyChange("SpecTablesUndefined");
             }
         }
 
-        public ObservableCollection<string> SpecMatchingTables { get; set; }
-        public ObservableCollection<string> SpecMissingTables { get; set; }
-        public ObservableCollection<string> SpecUndefinedTables { get; set; }
+        public string SpecTablesMatching { get; set; }
+        public string SpecTablesMissing { get; set; }
+        public string SpecTablesUndefined { get; set; }
       
 
         public void UpdateInteractiveReportView()
@@ -507,9 +512,6 @@ namespace HardHorn.ViewModels
             DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
             Regexes = new ObservableCollection<dynamic>();
             TestSuite = new TestSuite();
-            SpecMatchingTables = new ObservableCollection<string>();
-            SpecMissingTables = new ObservableCollection<string>();
-            SpecUndefinedTables = new ObservableCollection<string>();
 
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
 
@@ -631,6 +633,8 @@ namespace HardHorn.ViewModels
 
             Properties.Settings.Default.Save();
             NotifyOfPropertyChange("RecentLocations");
+
+            SpecTables = "";
         }
 
         private void _loadWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
