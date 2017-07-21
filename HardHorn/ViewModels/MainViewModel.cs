@@ -659,7 +659,7 @@ namespace HardHorn.ViewModels
                 case TestWorkerUpdate.TEST_DONE:
                     var totalErrors = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Aggregate(0, (m, columnReport) => columnReport.ErrorCount + m) + n);
                     var errorTables = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Any(columnReport => columnReport.ErrorCount > 0) ? n + 1 : n);
-                    var totalSuggestions = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Aggregate(0, (m, columnReport) => columnReport.SuggestedType != null ? 1 : 0));
+                    var totalSuggestions = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => n + columnReports.Values.Aggregate(0, (m, columnReport) => columnReport.SuggestedType != null ? m + 1 : m));
                     var suggestionTables = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Any(columnReport => columnReport.SuggestedType != null) ? n + 1 : n);
 
                     Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
