@@ -536,6 +536,7 @@ namespace HardHorn.ViewModels
             _compareWorker.DoWork += _compareWorker_DoWork;
             _compareWorker.RunWorkerCompleted += _compareWorker_RunWorkerCompleted;
             _compareWorker.ProgressChanged += _loadWorker_ProgressChanged;
+            _compareWorker.WorkerReportsProgress = true;
         }
 
         public void Compare(string location)
@@ -593,6 +594,7 @@ namespace HardHorn.ViewModels
                         tableComparison.DescriptionModified = false;
                         tableComparison.ColumnsModified = false;
                         tableComparison.RowsModified = false;
+                        tableComparison.FolderModified = false;
 
                         if (avTable.Table.Rows != compTable.Rows)
                         {
@@ -604,6 +606,12 @@ namespace HardHorn.ViewModels
                         {
                             tableComparison.Modified = true;
                             tableComparison.DescriptionModified = true;
+                        }
+
+                        if (avTable.Table.Folder != compTable.Folder)
+                        {
+                            tableComparison.Modified = true;
+                            tableComparison.FolderModified = true;
                         }
 
                         foreach (var avColumn in avTable.Table.Columns)
@@ -775,6 +783,7 @@ namespace HardHorn.ViewModels
                     tableComparison.Modified = false;
                     tableComparison.ColumnsModified = false;
                     tableComparison.DescriptionModified = false;
+                    tableComparison.FolderModified = false;
                     tableComparisons.Add(tableComparison);
                 }
             }
@@ -817,6 +826,7 @@ namespace HardHorn.ViewModels
                     tableComparison.Modified = false;
                     tableComparison.ColumnsModified = false;
                     tableComparison.DescriptionModified = false;
+                    tableComparison.FolderModified = false;
                     tableComparisons.Add(tableComparison);
                 }
             }

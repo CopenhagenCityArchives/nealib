@@ -263,6 +263,8 @@
                                     <RowDefinition />
                                     <RowDefinition />
                                     <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -298,7 +300,23 @@
                                 </Label>
                                 <Label Grid.Row="3" Grid.Column="1" Content="{Binding SelectedItem.OldTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
                                 <Label Grid.Row="4" Grid.Column="1" Content="{Binding SelectedItem.NewTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
+
                                 <Label Grid.Row="5">
+                                    <Label.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedItem.FolderModified, ElementName=ComparedTableList}" Value="True">
+                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Label.Style>
+                                    Mappe:
+                                </Label>
+                                <Label Grid.Row="5" Grid.Column="1" Content="{Binding SelectedItem.OldTable.Folder, ElementName=ComparedTableList, Mode=OneWay}" />
+                                <Label Grid.Row="6" Grid.Column="1" Content="{Binding SelectedItem.NewTable.Folder, ElementName=ComparedTableList, Mode=OneWay}" />
+
+                                <Label Grid.Row="7">
                                     <Label.Style>
                                         <Style>
                                             <Style.Triggers>
