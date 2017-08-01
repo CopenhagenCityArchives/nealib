@@ -21,7 +21,7 @@
             <ColumnDefinition Width="300" />
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        
+
         <!-- Column 0 -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="5">
             <Grid>
@@ -34,7 +34,7 @@
 
                 <GroupBox Padding="5">
                     <GroupBox.Header>
-                        <TextBlock FontWeight="Bold">Vælg arkiveringsversion</TextBlock>
+                        <TextBlock>Vælg arkiveringsversion</TextBlock>
                     </GroupBox.Header>
                     <StackPanel>
                         <DockPanel>
@@ -48,7 +48,7 @@
 
                 <GroupBox Grid.Row="1" Padding="5">
                     <GroupBox.Header>
-                        <TextBlock FontWeight="Bold">Vælg tests</TextBlock>
+                        <TextBlock>Vælg tests</TextBlock>
                     </GroupBox.Header>
 
                     <StackPanel>
@@ -83,7 +83,7 @@
 
                 <GroupBox Grid.Row="2" Padding="5">
                     <GroupBox.Header>
-                        <TextBlock FontWeight="Bold">Regulære udtryk</TextBlock>
+                        <TextBlock>Regulære udtryk</TextBlock>
                     </GroupBox.Header>
                     <Grid Grid.Row="3">
                         <Grid.RowDefinitions>
@@ -99,7 +99,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                    
+
                         <Label Grid.Row="0">Tabel:</Label>
                         <ComboBox Grid.Row="0" x:Name="RegexTableListBox" Grid.Column="1" Height="22" ItemsSource="{Binding Tables}" ItemTemplate="{StaticResource RegexTableTemplate}" IsEnabled="{Binding TestLoaded}"/>
                         <Label Grid.Row="1">Kolonne:</Label>
@@ -114,21 +114,22 @@
                 </GroupBox>
             </Grid>
         </ScrollViewer>
-        
+
         <TabControl Margin="5" Grid.Column="1">
             <TabItem Header="Interaktiv visning">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition MinWidth="250" Width="Auto" />
                         <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="195*" />
+                        <ColumnDefinition Width="502*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Column="2">
+                    <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Margin="0,0,0,595" Grid.RowSpan="2">
                         <StackPanel Orientation="Horizontal">
                             <Button Margin="0 5 0 5" cal:Message.Attach="OpenCurrentTable()">
                                 <Button.Content>
@@ -156,10 +157,17 @@
                         </StackPanel.Style>
                     </StackPanel>
 
-                    <ListBox Grid.RowSpan="3" DockPanel.Dock="Left" ItemsSource="{Binding Tables}" SelectedItem="{Binding CurrentTable, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"></ListBox>
-                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch"></GridSplitter>
-                    <TreeView Grid.Row="1" x:Name="ReportTreeView" Grid.Column="2" DockPanel.Dock="Right" ItemsSource="{Binding TableReports, Mode=OneWay}" ItemContainerStyle="{StaticResource ReportTreeContainerStyle}"></TreeView>
-                    <WrapPanel Grid.Row="2" Grid.Column="2" Margin="5">
+                    <ListBox Grid.RowSpan="3" ItemsSource="{Binding Tables}" SelectedItem="{Binding CurrentTable, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
+                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Margin="0,0,0,23" Grid.RowSpan="2"></GridSplitter>
+                    <ListView Grid.Row="1" Grid.Column="2" ItemsSource="{Binding TableReports, Mode=OneWay}" ItemTemplate="{StaticResource ReportListItem}" Grid.ColumnSpan="2" Margin="0,0,0,23" Grid.RowSpan="2">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Focusable" Value="False" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+                    <!--<TreeView Grid.Row="1" x:Name="ReportTreeView" Grid.Column="2" DockPanel.Dock="Right" ItemsSource="{Binding TableReports, Mode=OneWay}" ItemContainerStyle="{StaticResource ReportTreeContainerStyle}"></TreeView>-->
+                    <WrapPanel Grid.Row="2" Grid.Column="2" Margin="5,18,5,5" Grid.ColumnSpan="2">
                         <CheckBox IsChecked="{Binding ShowErrorReports}" Margin="0 0 10 0">Vis fejl</CheckBox>
                         <CheckBox IsChecked="{Binding ShowSuggestionReports}" Margin="0 0 10 0">Vis forslag</CheckBox>
                         <CheckBox IsChecked="{Binding ShowEmptyReports}" Margin="0 0 10 0">Vis resten</CheckBox>
@@ -178,6 +186,231 @@
                     </ItemsControl>
                 </ScrollViewer>
             </TabItem>
+
+            <TabItem Header="Tabeltjek">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <GroupBox Header="Specificerede tabeller" Padding="5">
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" Text="{Binding SpecTables, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TestLoaded}" />
+                    </GroupBox>
+                    <GroupBox Padding="5" Margin="5 0 0 0" Grid.Column="1">
+                        <GroupBox.Header>
+                            <TextBlock Text="Findes i specifikation og tabelindex" Foreground="Green" />
+                        </GroupBox.Header>
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMatching}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
+                    </GroupBox>
+                    <GroupBox Padding="5" Margin="5 0 0 0"  Grid.Column="2">
+                        <GroupBox.Header>
+                            <TextBlock Text="Findes i specifikation, men ikke tabelindex" Foreground="Red" />
+                        </GroupBox.Header>
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMissing}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
+                    </GroupBox>
+                    <GroupBox Padding="5" Margin="5 0 0 0"  Grid.Column="3">
+                        <GroupBox.Header>
+                            <TextBlock Text="Findes ikke i specifikation, men i tabelindex" Foreground="Red" />
+                        </GroupBox.Header>
+                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesUndefined}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Sammenlign arkiveringsversion">
+                <DockPanel>
+                    <GroupBox Padding="5" DockPanel.Dock="Top">
+                        <GroupBox.Header>
+                            <TextBlock>Vælg tabelindex  til sammenligning</TextBlock>
+                        </GroupBox.Header>
+                        <StackPanel>
+                            <DockPanel>
+                                <Button IsEnabled="{Binding TestLoaded}" Margin="5 0 0 0" DockPanel.Dock="Right" Width="30" cal:Message.Attach="SelectTableIndex()">...</Button>
+                                <TextBox IsEnabled="{Binding TestLoaded}" DockPanel.Dock="Left" x:Name="CompareLocationTextBox" Text="{Binding CompareLocation, Mode=TwoWay}"></TextBox>
+                            </DockPanel>
+
+                            <Button IsEnabled="{Binding TestLoaded}" Margin="0 5 0 0" MinWidth="120" cal:Message.Attach="Compare(CompareLocationTextBox)">Sammenlign</Button>
+                        </StackPanel>
+                    </GroupBox>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="250"/>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <ListBox x:Name="ComparedTableList" ItemsSource="{Binding TableComparisons}" ItemTemplate="{StaticResource ComparedTableItemTemplate}" />
+                        <DockPanel Grid.Column="1">
+                            <DockPanel.Style>
+                                <Style>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem, ElementName=ComparedTableList}" Value="{x:Null}">
+                                            <Setter Property="DockPanel.Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+                            <Grid DockPanel.Dock="Top">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.ColumnSpan="2" Content="{Binding SelectedItem.Name, ElementName=ComparedTableList}" />
+                                <Label Grid.Row="1">
+                                    <Label.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedItem.DescriptionModified, ElementName=ComparedTableList}" Value="True">
+                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Label.Style>
+                                    Beskrivelse:
+                                </Label>
+                                <TextBox IsReadOnly="True" Grid.Row="1" Grid.Column="1" Text="{Binding SelectedItem.OldTable.Description, ElementName=ComparedTableList, Mode=OneWay}" />
+                                <TextBox IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.NewTable.Description, ElementName=ComparedTableList, Mode=OneWay}" />
+
+                                <Label Grid.Row="3">
+                                    <Label.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedItem.RowsModified, ElementName=ComparedTableList}" Value="True">
+                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Label.Style>
+                                    Rækkeantal:
+                                </Label>
+                                <Label Grid.Row="3" Grid.Column="1" Content="{Binding SelectedItem.OldTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
+                                <Label Grid.Row="4" Grid.Column="1" Content="{Binding SelectedItem.NewTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
+                                <Label Grid.Row="5">
+                                    <Label.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedItem.ColumnsModified, ElementName=ComparedTableList}" Value="True">
+                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Label.Style>
+                                    Felter:
+                                </Label>
+                            </Grid>
+                            <ListBox x:Name="ComparedColumnList" ItemsSource="{Binding SelectedItem.Columns, ElementName=ComparedTableList}" ItemTemplate="{StaticResource ComparedColumnItemTemplate}"></ListBox>
+                        </DockPanel>
+                        
+                        <Grid Grid.Column="2">
+                            <Grid.Style>
+                                <Style>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem, ElementName=ComparedColumnList}" Value="{x:Null}">
+                                            <Setter Property="Grid.Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.ColumnSpan="2" Content="{Binding SelectedItem.Name, ElementName=ComparedColumnList}" />
+
+                            <Label Grid.Row="1">
+                                <Label.Style>
+                                    <Style>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.DescriptionModified, ElementName=ComparedColumnList}" Value="True">
+                                                <Setter Property="Label.Foreground" Value="Orange" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Label.Style>
+                                Beskrivelse:
+                            </Label>
+                            <TextBox IsReadOnly="True" Grid.Row="1" Grid.Column="1" Text="{Binding SelectedItem.OldColumn.Description, ElementName=ComparedColumnList, Mode=OneWay}" />
+                            <TextBox IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.NewColumn.Description, ElementName=ComparedColumnList, Mode=OneWay}" />
+
+                            <Label Grid.Row="3">
+                                <Label.Style>
+                                    <Style>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.IdModified, ElementName=ComparedColumnList}" Value="True">
+                                                <Setter Property="Label.Foreground" Value="Orange" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Label.Style>
+                                Id
+                            </Label>
+                            <Label Grid.Row="3" Grid.Column="1" Content="{Binding SelectedItem.OldColumn.ColumnId, ElementName=ComparedColumnList, Mode=OneWay}" />
+                            <Label Grid.Row="4" Grid.Column="1" Content="{Binding SelectedItem.NewColumn.ColumnId, ElementName=ComparedColumnList, Mode=OneWay}" />
+
+                            <Label Grid.Row="5">
+                                <Label.Style>
+                                    <Style>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.DataTypeModified, ElementName=ComparedColumnList}" Value="True">
+                                                <Setter Property="Label.Foreground" Value="Orange" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Label.Style>
+                                Datatype:
+                            </Label>
+                            <Label Grid.Row="5" Grid.Column="1">
+                                <Label.Content>
+                                    <TextBlock>
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} {1}">
+                                                <Binding Path="SelectedItem.OldColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
+                                                <Binding Path="SelectedItem.OldColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Label.Content>
+                            </Label>
+
+                            <Label Grid.Row="6" Grid.Column="1">
+                                <Label.Content>
+                                    <TextBlock>
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} {1}">
+                                                <Binding Path="SelectedItem.NewColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
+                                                <Binding Path="SelectedItem.NewColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Label.Content>
+                            </Label>
+                        </Grid>
+                    </Grid>
+                </DockPanel>
+            </TabItem>
+
 
             <TabItem Header="Status Log">
                 <Grid>
@@ -200,65 +433,11 @@
                 </Grid>
 
             </TabItem>
-
-            <TabItem Header="Tabeltjek">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-
-                    <GroupBox Header="Specificerede tabeller" Padding="5">
-                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" Text="{Binding SpecTables, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TestLoaded}" />
-                    </GroupBox>
-                    <GroupBox Header="Findes i specifikation og tableIndex" Padding="5" Margin="5 0 0 0" Grid.Column="1">
-                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMatching}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
-                    </GroupBox>
-                    <GroupBox Header="Findes i specifikation, men ikke tableIndex" Padding="5" Margin="5 0 0 0"  Grid.Column="2">
-                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMissing}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
-                    </GroupBox>
-                    <GroupBox Header="Findes ikke i specifikation, men i tableIndex" Padding="5" Margin="5 0 0 0"  Grid.Column="3">
-                        <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesUndefined}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
-                    </GroupBox>
-                </Grid>
-            </TabItem>
         </TabControl>
 
-        <StatusBar Grid.Row="2" Grid.ColumnSpan="2">
-            
-            <StatusBarItem>
-                <StatusBarItem.Style>
-                    <Style>
-                        <Setter Property="StatusBarItem.Visibility" Value="Collapsed"></Setter>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding TestRunning}" Value="True">
-                                <Setter Property="StatusBarItem.Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </StatusBarItem.Style>
-                <ProgressBar Width="300" Height="16" Value="{Binding TestProgress}"/>
-            </StatusBarItem>
+        <ProgressBar Grid.Row="1" Width="300" Value="{Binding TestProgress}"/>
 
-            <Separator>
-                <Separator.Style>
-                    <Style>
-                        <Setter Property="Separator.Visibility" Value="Collapsed"></Setter>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding TestRunning}" Value="True">
-                                <Setter Property="Separator.Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Separator.Style>
-            </Separator>
-
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusText}"/>
-            </StatusBarItem>
-        </StatusBar>
+        <TextBox MaxLines="1" Grid.Row="1" Grid.Column="1" Text="{Binding StatusText}" Background="{DynamicResource {x:Static SystemColors.ControlBrush}}"/>
 
     </Grid>
 </Window>

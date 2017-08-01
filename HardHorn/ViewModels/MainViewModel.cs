@@ -310,6 +310,7 @@ namespace HardHorn.ViewModels
     {
         #region Properties
         public object Item { get; set; }
+        public ObservableCollection<dynamic> TableComparisons { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
         public TestSuite TestSuite { get; set; }
         public int[] BarChartValues { get; set; }
@@ -477,6 +478,7 @@ namespace HardHorn.ViewModels
 
         BackgroundWorker _loadWorker = new BackgroundWorker();
         BackgroundWorker _testWorker = new BackgroundWorker();
+        BackgroundWorker _compareWorker = new BackgroundWorker();
 
         DataAnalyzer _analyzer;
         DataStatistics _stats;
@@ -502,6 +504,9 @@ namespace HardHorn.ViewModels
         string _statusText = "";
         public string StatusText { get { return _statusText; } set { _statusText = value; NotifyOfPropertyChange("StatusText"); } }
 
+        string _compareLocation;
+        public string CompareLocation { get { return _compareLocation; } set { _compareLocation = value; NotifyOfPropertyChange("CompareLocation"); } }
+
         #endregion
 
         #region Constructors
@@ -510,6 +515,7 @@ namespace HardHorn.ViewModels
             Tables = new ObservableCollection<ListTable>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
+            TableComparisons = new ObservableCollection<dynamic>();
             Regexes = new ObservableCollection<dynamic>();
             TestSuite = new TestSuite();
 
@@ -526,6 +532,296 @@ namespace HardHorn.ViewModels
             _loadWorker.RunWorkerCompleted += _loadWorker_RunWorkerCompleted;
             _loadWorker.ProgressChanged += _loadWorker_ProgressChanged;
             _loadWorker.WorkerReportsProgress = true;
+
+            _compareWorker.DoWork += _compareWorker_DoWork;
+            _compareWorker.RunWorkerCompleted += _compareWorker_RunWorkerCompleted;
+            _compareWorker.ProgressChanged += _loadWorker_ProgressChanged;
+        }
+
+        public void Compare(string location)
+        {
+            TableComparisons.Clear();
+            _compareWorker.RunWorkerAsync(location);
+        }
+
+        private void _compareWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+            {
+                Log(string.Format("Sammenligningen med '{0}' resulterede i en undtagelse af typen {1}, med beskeden '{2}'.", CompareLocation, e.Error.GetType().ToString(), e.Error.Message), LogLevel.ERROR);
+                return;
+            }
+
+            foreach (var el in e.Result as List<dynamic>)
+            {
+                TableComparisons.Add(el);
+            }
+        }
+
+        private void _compareWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            System.Xml.Linq.XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+            var tableIndexDocument = System.Xml.Linq.XDocument.Load(e.Argument as string);
+            var compTables = new List<Table>();
+            var xtables = tableIndexDocument.Descendants(xmlns + "tables").First();
+
+            foreach (var xtable in xtables.Elements(xmlns + "table"))
+            {
+                Table table = Table.Parse(xmlns, xtable, new LoadWorkerLogger(sender as BackgroundWorker));
+                compTables.Add(table);
+            }
+
+            var tableComparisons = new List<dynamic>();
+            dynamic tableComparison, columnComparison;
+
+            foreach (var avTable in Tables)
+            {
+                bool tableAdded = true;
+                foreach (var compTable in compTables)
+                {
+                    if (avTable.Table.Name.ToLower() == compTable.Name.ToLower())
+                    {
+                        tableComparison = new ExpandoObject();
+                        tableComparison.Name = avTable.Table.Name;
+                        tableComparison.NewTable = avTable.Table;
+                        tableComparison.OldTable = compTable;
+                        tableComparison.Columns = new List<dynamic>();
+                        tableComparison.Added = false;
+                        tableComparison.Modified = false;
+                        tableComparison.Removed = false;
+                        tableComparison.DescriptionModified = false;
+                        tableComparison.ColumnsModified = false;
+                        tableComparison.RowsModified = false;
+
+                        if (avTable.Table.Rows != compTable.Rows)
+                        {
+                            tableComparison.Modified = true;
+                            tableComparison.RowsModified = true;
+                        }
+
+                        if (avTable.Table.Description != compTable.Description)
+                        {
+                            tableComparison.Modified = true;
+                            tableComparison.DescriptionModified = true;
+                        }
+
+                        foreach (var avColumn in avTable.Table.Columns)
+                        {
+                            bool columnAdded = true;
+                            foreach (var compColumn in compTable.Columns)
+                            {
+                                if (avColumn.Name.ToLower() == compColumn.Name.ToLower())
+                                {
+                                    columnComparison = new ExpandoObject();
+                                    columnComparison.Name = compColumn.Name;
+                                    columnComparison.NewColumn = avColumn;
+                                    columnComparison.OldColumn = compColumn;
+                                    columnComparison.Added = false;
+                                    columnComparison.Modified = false;
+                                    columnComparison.Removed = false;
+                                    columnComparison.DataTypeModified = false;
+                                    columnComparison.NullableModified = false;
+                                    columnComparison.DescriptionModified = false;
+                                    columnComparison.IdModified = false;
+
+                                    if (avColumn.Description != compColumn.Description)
+                                    {
+                                        columnComparison.Modified = true;
+                                        columnComparison.DescriptionModified = true;
+                                    }
+
+                                    if (avColumn.Type != compColumn.Type)
+                                    {
+                                        columnComparison.Modified = true;
+                                        columnComparison.DataTypeModified = true;
+                                    }
+
+                                    if (avColumn.Param == null && compColumn.Param != null)
+                                    {
+                                        columnComparison.Modified = true;
+                                        columnComparison.DataTypeModified = true;
+                                    }
+                                    else if (avColumn.Param != null && compColumn.Param == null)
+                                    {
+                                        columnComparison.Modified = true;
+                                        columnComparison.DataTypeModified = true;
+                                    }
+                                    else if (avColumn.Param == null && compColumn.Param == null)
+                                    { }
+                                    else if (avColumn.Param.Length != compColumn.Param.Length)
+                                    {
+                                        columnComparison.Modified = true;
+                                        columnComparison.DataTypeModified = true;
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < avColumn.Param.Length; i++)
+                                        {
+                                            if (avColumn.Param[i] != compColumn.Param[i])
+                                            {
+                                                columnComparison.Modified = true;
+                                                columnComparison.DataTypeModified = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    if (avColumn.Nullable != compColumn.Nullable)
+                                    {
+                                        columnComparison.Modified = true;
+                                        columnComparison.NullableModified = true;
+                                    }
+
+                                    if (avColumn.ColumnId != compColumn.ColumnId)
+                                    {
+                                        columnComparison.Modified = true;
+                                        columnComparison.IdModified = true;
+                                    }
+
+                                    if (columnComparison.Modified)
+                                    {
+                                        tableComparison.ColumnsModified = true;
+                                        tableComparison.Modified = true;
+                                    }
+
+                                    tableComparison.Columns.Add(columnComparison);
+
+                                    columnAdded = false;
+                                    break;
+                                }
+                            }
+
+                            if (columnAdded)
+                            {
+                                columnComparison = new ExpandoObject();
+                                columnComparison.Name = avColumn.Name;
+                                columnComparison.NewColumn = avColumn;
+                                columnComparison.OldColumn = null;
+                                columnComparison.Added = true;
+                                columnComparison.Modified = false;
+                                columnComparison.Removed = false;
+                                columnComparison.DataTypeModified = false;
+                                columnComparison.NullableModified = false;
+                                columnComparison.DescriptionModified = false;
+                                columnComparison.IdModified = false;
+                                tableComparison.Columns.Add(columnComparison);
+                            }
+                        }
+
+                        foreach (var compColumn in compTable.Columns)
+                        {
+                            bool columnRemoved = true;
+                            foreach (var avColumn in avTable.Table.Columns)
+                            {
+                                if (avColumn.Name.ToLower() == compColumn.Name.ToLower())
+                                {
+                                    columnRemoved = false;
+                                }
+                            }
+
+                            if (columnRemoved)
+                            {
+                                columnComparison = new ExpandoObject();
+                                columnComparison.Name = compColumn.Name;
+                                columnComparison.NewColumn = null;
+                                columnComparison.OldColumn = compColumn;
+                                columnComparison.Added = false;
+                                columnComparison.Modified = false;
+                                columnComparison.Removed = true;
+                                columnComparison.DataTypeModified = false;
+                                columnComparison.NullableModified = false;
+                                columnComparison.DescriptionModified = false;
+                                columnComparison.IdModified = false;
+                                tableComparison.Columns.Add(columnComparison);
+                            }
+                        }
+
+                        foreach (dynamic col in tableComparison.Columns)
+                        {
+                            tableComparison.Modified = col.Modified || tableComparison.Modified;
+                            tableComparison.ColumnsModified = col.Modified || tableComparison.ColumnsModified;
+                        }
+
+                        tableComparisons.Add(tableComparison);
+                        tableAdded = false;
+                        break;
+                    }
+                }
+
+                if (tableAdded)
+                {
+                    tableComparison = new ExpandoObject();
+                    tableComparison.Name = avTable.Table.Name;
+                    tableComparison.NewTable = avTable.Table;
+                    tableComparison.OldTable = null;
+                    tableComparison.Columns = avTable.Table.Columns.Select(c =>
+                    {
+                        dynamic col = new ExpandoObject();
+                        col.Name = c.Name;
+                        col.OldColumn = null;
+                        col.NewColumn = c;
+                        col.Added = false;
+                        col.Removed = false;
+                        col.Modified = false;
+                        col.DataTypeModified = false;
+                        col.NullableModified = false;
+                        col.DescriptionModified = false;
+                        col.IdModified = false;
+                        return col;
+                    });
+                    tableComparison.Added = true;
+                    tableComparison.Removed = false;
+                    tableComparison.Modified = false;
+                    tableComparison.ColumnsModified = false;
+                    tableComparison.DescriptionModified = false;
+                    tableComparisons.Add(tableComparison);
+                }
+            }
+
+            foreach (var compTable in compTables)
+            {
+                bool tableRemoved = true;
+                foreach (var avTable in Tables)
+                {
+                    if (avTable.Table.Name.ToLower() == compTable.Name.ToLower())
+                    {
+                        tableRemoved = false;
+                        break;
+                    }
+                }
+
+                if (tableRemoved)
+                {
+                    tableComparison = new ExpandoObject();
+                    tableComparison.Name = compTable.Name;
+                    tableComparison.NewTable = null;
+                    tableComparison.OldTable = compTable;
+                    tableComparison.Columns = compTable.Columns.Select(c =>
+                    {
+                        dynamic col = new ExpandoObject();
+                        col.Name = c.Name;
+                        col.OldColumn = c;
+                        col.NewColumn = null;
+                        col.Added = false;
+                        col.Removed = false;
+                        col.Modified = false;
+                        col.DataTypeModified = false;
+                        col.NullableModified = false;
+                        col.DescriptionModified = false;
+                        col.IdModified = false;
+                        return col;
+                    });
+                    tableComparison.Added = false;
+                    tableComparison.Removed = true;
+                    tableComparison.Modified = false;
+                    tableComparison.ColumnsModified = false;
+                    tableComparison.DescriptionModified = false;
+                    tableComparisons.Add(tableComparison);
+                }
+            }
+
+            e.Result = tableComparisons;
         }
         #endregion
 
@@ -928,10 +1224,23 @@ namespace HardHorn.ViewModels
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     TestLocation = dialog.SelectedPath;
+
+                    LoadTables();
                 }
             }
+        }
 
-            LoadTables();
+        public void SelectTableIndex()
+        {
+            using (var dialog = new System.Windows.Forms.OpenFileDialog())
+            {
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    CompareLocation = dialog.FileName;
+
+                    Compare(CompareLocation);
+                }
+            }
         }
         #endregion
     }

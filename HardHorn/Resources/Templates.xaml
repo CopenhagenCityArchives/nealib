@@ -12,6 +12,46 @@
     <local:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
     <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
+    <DataTemplate x:Key="ComparedTableItemTemplate">
+        <TextBlock Text="{Binding Name}">
+            <TextBlock.Style>
+                <Style>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Modified}" Value="True">
+                            <Setter Property="TextBlock.Foreground" Value="Orange" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Added}" Value="True">
+                            <Setter Property="TextBlock.Foreground" Value="SteelBlue" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Removed}" Value="True">
+                            <Setter Property="TextBlock.Foreground" Value="Red" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ComparedColumnItemTemplate">
+        <TextBlock Text="{Binding Name}">
+            <TextBlock.Style>
+                <Style>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Modified}" Value="True">
+                            <Setter Property="TextBlock.Foreground" Value="Orange" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Added}" Value="True">
+                            <Setter Property="TextBlock.Foreground" Value="SteelBlue" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Removed}" Value="True">
+                            <Setter Property="TextBlock.Foreground" Value="Red" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </DataTemplate>
+
     <DataTemplate x:Key="RegexItemTemplate">
         <TextBlock>
             <TextBlock.Text>
@@ -120,15 +160,20 @@
     </DataTemplate>
     
     <DataTemplate x:Key="InstanceItemTemplate">
-        <TextBlock>
-            <TextBlock.Text>
-                <MultiBinding StringFormat="{}({0}, {1}) &#187;{2}&#171;">
-                    <Binding Path="Line"></Binding>
-                    <Binding Path="Pos"></Binding>
-                    <Binding Path="Data"></Binding>
-                </MultiBinding>
-            </TextBlock.Text>
-        </TextBlock>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Margin="0 0 5 0">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}({0}, {1})">
+                        <Binding Path="Line"></Binding>
+                        <Binding Path="Pos"></Binding>
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock>&#187;</TextBlock>
+            <TextBox IsReadOnly="True" BorderThickness="0" Text="{Binding Data}"></TextBox>
+            <TextBlock>&#171;</TextBlock>
+        </StackPanel>
+
     </DataTemplate>
 
     <HierarchicalDataTemplate x:Key="ErrorItemTemplate" ItemsSource="{Binding Instances}" ItemTemplate="{StaticResource InstanceItemTemplate}">
@@ -162,6 +207,86 @@
         </Style.Triggers>
     </Style>
 
+    <DataTemplate x:Key="ErrorListItem">
+        <StackPanel>
+            <TextBlock>
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} ({1})">
+                        <Binding Path="Type" />
+                        <Binding Path="Count" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <ListView BorderThickness="0" ItemTemplate="{StaticResource InstanceItemTemplate}" ItemsSource="{Binding Instances}">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Focusable" Value="False" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ReportListItem">
+        <StackPanel>
+            <Expander>
+                <Expander.Header>
+                    <StackPanel>
+                        <TextBlock FontWeight="Bold" Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0} &lt;{1}&gt;">
+                                    <Binding Path="Column.Name" />
+                                    <Binding Path="Column.ColumnId" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0}{1}">
+                                    <Binding Path="Column.Type" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
+                                    <Binding Path="Column.Param"></Binding>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock x:Name="SuggestTypeTextBlock" Foreground="DarkGreen">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0}{1}">
+                                    <Binding Path="SuggestedType.Item1" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
+                                    <Binding Path="SuggestedType.Item2"></Binding>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SuggestedType}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Expander.Header>
+                <ListView BorderThickness="0" ItemsSource="{Binding Errors.Values}" ItemTemplate="{StaticResource ErrorListItem}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Focusable" Value="False" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+                <Expander.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ErrorCount}" Value="0">
+                                <Setter Property="Expander.IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Expander.Style>
+            </Expander>
+        </StackPanel>
+    </DataTemplate>
+
     <HierarchicalDataTemplate x:Key="ReportItemTemplate" ItemsSource="{Binding Errors.Values}" ItemContainerStyle="{StaticResource ErrorContainerStyle}">
         <StackPanel Margin="0 2 0 0">
             <StackPanel Orientation="Horizontal">
@@ -175,9 +300,8 @@
                 </TextBlock>
                 <TextBlock Margin="5 0 0 0" Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
                     <TextBlock.Text>
-                        <MultiBinding StringFormat="{}Fejlandel {0}/{1}">
+                        <MultiBinding StringFormat="{}Fejl: {0}">
                             <Binding Path="ErrorCount" />
-                            <Binding Path="Column.Table.Rows" />
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
@@ -380,7 +504,7 @@
                                 <Ellipse x:Name="ellipse7" Canvas.Top="11.42" Canvas.Left="2.33" />
                                 <Ellipse Width="13.17" Height="13.17" Canvas.Left="2.92" Canvas.Top="2.67" Visibility="Hidden"/>
                             </Canvas>
-                            <Label Content="{Binding Path=Text}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!--<Label Content="{Binding Path=Text}" HorizontalAlignment="Center" VerticalAlignment="Center"/>-->
                         </Grid>
                     </Border>
                 </ControlTemplate>
