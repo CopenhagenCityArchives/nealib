@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using HardHorn.ArchiveVersion;
+using HardHorn.Archiving;
 using System.Text.RegularExpressions;
 using System.Dynamic;
 using HardHorn.Logging;
@@ -24,9 +24,9 @@ namespace HardHorn.Analysis
     {
         int _count = 0;
         public int Count { get { return _count; } }
-        List<ExpandoObject> _instances = new List<ExpandoObject>();
+        List<Post> _instances = new List<Post>();
 
-        public IEnumerable<ExpandoObject> Instances { get { return _instances as IEnumerable<ExpandoObject>; } }
+        public IEnumerable<Post> Posts { get { return _instances as IEnumerable<Post>; } }
         public AnalysisErrorType Type { get; private set; }
 
         public AnalysisError(AnalysisErrorType type)
@@ -34,15 +34,11 @@ namespace HardHorn.Analysis
             Type = type;
         }
 
-        public void Add(int line, int pos, string data)
+        public void Add(Post post)
         {
             if (_count < AnalysisReport.MAX_ERROR_INSTANCES)
             {
-                dynamic instance = new ExpandoObject();
-                instance.Data = data;
-                instance.Line = line;
-                instance.Pos = pos;
-                _instances.Add(instance);
+                _instances.Add(post);
             }
             _count++;
         }
@@ -79,7 +75,7 @@ namespace HardHorn.Analysis
             Errors = new Dictionary<AnalysisErrorType, AnalysisError>();
         }
 
-        public void ReportError(int line, int pos, AnalysisErrorType errorType, string instance)
+        public void ReportError(Post post, AnalysisErrorType errorType)
         {
             ErrorCount++;
             if (!Errors.ContainsKey(errorType))
@@ -87,7 +83,7 @@ namespace HardHorn.Analysis
                 Errors.Add(errorType, new AnalysisError(errorType));
             }
 
-            Errors[errorType].Add(line, pos, instance);
+            Errors[errorType].Add(post);
         }
 
         public void SuggestType()
@@ -166,18 +162,11 @@ namespace HardHorn.Analysis
 
     public class DataAnalyzer
     {
-        public IEnumerable<Table> Tables { get; set; }
+        ArchiveVersion _archiveVersion;
+        public ArchiveVersion ArchiveVersion { get { return _archiveVersion; } }
         public Dictionary<DataType, HashSet<AnalysisErrorType>> TestSelection { get; set; }
         public IEnumerable<RegexTest> RegexTests { get; set; }
         ILogger _log;
-
-        string _location;
-        XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
-        XNamespace xmlnsxsi = "http://www.w3.org/2001/XMLSchema-instance";
-
-        Table currentTable;
-        FileStream tableStream;
-        XmlReader tableReader;
 
         Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
         Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
@@ -188,31 +177,19 @@ namespace HardHorn.Analysis
 
         public Dictionary<string, Dictionary<string, AnalysisReport>> Report { get; private set; }
 
-        public DataAnalyzer(string location, ILogger log)
+        public DataAnalyzer(ArchiveVersion archiveVersion, ILogger log)
         {
             _log = log;
+            _archiveVersion = archiveVersion;
             TestSelection = new Dictionary<DataType, HashSet<AnalysisErrorType>>();
-            _location = location;
-            var tableIndexDocument = XDocument.Load(Path.Combine(_location, "Indices", "tableIndex.xml"));
-
             Report = new Dictionary<string, Dictionary<string, AnalysisReport>>();
-
-            Tables = new List<Table>();
-
-            var xtables = tableIndexDocument.Descendants(xmlns + "tables").First();
-            foreach (var xtable in xtables.Elements(xmlns + "table"))
-            {
-                Table table = Table.Parse(xmlns, xtable, _log);
-                (Tables as List<Table>).Add(table);
-            }
-
             PrepareReports();
         }
 
         public void PrepareReports()
         {
             Report.Clear();
-            foreach (var table in Tables)
+            foreach (var table in ArchiveVersion.Tables)
             {
                 var columnReports = new Dictionary<string, AnalysisReport>();
                 foreach (var column in table.Columns)
@@ -223,84 +200,31 @@ namespace HardHorn.Analysis
             }
         }
 
-        public int AnalyzeRows(int n = 100000)
+        /// <summary>
+        /// Analyze rows of the archive version.
+        /// </summary>
+        /// <param name="n">The number of rows to analyze.</param>
+        /// <returns>The number of rows analyzed.</returns>
+        public void AnalyzeRows(Table table, Row[] rows, int n)
         {
-            dynamic rows = new ExpandoObject[currentTable.Columns.Count, n];
-            int row = 0;
-
-            while (tableReader.Read() && row < n)
-            {
-                if (tableReader.NodeType == XmlNodeType.Element && tableReader.Name.Equals("row"))
-                {
-                    using (XmlReader inner = tableReader.ReadSubtree())
-                    {
-                        if (inner.Read())
-                        {
-                            var xrow = XElement.Load(inner);
-                            var xdatas = xrow.Elements();
-
-                            int i = 0;
-                            foreach (var xdata in xdatas)
-                            {
-                                if (i > currentTable.Columns.Count)
-                                {
-                                    throw new InvalidOperationException("Data file and column mismatch.");
-                                }
-                                var xmlInfo = tableReader as IXmlLineInfo;
-                                var isNull = false;
-                                if (xdata.HasAttributes)
-                                {
-                                    var xnull = xdata.Attribute(xmlnsxsi + "nil");
-                                    bool.TryParse(xnull.Value, out isNull);
-                                }
-                                dynamic instance = new ExpandoObject();
-                                instance.Line = xmlInfo.LineNumber;
-                                instance.Pos = xmlInfo.LinePosition;
-                                instance.IsNull = isNull;
-                                instance.Data = xdata.Value;
-                                rows[i, row] = instance;
-                                i++;
-                            }
-
-                            row++;
-                        }
-                    }
-                }
-            }
-
             // analyize the rows
-            for (int i = 0; i < row; i++)
+            for (int i = 0; i < n; i++)
             {
-                for (int j = 0; j < currentTable.Columns.Count; j++)
+                var row = rows[i];
+                for (int j = 0; j < row.FieldCount; j++)
                 {
-                    AnalyzeLengths(Report[currentTable.Name][currentTable.Columns[j].Name], rows[j, i].Data);
-                    AnalyzeData(rows[j, i].Line,
-                        rows[j, i].Pos,
-                        currentTable.Columns[j],
-                        rows[j, i].Data,
-                        rows[j, i].IsNull,
-                        Report[currentTable.Name][currentTable.Columns[j].Name]);
+                    var post = row[j];
+                    AnalyzeLengths(Report[table.Name][table.Columns[j].Name], post.Data);
+                    AnalyzePost(table.Columns[j], post, Report[table.Name][table.Columns[j].Name]);
                 }
             }
-
-            return row; // return true if all specified rows were read
         }
 
-        public void InitializeTableAnalysis(Table table)
-        {
-            tableStream = new FileStream(Path.Combine(_location, "Tables", table.Folder, table.Folder + ".xml"), FileMode.Open, FileAccess.Read);
-            tableReader = XmlReader.Create(tableStream);
-            currentTable = table;
-        }
-
-        public void DisposeTableAnalysis()
-        {
-            tableReader.Close();
-            tableReader.Dispose();
-            tableStream.Close();
-            tableStream.Dispose();
-        }
-
+        /// <summary>
+        /// Analyze the lengths of the columns of the archive version.
+        /// </summary>
+        /// <param name="report"></param>
+        /// <param name="data"></param>
         void AnalyzeLengths(AnalysisReport report, string data)
         {
             switch (report.Column.Type)
@@ -355,15 +279,24 @@ namespace HardHorn.Analysis
             }
         }
 
-        void AnalyzeData(int line, int pos, Column column, string data, bool isNull, AnalysisReport report)
+        /// <summary>
+        /// Analyze a post.
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="pos"></param>
+        /// <param name="column"></param>
+        /// <param name="data"></param>
+        /// <param name="isNull"></param>
+        /// <param name="report"></param>
+        void AnalyzePost(Column column, Post post, AnalysisReport report)
         {
             if (RegexTests != null)
             {
                 foreach (var regexTest in RegexTests)
                 {
-                    if (regexTest.ShouldPerformMatch(column) && !isNull && !regexTest.MatchData(data))
+                    if (regexTest.ShouldPerformMatch(column) && !post.IsNull && !regexTest.MatchData(post.Data))
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        report.ReportError(post, AnalysisErrorType.FORMAT);
                     }
                 }
             }
@@ -383,31 +316,31 @@ namespace HardHorn.Analysis
             {
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.CHARACTER:
-                    if (currentTests.Contains(AnalysisErrorType.UNDERFLOW) && data.Length < column.Param[0])
+                    if (currentTests.Contains(AnalysisErrorType.UNDERFLOW) && post.Data.Length < column.Param[0])
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.UNDERFLOW, data);
+                        report.ReportError(post, AnalysisErrorType.UNDERFLOW);
                     }
-                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && data.Length > column.Param[0])
+                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && post.Data.Length > column.Param[0])
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                        report.ReportError(post, AnalysisErrorType.OVERFLOW);
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
                 case DataType.CHARACTER_VARYING:
                     // Data too long
-                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && data.Length > column.Param[0])
+                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && post.Data.Length > column.Param[0])
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                        report.ReportError(post, AnalysisErrorType.OVERFLOW);
                     }
                     break;
                 case DataType.DECIMAL:
-                    var components = data.Split('.');
+                    var components = post.Data.Split('.');
                     // No separator
                     if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && components.Length == 1)
                     {
                         if (components[0].Length > column.Param[0])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
                         }
                     }
                     // With separator
@@ -415,12 +348,12 @@ namespace HardHorn.Analysis
                     {
                         if (components[0].Length + components[1].Length > column.Param[0] || components[1].Length > column.Param[1])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
                         }
                     }
                     break;
                 case DataType.DATE:
-                    match = date_regex.Match(data);
+                    match = date_regex.Match(post.Data);
                     if (match.Success)
                     {
                         int year = int.Parse(match.Groups[1].Value);
@@ -428,66 +361,66 @@ namespace HardHorn.Analysis
                         int day = int.Parse(match.Groups[3].Value);
                         if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                            report.ReportError(post, AnalysisErrorType.FORMAT);
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        report.ReportError(post, AnalysisErrorType.FORMAT);
                     }
                     break;
                 case DataType.TIME:
-                    match = time_regex.Match(data);
+                    match = time_regex.Match(post.Data);
                     if (match.Success)
                     {
                         if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
                             column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
                         }
                         int year = int.Parse(match.Groups[1].Value);
                         int month = int.Parse(match.Groups[2].Value);
                         int day = int.Parse(match.Groups[3].Value);
                         if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                            report.ReportError(post, AnalysisErrorType.FORMAT);
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        report.ReportError(post, AnalysisErrorType.FORMAT);
                     }
                     break;
                 case DataType.TIME_WITH_TIME_ZONE:
-                    match = time_timezone_regex.Match(data);
+                    match = time_timezone_regex.Match(post.Data);
                     if (match.Success)
                     {
                         if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
                             column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
                         }
                         int year = int.Parse(match.Groups[1].Value);
                         int month = int.Parse(match.Groups[2].Value);
                         int day = int.Parse(match.Groups[3].Value);
                         if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                            report.ReportError(post, AnalysisErrorType.FORMAT);
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        report.ReportError(post, AnalysisErrorType.FORMAT);
                     }
                     break;
                 case DataType.TIMESTAMP:
-                    match = timestamp_regex.Match(data);
+                    match = timestamp_regex.Match(post.Data);
                     if (match.Success)
                     {
                         if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
                             column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
                         }
 
                         if (currentTests.Contains(AnalysisErrorType.FORMAT))
@@ -502,23 +435,23 @@ namespace HardHorn.Analysis
 
                             if (invalidDate(year, month, day) || invalidTime(hour, minute, second))
                             {
-                                report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                                report.ReportError(post, AnalysisErrorType.FORMAT);
                             }
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        report.ReportError(post, AnalysisErrorType.FORMAT);
                     }
                     break;
                 case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                    match = timestamp_timezone_regex.Match(data);
+                    match = timestamp_timezone_regex.Match(post.Data);
                     if (match.Success)
                     {
                         if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
                             column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0])
                         {
-                            report.ReportError(line, pos, AnalysisErrorType.OVERFLOW, data);
+                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
                         }
 
                         if (currentTests.Contains(AnalysisErrorType.FORMAT))
@@ -533,26 +466,26 @@ namespace HardHorn.Analysis
 
                             if (invalidDate(year, month, day) || invalidTime(hour, minute, second))
                             {
-                                report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                                report.ReportError(post, AnalysisErrorType.FORMAT);
                             }
                         }
                     }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(data.Length == 0 && column.Nullable && isNull))
+                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
                     {
-                        report.ReportError(line, pos, AnalysisErrorType.FORMAT, data);
+                        report.ReportError(post, AnalysisErrorType.FORMAT);
                     }
                     break;
             }
 
-            if (currentTests.Contains(AnalysisErrorType.BLANK) && data.Length > 0 &&
-                (data[0] == ' ' ||
-                 data[0] == '\n' ||
-                 data[0] == '\t' ||
-                 data[data.Length - 1] == ' ' ||
-                 data[data.Length - 1] == '\n' ||
-                 data[data.Length - 1] == '\t'))
+            if (currentTests.Contains(AnalysisErrorType.BLANK) && post.Data.Length > 0 &&
+                (post.Data[0] == ' ' ||
+                 post.Data[0] == '\n' ||
+                 post.Data[0] == '\t' ||
+                 post.Data[post.Data.Length - 1] == ' ' ||
+                 post.Data[post.Data.Length - 1] == '\n' ||
+                 post.Data[post.Data.Length - 1] == '\t'))
             {
-                report.ReportError(line, pos, AnalysisErrorType.BLANK, data);
+                report.ReportError(post, AnalysisErrorType.BLANK);
             }
 
             report.AnalysisFirstRow = true;

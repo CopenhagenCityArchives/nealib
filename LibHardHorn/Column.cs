@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace HardHorn.ArchiveVersion
+namespace HardHorn.Archiving
 {
     public class ArchiveVersionColumnParsingException : Exception
     {
@@ -56,6 +56,9 @@ namespace HardHorn.ArchiveVersion
         NOT_DEFINED,
     }
 
+    /// <summary>
+    /// A parameter list.
+    /// </summary>
     public class DataTypeParam
     {
         int[] _param;
@@ -68,6 +71,10 @@ namespace HardHorn.ArchiveVersion
             set { _param[index] = value; }
         }
 
+        /// <summary>
+        /// Get the string representation.
+        /// </summary>
+        /// <returns>The string representation of the parameter list.</returns>
         public override string ToString()
         {
             if (_param == null)
@@ -80,6 +87,10 @@ namespace HardHorn.ArchiveVersion
             }
         }
 
+        /// <summary>
+        /// Construct a parameter list.
+        /// </summary>
+        /// <param name="param">The integer parameters.</param>
         public DataTypeParam(params int[] param)
         {
             _param = param;
@@ -88,6 +99,9 @@ namespace HardHorn.ArchiveVersion
 
     }
 
+    /// <summary>
+    /// A column of a table in an archive version.
+    /// </summary>
     public class Column
     {
         string _name;
@@ -114,6 +128,16 @@ namespace HardHorn.ArchiveVersion
         static Regex paramRegex = new Regex(@"^ *\((\d+(,\d+)*)\)$");
         static Regex commaNumRegex = new Regex(@",?(\d+)");
 
+        /// <summary>
+        /// Construct a column.
+        /// </summary>
+        /// <param name="table">The table, the column is a part of.</param>
+        /// <param name="name">The name of the column.</param>
+        /// <param name="type">The data type of the column.</param>
+        /// <param name="nullable">Is the column nullable.</param>
+        /// <param name="param">The parameters of the column datatype.</param>
+        /// <param name="desc">The description of the column.</param>
+        /// <param name="colId">The id of the column.</param>
         public Column(Table table, string name, DataType type, bool nullable, int[] param, string desc, string colId)
         {
             _table = table;
@@ -125,14 +149,23 @@ namespace HardHorn.ArchiveVersion
             _colId = colId;
         }
 
-        public static Column Parse(Table table, XNamespace ns, XElement xcolumn)
+        /// <summary>
+        /// Parse a column object.
+        /// </summary>
+        /// <param name="table">The table, the column is a part of.</param>
+        /// <param name="ns">The XML namespace to use.</param>
+        /// <param name="xcolumn">The column XML element.</param>
+        /// <returns></returns>
+        public static Column Parse(Table table, XElement xcolumn)
         {
+            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
             string xml = xcolumn.ToString();
             Column column = null;
             XElement xname, xtype, xnullable, xdesc, xcolid;
             try
             {
-                xname = xcolumn.Element(ns + "name");
+                xname = xcolumn.Element(xmlns + "name");
             }
             catch (InvalidOperationException)
             {
@@ -140,7 +173,7 @@ namespace HardHorn.ArchiveVersion
             }
             try
             {
-                xtype = xcolumn.Element(ns + "type");
+                xtype = xcolumn.Element(xmlns + "type");
             }
             catch (InvalidOperationException)
             {
@@ -148,7 +181,7 @@ namespace HardHorn.ArchiveVersion
             }
             try
             {
-                xnullable = xcolumn.Element(ns + "nullable");
+                xnullable = xcolumn.Element(xmlns + "nullable");
             }
             catch (InvalidOperationException)
             {
@@ -156,7 +189,7 @@ namespace HardHorn.ArchiveVersion
             }
             try
             {
-                xdesc = xcolumn.Element(ns + "description");
+                xdesc = xcolumn.Element(xmlns + "description");
             }
             catch (InvalidOperationException)
             {
@@ -164,7 +197,7 @@ namespace HardHorn.ArchiveVersion
             }
             try
             {
-                xcolid = xcolumn.Element(ns + "columnID");
+                xcolid = xcolumn.Element(xmlns + "columnID");
             }
             catch (InvalidOperationException)
             {
@@ -253,12 +286,27 @@ namespace HardHorn.ArchiveVersion
                 return column;
         }
 
-        static bool ParseParam(int n, string s, out int[] param)
+        /// <summary>
+        /// A helper method to parse a parameter string.
+        /// </summary>
+        /// <param name="length">The number of parameters.</param>
+        /// <param name="s">The parameter string.</param>
+        /// <param name="param">A reference to the integer array that should contain the parameter list.</param>
+        /// <returns></returns>
+        static bool ParseParam(int length, string s, out int[] param)
         {
-            return ParseParam(n, n, s, out param);
+            return ParseParam(length, length, s, out param);
         }
 
-        static bool ParseParam(int n, int m, string s, out int[] param)
+        /// <summary>
+        /// A helper method to parse a parameter string.
+        /// </summary>
+        /// <param name="minLength">The minimum number of parameters.</param>
+        /// <param name="maxLength">The maximum number of parameters.</param>
+        /// <param name="s">The parameter string.</param>
+        /// <param name="param">A reference to the integer array that should contain the parameter list.</param>
+        /// <returns></returns>
+        static bool ParseParam(int minLength, int maxLength, string s, out int[] param)
         {
             var parenMatch = paramRegex.Match(s);
 
@@ -266,7 +314,7 @@ namespace HardHorn.ArchiveVersion
             {
                 var numMatches = commaNumRegex.Matches(parenMatch.Groups[0].Value);
 
-                if (numMatches.Count >= n && numMatches.Count <= m)
+                if (numMatches.Count >= minLength && numMatches.Count <= maxLength)
                 {
                     param = new int[numMatches.Count];
 

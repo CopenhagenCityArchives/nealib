@@ -165,7 +165,7 @@
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}({0}, {1})">
                         <Binding Path="Line"></Binding>
-                        <Binding Path="Pos"></Binding>
+                        <Binding Path="Position"></Binding>
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
@@ -176,7 +176,7 @@
 
     </DataTemplate>
 
-    <HierarchicalDataTemplate x:Key="ErrorItemTemplate" ItemsSource="{Binding Instances}" ItemTemplate="{StaticResource InstanceItemTemplate}">
+    <HierarchicalDataTemplate x:Key="ErrorItemTemplate" ItemsSource="{Binding Posts}" ItemTemplate="{StaticResource InstanceItemTemplate}">
         <TextBlock Foreground="{Binding Count, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
             <TextBlock.Text>
                 <MultiBinding StringFormat="{}{0} ({1})">
@@ -187,7 +187,7 @@
         </TextBlock>
     </HierarchicalDataTemplate>
 
-    <HierarchicalDataTemplate x:Key="ErrorSelectedTemplate" ItemsSource="{Binding Instances}" ItemTemplate="{StaticResource InstanceItemTemplate}">
+    <HierarchicalDataTemplate x:Key="ErrorSelectedTemplate" ItemsSource="{Binding Posts}" ItemTemplate="{StaticResource InstanceItemTemplate}">
         <TextBlock Foreground="{Binding Count, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}">
             <TextBlock.Text>
                 <MultiBinding StringFormat="{}{0} ({1})">
@@ -217,7 +217,7 @@
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
-            <ListView BorderThickness="0" ItemTemplate="{StaticResource InstanceItemTemplate}" ItemsSource="{Binding Instances}">
+            <ListView BorderThickness="0" ItemTemplate="{StaticResource InstanceItemTemplate}" ItemsSource="{Binding Posts}">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Setter Property="Focusable" Value="False" />
