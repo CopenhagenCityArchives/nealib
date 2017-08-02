@@ -242,10 +242,15 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <ListBox x:Name="ComparedTableList" ItemsSource="{Binding TableComparisons}" ItemTemplate="{StaticResource ComparedTableItemTemplate}" />
-                        <DockPanel Grid.Column="1">
+                        <Label FontWeight="Bold">Tabeller</Label>
+                        <Label Grid.Column="1" FontWeight="Bold">Tabel</Label>
+                        <Label Grid.Column="2" FontWeight="Bold">Felt</Label>
+
+                        <ListBox Margin="5" Grid.Row="1" x:Name="ComparedTableList" ItemsSource="{Binding TableComparisons}" ItemTemplate="{StaticResource ComparedTableItemTemplate}" />
+                        <DockPanel  Grid.Row="1" Grid.Column="1">
                             <DockPanel.Style>
                                 <Style>
                                     <Style.Triggers>
@@ -255,7 +260,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </DockPanel.Style>
-                            <Grid DockPanel.Dock="Top">
+                            <Grid DockPanel.Dock="Top" Margin="5">
                                 <Grid.RowDefinitions>
                                     <RowDefinition />
                                     <RowDefinition />
@@ -270,69 +275,70 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
-                                <Label Grid.ColumnSpan="2" Content="{Binding SelectedItem.Name, ElementName=ComparedTableList}" />
-                                <Label Grid.Row="1">
-                                    <Label.Style>
+                                <TextBlock Margin="0 0 5 5">Navn:</TextBlock>
+                                <TextBlock Margin="0 0 0 5" Grid.Column="1" Text="{Binding SelectedItem.Name, ElementName=ComparedTableList}" />
+                                <TextBlock Margin="0 0 5 0" Grid.Row="1">
+                                    <TextBlock.Style>
                                         <Style>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedItem.DescriptionModified, ElementName=ComparedTableList}" Value="True">
-                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                    <Setter Property="TextBlock.Foreground" Value="Orange" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </Label.Style>
+                                    </TextBlock.Style>
                                     Beskrivelse:
-                                </Label>
+                                </TextBlock>
                                 <TextBox IsReadOnly="True" Grid.Row="1" Grid.Column="1" Text="{Binding SelectedItem.OldTable.Description, ElementName=ComparedTableList, Mode=OneWay}" />
-                                <TextBox IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.NewTable.Description, ElementName=ComparedTableList, Mode=OneWay}" />
+                                <TextBox Margin="0 0 0 5" IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.NewTable.Description, ElementName=ComparedTableList, Mode=OneWay}" />
 
-                                <Label Grid.Row="3">
-                                    <Label.Style>
+                                <TextBlock Margin="0 0 5 0" Grid.Row="3">
+                                    <TextBlock.Style>
                                         <Style>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedItem.RowsModified, ElementName=ComparedTableList}" Value="True">
-                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                    <Setter Property="TextBlock.Foreground" Value="Orange" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </Label.Style>
+                                    </TextBlock.Style>
                                     Rækkeantal:
-                                </Label>
-                                <Label Grid.Row="3" Grid.Column="1" Content="{Binding SelectedItem.OldTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
-                                <Label Grid.Row="4" Grid.Column="1" Content="{Binding SelectedItem.NewTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
+                                </TextBlock>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedItem.OldTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
+                                <TextBlock Margin="0 0 0 5" Grid.Row="4" Grid.Column="1" Text="{Binding SelectedItem.NewTable.Rows, ElementName=ComparedTableList, Mode=OneWay}" />
 
-                                <Label Grid.Row="5">
-                                    <Label.Style>
+                                <TextBlock Margin="0 0 5 0" Grid.Row="5">
+                                    <TextBlock.Style>
                                         <Style>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedItem.FolderModified, ElementName=ComparedTableList}" Value="True">
-                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                    <Setter Property="TextBlock.Foreground" Value="Orange" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </Label.Style>
+                                    </TextBlock.Style>
                                     Mappe:
-                                </Label>
-                                <Label Grid.Row="5" Grid.Column="1" Content="{Binding SelectedItem.OldTable.Folder, ElementName=ComparedTableList, Mode=OneWay}" />
-                                <Label Grid.Row="6" Grid.Column="1" Content="{Binding SelectedItem.NewTable.Folder, ElementName=ComparedTableList, Mode=OneWay}" />
+                                </TextBlock>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedItem.OldTable.Folder, ElementName=ComparedTableList, Mode=OneWay}" />
+                                <TextBlock Margin="0 0 0 5" Grid.Row="6" Grid.Column="1" Text="{Binding SelectedItem.NewTable.Folder, ElementName=ComparedTableList, Mode=OneWay}" />
 
-                                <Label Grid.Row="7">
-                                    <Label.Style>
+                                <TextBlock Margin="0 0 5 0" Grid.Row="7">
+                                    <TextBlock.Style>
                                         <Style>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding SelectedItem.ColumnsModified, ElementName=ComparedTableList}" Value="True">
-                                                    <Setter Property="Label.Foreground" Value="Orange" />
+                                                    <Setter Property="TextBlock.Foreground" Value="Orange" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </Label.Style>
+                                    </TextBlock.Style>
                                     Felter:
-                                </Label>
+                                </TextBlock>
                             </Grid>
-                            <ListBox x:Name="ComparedColumnList" ItemsSource="{Binding SelectedItem.Columns, ElementName=ComparedTableList}" ItemTemplate="{StaticResource ComparedColumnItemTemplate}"></ListBox>
+                            <ListBox Margin="5" x:Name="ComparedColumnList" ItemsSource="{Binding SelectedItem.Columns, ElementName=ComparedTableList}" ItemTemplate="{StaticResource ComparedColumnItemTemplate}"></ListBox>
                         </DockPanel>
-                        
-                        <Grid Grid.Column="2">
+
+                        <Grid Grid.Row="1" Grid.Column="2" Margin="5">
                             <Grid.Style>
                                 <Style>
                                     <Style.Triggers>
@@ -355,75 +361,68 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition />
                             </Grid.ColumnDefinitions>
-                            <Label Grid.ColumnSpan="2" Content="{Binding SelectedItem.Name, ElementName=ComparedColumnList}" />
+                            <TextBlock Margin="0 0 5 5">Navn:</TextBlock>
+                            <TextBlock Margin="0 0 0 5" Grid.Column="1" Text="{Binding SelectedItem.Name, ElementName=ComparedColumnList}" />
 
-                            <Label Grid.Row="1">
-                                <Label.Style>
+                            <TextBlock  Margin="0 0 5 0" Grid.Row="1">
+                                <TextBlock.Style>
                                     <Style>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SelectedItem.DescriptionModified, ElementName=ComparedColumnList}" Value="True">
-                                                <Setter Property="Label.Foreground" Value="Orange" />
+                                                <Setter Property="TextBlock.Foreground" Value="Orange" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Label.Style>
+                                </TextBlock.Style>
                                 Beskrivelse:
-                            </Label>
+                            </TextBlock>
                             <TextBox IsReadOnly="True" Grid.Row="1" Grid.Column="1" Text="{Binding SelectedItem.OldColumn.Description, ElementName=ComparedColumnList, Mode=OneWay}" />
-                            <TextBox IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.NewColumn.Description, ElementName=ComparedColumnList, Mode=OneWay}" />
+                            <TextBox Margin="0 0 0 5" IsReadOnly="True" Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.NewColumn.Description, ElementName=ComparedColumnList, Mode=OneWay}" />
 
-                            <Label Grid.Row="3">
-                                <Label.Style>
+                            <TextBlock Margin="0 0 5 0" Grid.Row="3">
+                                <TextBlock.Style>
                                     <Style>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SelectedItem.IdModified, ElementName=ComparedColumnList}" Value="True">
-                                                <Setter Property="Label.Foreground" Value="Orange" />
+                                                <Setter Property="TextBlock.Foreground" Value="Orange" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Label.Style>
+                                </TextBlock.Style>
                                 Id
-                            </Label>
-                            <Label Grid.Row="3" Grid.Column="1" Content="{Binding SelectedItem.OldColumn.ColumnId, ElementName=ComparedColumnList, Mode=OneWay}" />
-                            <Label Grid.Row="4" Grid.Column="1" Content="{Binding SelectedItem.NewColumn.ColumnId, ElementName=ComparedColumnList, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedItem.OldColumn.ColumnId, ElementName=ComparedColumnList, Mode=OneWay}" />
+                            <TextBlock Margin="0 0 0 5" Grid.Row="4" Grid.Column="1" Text="{Binding SelectedItem.NewColumn.ColumnId, ElementName=ComparedColumnList, Mode=OneWay}" />
 
-                            <Label Grid.Row="5">
-                                <Label.Style>
+                            <TextBlock Margin="0 0 5 0" Grid.Row="5">
+                                <TextBlock.Style>
                                     <Style>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SelectedItem.DataTypeModified, ElementName=ComparedColumnList}" Value="True">
-                                                <Setter Property="Label.Foreground" Value="Orange" />
+                                                <Setter Property="TextBlock.Foreground" Value="Orange" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Label.Style>
+                                </TextBlock.Style>
                                 Datatype:
-                            </Label>
-                            <Label Grid.Row="5" Grid.Column="1">
-                                <Label.Content>
-                                    <TextBlock>
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0} {1}">
-                                                <Binding Path="SelectedItem.OldColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
-                                                <Binding Path="SelectedItem.OldColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                </Label.Content>
-                            </Label>
+                            </TextBlock>
+                            <TextBlock Grid.Row="5" Grid.Column="1">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="SelectedItem.OldColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
+                                        <Binding Path="SelectedItem.OldColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
 
-                            <Label Grid.Row="6" Grid.Column="1">
-                                <Label.Content>
-                                    <TextBlock>
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0} {1}">
-                                                <Binding Path="SelectedItem.NewColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
-                                                <Binding Path="SelectedItem.NewColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                </Label.Content>
-                            </Label>
+                            <TextBlock Grid.Row="6" Grid.Column="1">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="SelectedItem.NewColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
+                                        <Binding Path="SelectedItem.NewColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </Grid>
                     </Grid>
                 </DockPanel>
