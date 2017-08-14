@@ -60,6 +60,56 @@
       <Name>LibHardHorn</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestResources\AVID.TEST.1.1\ContextDocumentation\docCollection1\1\1.tif" />
+    <Content Include="TestResources\AVID.TEST.1.1\Indices\archiveIndex.xml" />
+    <Content Include="TestResources\AVID.TEST.1.1\Indices\contextDocumentationIndex.xml" />
+    <Content Include="TestResources\AVID.TEST.1.1\Indices\fileIndex.xml" />
+    <Content Include="TestResources\AVID.TEST.1.1\Indices\tableIndex.xml" />
+    <Content Include="TestResources\AVID.TEST.1.1\Tables\table1\table1.xml" />
+    <Content Include="TestResources\AVID.TEST.1.1\Tables\table2\table2.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\archiveIndex.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\contextDocumentationIndex.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\docIndex.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\fileIndex.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\GML2.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\gmlsf.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\gmlsfLevels.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\tableIndex.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\xlinks.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Schemas\standard\XMLSchema.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Tables\table1\table1.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="TestResources\AVID.TEST.1.1\Tables\table2\table2.xsd">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestResources\AVID.TEST.1.1\Schemas\localShared\" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

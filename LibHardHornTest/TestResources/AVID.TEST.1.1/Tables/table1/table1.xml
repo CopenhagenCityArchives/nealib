@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<table xmlns="http://www.sa.dk/xmlns/siard/1.0/schema0/table1.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sa.dk/xmlns/siard/1.0/schema0/table1.xsd table1.xsd">
+  <row>
+    <c1>1</c1>
+    <c2>Bo Breezer</c2>
+    <c3>11223344</c3>
+  </row>
+  <row>
+    <c1>2</c1>
+    <c2>Jens Data</c2>
+    <c3>55667788</c3>
+  </row>
+  <row>
+    <c1>3</c1>
+    <c2>Mads Boss</c2>
+    <c3>99001122</c3>
+  </row>
+</table>
