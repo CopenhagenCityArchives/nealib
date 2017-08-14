@@ -559,7 +559,7 @@
         <Canvas Grid.Row="1" Width="300" VerticalAlignment="Center" Height="14">
             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="Black">
                 <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}/{1}">
+                    <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
                         <Binding Path="DoneRows" />
                         <Binding Path="TotalRows" />
                     </MultiBinding>
@@ -567,7 +567,7 @@
             </TextBlock>
             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="0" Foreground="Black">
                 <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}/{1}">
+                    <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
                         <Binding Path="DoneRows" />
                         <Binding Path="TotalRows" />
                     </MultiBinding>
@@ -575,7 +575,7 @@
             </TextBlock>
             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="2" Foreground="Black">
                 <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}/{1}">
+                    <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
                         <Binding Path="DoneRows" />
                         <Binding Path="TotalRows" />
                     </MultiBinding>
@@ -583,7 +583,7 @@
             </TextBlock>
             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="2" Foreground="Black">
                 <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}/{1}">
+                    <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
                         <Binding Path="DoneRows" />
                         <Binding Path="TotalRows" />
                     </MultiBinding>
@@ -591,7 +591,7 @@
             </TextBlock>
             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="1" Canvas.Left="1" Foreground="White">
                 <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}/{1}">
+                    <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
                         <Binding Path="DoneRows" />
                         <Binding Path="TotalRows" />
                     </MultiBinding>
