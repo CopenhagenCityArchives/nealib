@@ -24,7 +24,8 @@ namespace HardHorn.ViewModels
         UPDATE_TABLE_STATUS,
         TEST_DONE,
         COLUMN_REPORT,
-        TABLE_REPORT
+        TABLE_REPORT,
+        TABLE_NOT_FOUND
     }
 
     class ListTable : PropertyChangedBase
@@ -771,6 +772,10 @@ namespace HardHorn.ViewModels
 
                     Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
                     break;
+                case TestWorkerUpdate.TABLE_NOT_FOUND:
+                    table = state.Data;
+                    Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", table.Name, table.Folder), LogLevel.ERROR);
+                    break;
             }
         }
 
@@ -796,21 +801,28 @@ namespace HardHorn.ViewModels
             {
                 worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.NEW_TABLE, Data = table });
                 ListTableLookup[table.Name].Busy = true;
-                using (var reader = table.GetReader())
+                try
                 {
-                    int readRows = 0;
-                    do
+                    using (var reader = table.GetReader())
                     {
-                        if (worker.CancellationPending)
-                            return;
-                        Post[,] rows;
-                        readRows = reader.Read(out rows, chunk);
-                        if (worker.CancellationPending)
-                            return;
-                        _analyzer.AnalyzeRows(table, rows, readRows);
-                        worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.UPDATE_TABLE_STATUS, Data = table });
-                        DoneRows += readRows;
-                    } while (readRows == chunk);
+                        int readRows = 0;
+                        do
+                        {
+                            if (worker.CancellationPending)
+                                return;
+                            Post[,] rows;
+                            readRows = reader.Read(out rows, chunk);
+                            if (worker.CancellationPending)
+                                return;
+                            _analyzer.AnalyzeRows(table, rows, readRows);
+                            worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.UPDATE_TABLE_STATUS, Data = table });
+                            DoneRows += readRows;
+                        } while (readRows == chunk);
+                    }
+                }
+                catch (FileNotFoundException)
+                {
+                    worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TABLE_NOT_FOUND, Data = table });
                 }
                 
 
