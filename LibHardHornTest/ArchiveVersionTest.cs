@@ -4,9 +4,18 @@ using HardHorn.Archiving;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using HardHorn.Logging;
+using HardHorn.Analysis;
 
 namespace LibHardHornTest
 {
+    public class TestLogger : ILogger
+    {
+        public void Log(string message, LogLevel level)
+        {
+        }
+    }
+
     [TestClass]
     public class ArchiveVersionTest
     {
@@ -56,10 +65,10 @@ namespace LibHardHornTest
             VerifyAV4 = new ExpandoObject();
             VerifyAV4.tableIndex = new List<dynamic>(new dynamic[] { vTable1Keep });
 
-            VerifyAV1JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" }, { \"name\":\"table2\", \"keep\":\"true\" } ] }";
-            VerifyAV2JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" }, { \"name\":\"table2\", \"keep\":\"true\" }, { \"name\":\"table3\", \"keep\":\"true\" } ] }";
-            VerifyAV3JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" }, { \"name\":\"table2\", \"keep\":\"false\" } ] }";
-            VerifyAV4JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":\"true\" } ] }";
+            VerifyAV1JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":true }, { \"name\":\"table2\", \"keep\":true } ] }";
+            VerifyAV2JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":true }, { \"name\":\"table2\", \"keep\":true }, { \"name\":\"table3\", \"keep\":true } ] }";
+            VerifyAV3JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":true }, { \"name\":\"table2\", \"keep\":false } ] }";
+            VerifyAV4JSON = "{ \"tableIndex\": [ { \"name\":\"table1\", \"keep\":true } ] }";
         }
 
         [TestMethod]
@@ -123,6 +132,33 @@ namespace LibHardHornTest
             IEnumerable<ArchiveVersionVerificationError> errorList = AV.VerifyJSON(VerifyAV4JSON);
             Assert.AreEqual(1, errorList.Count());
             Assert.AreEqual(ArchiveVersionVerificationError.ErrorType.UnknownTable, errorList.First().Type);
+        }
+
+        [TestMethod]
+        [DeploymentItem(@"..\..\TestResources", @"TestResources")]
+        public void TestLoadTableIndex()
+        {
+            var AV = ArchiveVersion.Load(@"TestResources\AVID.TEST.1.1", new TestLogger());
+            var analyzer = new DataAnalyzer(AV, new TestLogger());
+            var tables = AV.Tables.ToList();
+
+            Assert.AreEqual(2, tables.Count);
+
+            Assert.AreEqual("PERSONER", tables[0].Name);
+            Assert.AreEqual("table1", tables[0].Folder);
+            Assert.AreEqual("Tabel over personer.", tables[0].Description);
+
+            Assert.AreEqual("ID", tables[0].Columns[0].Name);
+            Assert.AreEqual("NAVN", tables[0].Columns[1].Name);
+            Assert.AreEqual("TLFNR", tables[0].Columns[2].Name);
+
+            Assert.AreEqual("ADDRESSER", tables[1].Name);
+            Assert.AreEqual("table2", tables[1].Folder);
+            Assert.AreEqual("Personaddresser.", tables[1].Description);
+
+            Assert.AreEqual("PERSON_ID", tables[1].Columns[0].Name);
+            Assert.AreEqual("ADDRESSE", tables[1].Columns[1].Name);
+            Assert.AreEqual("INDFLYT", tables[1].Columns[2].Name);
         }
     }
 }
