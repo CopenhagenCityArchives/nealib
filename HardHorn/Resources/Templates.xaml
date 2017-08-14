@@ -210,12 +210,13 @@
     <DataTemplate x:Key="ErrorListItem">
         <StackPanel>
             <StackPanel Orientation="Horizontal">
-                <TextBlock>
+                <TextBlock x:Name="ErrorListItemHeaderTextBlock">
                     <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0} {1} ({2})">
+                        <MultiBinding StringFormat="{}{0} &quot;{1}&quot; ({2}/{3} rækker)">
                             <Binding Path="Type" />
                             <Binding Path="Regex.Regex" />
                             <Binding Path="Count" />
+                            <Binding Path="Column.Table.Rows" />
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
@@ -228,6 +229,19 @@
                 </ListView.ItemContainerStyle>
             </ListView>
         </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Regex}" Value="{x:Null}">
+                <Setter TargetName="ErrorListItemHeaderTextBlock" Property="Text">
+                    <Setter.Value>
+                        <MultiBinding StringFormat="{}{0} ({1}/{2} rækker)">
+                            <Binding Path="Type" />
+                            <Binding Path="Count" />
+                            <Binding Path="Column.Table.Rows" />
+                        </MultiBinding>
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+        </DataTemplate.Triggers>
     </DataTemplate>
 
     <DataTemplate x:Key="ReportListItem">
