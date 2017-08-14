@@ -8,6 +8,7 @@
         xmlns:vm="clr-namespace:HardHorn.ViewModels"
         xmlns:ctl="clr-namespace:HardHorn.Controls"
         xmlns:properties="clr-namespace:HardHorn.Properties"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d"
         Title="HardHorn" Height="720" Width="1280"
@@ -64,6 +65,11 @@
                                     <CheckBox IsChecked="{Binding Selected}" Content="{Binding DataType}" />
                                 </HierarchicalDataTemplate>
                             </TreeView.Resources>
+                            <TreeView.ItemContainerStyle>
+                                <Style TargetType="{x:Type TreeViewItem}">
+                                    <Setter Property="IsExpanded" Value="True" />
+                                </Style>
+                            </TreeView.ItemContainerStyle>
                         </TreeView>
 
                         <Button  Margin="0 5 0 0" DockPanel.Dock="Right" IsEnabled="{Binding TestLoaded}" cal:Message.Attach="ToggleTest()">
@@ -455,7 +461,59 @@
             </TabItem>
         </TabControl>
 
-        <ProgressBar Grid.Row="1" Width="300" Value="{Binding TestProgress}"/>
+        <ProgressBar Grid.Row="1" Width="300" Value="{Binding TestProgress}" />
+        <Canvas Grid.Row="1" Width="300" VerticalAlignment="Center" Height="14">
+            <TextBlock Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="White">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}/{1}">
+                        <Binding Path="DoneRows" />
+                        <Binding Path="TotalRows" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="0" Foreground="White">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}/{1}">
+                        <Binding Path="DoneRows" />
+                        <Binding Path="TotalRows" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="2" Foreground="White">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}/{1}">
+                        <Binding Path="DoneRows" />
+                        <Binding Path="TotalRows" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="2" Foreground="White">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}/{1}">
+                        <Binding Path="DoneRows" />
+                        <Binding Path="TotalRows" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBlock Width="300" TextAlignment="Center" Canvas.Top="1" Canvas.Left="1" Foreground="Black">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}/{1}">
+                        <Binding Path="DoneRows" />
+                        <Binding Path="TotalRows" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <Canvas.Style>
+                <Style>
+                    <Setter Property="Label.Visibility" Value="Hidden" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding TestRunning}" Value="True">
+                            <Setter Property="Label.Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Canvas.Style>
+        </Canvas>
 
         <TextBox MaxLines="1" Grid.Row="1" Grid.Column="1" Text="{Binding StatusText}" Background="{DynamicResource {x:Static SystemColors.ControlBrush}}"/>
 

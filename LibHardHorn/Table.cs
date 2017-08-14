@@ -118,9 +118,9 @@ namespace HardHorn.Archiving
         /// <param name="rows"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        public int Read(out Row[] rows, int n = 100000)
+        public int Read(out Post[,] rows, int n = 100000)
         {
-            rows = new Row[n];
+            rows = new Post[n, _table.Columns.Count];
             int row = 0;
 
             while (_xmlReader.Read() && row < n)
@@ -131,11 +131,8 @@ namespace HardHorn.Archiving
                     {
                         if (inner.Read())
                         {
-                            var xrow = XElement.Load(inner);
-                            var xdatas = xrow.Elements();
-                            rows[row] = new Row(_table.Columns.Count);
                             int col = 0;
-                            foreach (var xdata in xdatas)
+                            foreach (var xpost in XElement.Load(inner).Elements())
                             {
                                 if (col > _table.Columns.Count)
                                 {
@@ -143,17 +140,21 @@ namespace HardHorn.Archiving
                                 }
                                 var xmlInfo = _xmlReader as IXmlLineInfo;
                                 var isNull = false;
-                                if (xdata.HasAttributes)
+                                if (xpost.HasAttributes)
                                 {
-                                    var xnull = xdata.Attribute(xmlnsxsi + "nil");
+                                    var xnull = xpost.Attribute(xmlnsxsi + "nil");
                                     bool.TryParse(xnull.Value, out isNull);
                                 }
-                                rows[row][col] = new Post(xdata.Value, xmlInfo.LineNumber, xmlInfo.LinePosition, isNull);
+                                rows[row, col] = new Post();
+                                rows[row, col].Data = xpost.Value;
+                                rows[row, col].Line = xmlInfo.LineNumber;
+                                rows[row, col].Position = xmlInfo.LinePosition;
+                                rows[row, col].IsNull = isNull;
                                 col++;
                             }
-                            row++;
                         }
                     }
+                    row++;
                 }
             }
 
@@ -184,10 +185,11 @@ namespace HardHorn.Archiving
         }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~TableReader() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
+        ~TableReader()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()
@@ -195,7 +197,7 @@ namespace HardHorn.Archiving
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
             // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
         #endregion
     }
@@ -206,6 +208,9 @@ namespace HardHorn.Archiving
         public int Position { get; set; }
         public bool IsNull { get; set; }
         public string Data { get; set; }
+
+        public Post()
+        { }
 
         public Post(string data, int line, int position, bool isNull)
         {
@@ -231,6 +236,10 @@ namespace HardHorn.Archiving
         {
             FieldCount = count;
             _fields = new Post[count];
+            for (int i = 0; i < count; i++)
+            {
+                _fields[i] = new Post();
+            }
         }
     }
 }

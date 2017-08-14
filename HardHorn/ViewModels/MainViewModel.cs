@@ -315,6 +315,12 @@ namespace HardHorn.ViewModels
         public TestSuite TestSuite { get; set; }
         public int[] BarChartValues { get; set; }
 
+        int _totalRows;
+        public int TotalRows { get { return _totalRows; } set { _totalRows = value; NotifyOfPropertyChange("TotalRows"); } }
+
+        int _doneRows;
+        public int DoneRows { get { return _doneRows; } set { _doneRows = value; NotifyOfPropertyChange("DoneRows"); } }
+
         ArchiveVersion _archiveVersion;
         public ArchiveVersion ArchiveVersion { get { return _archiveVersion; } set { _archiveVersion = value; NotifyOfPropertyChange("ArchiveVersion"); } }
 
@@ -581,7 +587,7 @@ namespace HardHorn.ViewModels
 
         private void _compareWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            e.Result = ArchiveVersion.CompareWithTableIndex(e.Argument as string, new LoadWorkerLogger(sender as BackgroundWorker));
+            e.Result = ArchiveVersion.CompareWithTables(ArchiveVersion.LoadTableIndex(ArchiveVersion, e.Argument as string, new LoadWorkerLogger(sender as BackgroundWorker)));
         }
 
 
@@ -782,13 +788,13 @@ namespace HardHorn.ViewModels
             var worker = sender as BackgroundWorker;
 
             // Count total rows
-            int totalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
-            int doneRows = 0;
-           
+            TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
+            DoneRows = 0;
+            int chunk = 10000;
 
             foreach (var table in ArchiveVersion.Tables)
             {
-                worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.NEW_TABLE, Data = table });
+                worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.NEW_TABLE, Data = table });
                 ListTableLookup[table.Name].Busy = true;
                 using (var reader = table.GetReader())
                 {
@@ -797,26 +803,28 @@ namespace HardHorn.ViewModels
                     {
                         if (worker.CancellationPending)
                             return;
-                        Row[] rows;
-                        readRows = reader.Read(out rows, 10000);
+                        Post[,] rows;
+                        readRows = reader.Read(out rows, chunk);
+                        if (worker.CancellationPending)
+                            return;
                         _analyzer.AnalyzeRows(table, rows, readRows);
-                        worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.UPDATE_TABLE_STATUS, Data = table });
-                        doneRows += readRows;
-                    } while (readRows > 0);
+                        worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.UPDATE_TABLE_STATUS, Data = table });
+                        DoneRows += readRows;
+                    } while (readRows == chunk);
                 }
                 
 
-                worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.TABLE_REPORT, Data = _analyzer.Report[table.Name] });
+                worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TABLE_REPORT, Data = _analyzer.Report[table.Name] });
 
                 foreach (var report in _analyzer.Report[table.Name].Values)
                 {
                     report.SuggestType();
-                    worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.COLUMN_REPORT, Data = report });
+                    worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.COLUMN_REPORT, Data = report });
                 }
                 ListTableLookup[table.Name].Busy = false;
                 ListTableLookup[table.Name].Done = true;
             }
-            worker.ReportProgress(100 * doneRows / totalRows, new { Type = TestWorkerUpdate.TEST_DONE, Data = (object)null });
+            worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TEST_DONE, Data = (object)null });
         }
         #endregion
 

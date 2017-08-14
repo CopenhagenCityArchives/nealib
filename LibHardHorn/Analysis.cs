@@ -17,7 +17,8 @@ namespace HardHorn.Analysis
         UNDERFLOW,
         FORMAT,
         NULL,
-        BLANK
+        BLANK,
+        REGEX
     }
 
     public class AnalysisError
@@ -26,12 +27,14 @@ namespace HardHorn.Analysis
         public int Count { get { return _count; } }
         List<Post> _instances = new List<Post>();
 
-        public IEnumerable<Post> Posts { get { return _instances as IEnumerable<Post>; } }
+        public IEnumerable<Post> Posts { get { return _instances; } }
         public AnalysisErrorType Type { get; private set; }
+        public RegexTest Regex { get; private set; }
 
-        public AnalysisError(AnalysisErrorType type)
+        public AnalysisError(AnalysisErrorType type, RegexTest regex = null)
         {
             Type = type;
+            Regex = regex;
         }
 
         public void Add(Post post)
@@ -75,12 +78,12 @@ namespace HardHorn.Analysis
             Errors = new Dictionary<AnalysisErrorType, AnalysisError>();
         }
 
-        public void ReportError(Post post, AnalysisErrorType errorType)
+        public void ReportError(Post post, AnalysisErrorType errorType, RegexTest regexTest = null)
         {
             ErrorCount++;
             if (!Errors.ContainsKey(errorType))
             {
-                Errors.Add(errorType, new AnalysisError(errorType));
+                Errors.Add(errorType, new AnalysisError(errorType, regexTest));
             }
 
             Errors[errorType].Add(post);
@@ -205,15 +208,14 @@ namespace HardHorn.Analysis
         /// </summary>
         /// <param name="n">The number of rows to analyze.</param>
         /// <returns>The number of rows analyzed.</returns>
-        public void AnalyzeRows(Table table, Row[] rows, int n)
+        public void AnalyzeRows(Table table, Post[,] rows, int n)
         {
             // analyize the rows
             for (int i = 0; i < n; i++)
             {
-                var row = rows[i];
-                for (int j = 0; j < row.FieldCount; j++)
+                for (int j = 0; j < table.Columns.Count; j++)
                 {
-                    var post = row[j];
+                    var post = rows[i,j];
                     AnalyzeLengths(Report[table.Name][table.Columns[j].Name], post.Data);
                     AnalyzePost(table.Columns[j], post, Report[table.Name][table.Columns[j].Name]);
                 }
@@ -296,7 +298,7 @@ namespace HardHorn.Analysis
                 {
                     if (regexTest.ShouldPerformMatch(column) && !post.IsNull && !regexTest.MatchData(post.Data))
                     {
-                        report.ReportError(post, AnalysisErrorType.FORMAT);
+                        report.ReportError(post, AnalysisErrorType.REGEX, regexTest);
                     }
                 }
             }

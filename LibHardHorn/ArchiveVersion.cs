@@ -175,7 +175,7 @@ namespace HardHorn.Archiving
         public static ArchiveVersion Load(string path, ILogger log)
         {
             var archiveVersion = new ArchiveVersion(System.IO.Path.GetDirectoryName(path), path, null);
-            archiveVersion.Tables = LoadTableIndex(archiveVersion, System.IO.Path.Combine(path, "Indices", "tableIndex.xml"), log);
+            archiveVersion.Tables = LoadTableIndex(archiveVersion, System.IO.Path.Combine(path, "Indices", "tableIndex.xml"), log).ToList();
             return archiveVersion;
         }
 
@@ -193,15 +193,14 @@ namespace HardHorn.Archiving
             }
         }
 
-        public IEnumerable<dynamic> CompareWithTableIndex(string tableIndexPath, ILogger log)
+        public IEnumerable<dynamic> CompareWithTables(IEnumerable<Table> compareTables)
         {
             dynamic tableComparison, columnComparison;
-            var oldTables = LoadTableIndex(null, tableIndexPath, log);
 
             foreach (var table in Tables)
             {
                 bool tableAdded = true;
-                foreach (var oldTable in oldTables)
+                foreach (var oldTable in compareTables)
                 {
                     if (table.Name.ToLower() == oldTable.Name.ToLower())
                     {
@@ -410,7 +409,7 @@ namespace HardHorn.Archiving
                 }
             }
 
-            foreach (var oldTable in oldTables)
+            foreach (var oldTable in compareTables)
             {
                 bool tableRemoved = true;
                 foreach (var table in Tables)

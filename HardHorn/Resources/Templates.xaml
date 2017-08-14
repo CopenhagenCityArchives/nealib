@@ -209,14 +209,17 @@
 
     <DataTemplate x:Key="ErrorListItem">
         <StackPanel>
-            <TextBlock>
-                <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0} ({1})">
-                        <Binding Path="Type" />
-                        <Binding Path="Count" />
-                    </MultiBinding>
-                </TextBlock.Text>
-            </TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0} {1} ({2})">
+                            <Binding Path="Type" />
+                            <Binding Path="Regex.Regex" />
+                            <Binding Path="Count" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+            </StackPanel>
             <ListView BorderThickness="0" ItemTemplate="{StaticResource InstanceItemTemplate}" ItemsSource="{Binding Posts}">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
