@@ -588,7 +588,7 @@ namespace HardHorn.ViewModels
 
         private void _compareWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            e.Result = ArchiveVersion.CompareWithTables(ArchiveVersion.LoadTableIndex(ArchiveVersion, e.Argument as string, new LoadWorkerLogger(sender as BackgroundWorker)));
+            e.Result = ArchiveVersion.CompareWithTables(ArchiveVersion.LoadTableIndex(ArchiveVersion, e.Argument as string, new LoadWorkerLogger(sender as BackgroundWorker)).ToList());
         }
 
 
@@ -1008,6 +1008,7 @@ namespace HardHorn.ViewModels
 
         public void Compare(string location)
         {
+            Log(string.Format("Sammenligner '{0}' med {1}.", location, ArchiveVersion.Id), LogLevel.SECTION);
             TableComparisons.Clear();
             _compareWorker.RunWorkerAsync(location);
         }
