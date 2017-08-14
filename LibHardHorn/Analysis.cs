@@ -30,11 +30,13 @@ namespace HardHorn.Analysis
         public IEnumerable<Post> Posts { get { return _instances; } }
         public AnalysisErrorType Type { get; private set; }
         public RegexTest Regex { get; private set; }
+        public Column Column { get; private set; }
 
-        public AnalysisError(AnalysisErrorType type, RegexTest regex = null)
+        public AnalysisError(AnalysisErrorType type, Column column, RegexTest regex = null)
         {
             Type = type;
             Regex = regex;
+            Column = column;
         }
 
         public void Add(Post post)
@@ -83,7 +85,7 @@ namespace HardHorn.Analysis
             ErrorCount++;
             if (!Errors.ContainsKey(errorType))
             {
-                Errors.Add(errorType, new AnalysisError(errorType, regexTest));
+                Errors.Add(errorType, new AnalysisError(errorType, Column, regexTest));
             }
 
             Errors[errorType].Add(post);
