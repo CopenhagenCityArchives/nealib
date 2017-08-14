@@ -174,7 +174,7 @@ namespace HardHorn.Archiving
         /// <returns></returns>
         public static ArchiveVersion Load(string path, ILogger log)
         {
-            var archiveVersion = new ArchiveVersion(System.IO.Path.GetDirectoryName(path), path, null);
+            var archiveVersion = new ArchiveVersion(System.IO.Path.GetFileName(path), path, null);
             archiveVersion.Tables = LoadTableIndex(archiveVersion, System.IO.Path.Combine(path, "Indices", "tableIndex.xml"), log).ToList();
             return archiveVersion;
         }
@@ -404,6 +404,7 @@ namespace HardHorn.Archiving
                     tableComparison.Modified = false;
                     tableComparison.ColumnsModified = false;
                     tableComparison.DescriptionModified = false;
+                    tableComparison.RowsModified = false;
                     tableComparison.FolderModified = false;
                     yield return tableComparison;
                 }
@@ -447,6 +448,7 @@ namespace HardHorn.Archiving
                     tableComparison.Modified = false;
                     tableComparison.ColumnsModified = false;
                     tableComparison.DescriptionModified = false;
+                    tableComparison.RowsModified = false;
                     tableComparison.FolderModified = false;
                     yield return tableComparison;
                 }
