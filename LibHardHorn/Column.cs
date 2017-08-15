@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -99,6 +100,33 @@ namespace HardHorn.Archiving
 
     }
 
+    public class ColumnComparison
+    {
+        public Column NewColumn { get; set; }
+        public Column OldColumn { get; set; }
+        public bool Added { get; set; }
+        public bool Modified { get; set; }
+        public bool Removed { get; set; }
+        public bool DataTypeModified { get; set; }
+        public bool NullableModified { get; set; }
+        public bool DescriptionModified { get; set; }
+        public bool IdModified { get; set; }
+        public string Name { get; internal set; }
+
+        public ColumnComparison(Column newColumn, Column oldColumn)
+        {
+            NewColumn = newColumn;
+            OldColumn = oldColumn;
+            Added = false;
+            Modified = false;
+            Removed = false;
+            DataTypeModified = false;
+            NullableModified = false;
+            DescriptionModified = false;
+            IdModified = false;
+        }
+    }
+
     /// <summary>
     /// A column of a table in an archive version.
     /// </summary>
@@ -147,6 +175,67 @@ namespace HardHorn.Archiving
             _nullable = nullable;
             _desc = desc;
             _colId = colId;
+        }
+
+        public ColumnComparison CompareTo(Column oldColumn)
+        {
+            var comparison = new ColumnComparison(this, oldColumn);
+
+            if (Description != oldColumn.Description)
+            {
+                comparison.Modified = true;
+                comparison.DescriptionModified = true;
+            }
+
+            if (Type != oldColumn.Type)
+            {
+                comparison.Modified = true;
+                comparison.DataTypeModified = true;
+            }
+
+            if (Param == null && oldColumn.Param != null)
+            {
+                comparison.Modified = true;
+                comparison.DataTypeModified = true;
+            }
+            else if (Param != null && oldColumn.Param == null)
+            {
+                comparison.Modified = true;
+                comparison.DataTypeModified = true;
+            }
+            else if (Param == null && oldColumn.Param == null)
+            { }
+            else if (Param.Length != oldColumn.Param.Length)
+            {
+                comparison.Modified = true;
+                comparison.DataTypeModified = true;
+            }
+            else
+            {
+                for (int i = 0; i < Param.Length; i++)
+                {
+                    if (Param[i] != oldColumn.Param[i])
+                    {
+                        comparison.Modified = true;
+                        comparison.DataTypeModified = true;
+                        break;
+                    }
+                }
+            }
+
+            if (Nullable != oldColumn.Nullable)
+            {
+                comparison.Modified = true;
+                comparison.NullableModified = true;
+            }
+
+            if (ColumnId != oldColumn.ColumnId)
+            {
+                comparison.Modified = true;
+                comparison.IdModified = true;
+            }
+
+            return comparison;
         }
 
         /// <summary>

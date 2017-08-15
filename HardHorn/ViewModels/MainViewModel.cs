@@ -311,7 +311,9 @@ namespace HardHorn.ViewModels
     {
         #region Properties
         public object Item { get; set; }
-        public ObservableCollection<dynamic> TableComparisons { get; set; }
+        public ObservableCollection<TableComparison> TableComparisons { get; set; }
+        public ObservableCollection<TableComparison> RemovedTableComparisons { get; set; }
+        public ObservableCollection<TableComparison> AddedTableComparisons { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
         public TestSuite TestSuite { get; set; }
         public int[] BarChartValues { get; set; }
@@ -525,7 +527,9 @@ namespace HardHorn.ViewModels
             ListTables = new ObservableCollection<ListTable>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
-            TableComparisons = new ObservableCollection<dynamic>();
+            TableComparisons = new ObservableCollection<TableComparison>();
+            RemovedTableComparisons = new ObservableCollection<TableComparison>();
+            AddedTableComparisons = new ObservableCollection<TableComparison>();
             Regexes = new ObservableCollection<dynamic>();
             TestSuite = new TestSuite();
 
@@ -580,9 +584,19 @@ namespace HardHorn.ViewModels
                 return;
             }
 
-            foreach (var el in e.Result as IEnumerable<dynamic>)
+            TableComparisons.Clear();
+            AddedTableComparisons.Clear();
+            RemovedTableComparisons.Clear();
+
+            foreach (var tc in e.Result as IEnumerable<TableComparison>)
             {
-                TableComparisons.Add(el);
+                TableComparisons.Add(tc);
+
+                if (tc.Removed)
+                    RemovedTableComparisons.Add(tc);
+
+                if (tc.Added)
+                    AddedTableComparisons.Add(tc);
             }
         }
 
@@ -841,6 +855,20 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Actions
+        public void Merge(TableComparison added, TableComparison removed)
+        {
+            if (added == null || removed == null)
+                return;
+
+            var tableComparison = added.NewTable.CompareTo(removed.OldTable);
+            tableComparison.Name = added.Name + " / " + removed.Name;
+            TableComparisons.Add(tableComparison);
+            TableComparisons.Remove(added);
+            TableComparisons.Remove(removed);
+            AddedTableComparisons.Remove(added);
+            RemovedTableComparisons.Remove(removed);
+        }
+
         public void AddRegex(string regexText, Column regexColumn)
         {
             if (regexColumn == null)

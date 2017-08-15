@@ -96,6 +96,105 @@ namespace HardHorn.Archiving
         {
             return new TableReader(this);
         }
+
+        public TableComparison CompareTo(Table oldTable)
+        {
+            var tableComparison = new TableComparison(this, oldTable);
+            tableComparison.Name = Name;
+
+            if (Rows != oldTable.Rows)
+            {
+                tableComparison.Modified = true;
+                tableComparison.RowsModified = true;
+            }
+
+            if (Description != oldTable.Description)
+            {
+                tableComparison.Modified = true;
+                tableComparison.DescriptionModified = true;
+            }
+
+            if (Folder != oldTable.Folder)
+            {
+                tableComparison.Modified = true;
+                tableComparison.FolderModified = true;
+            }
+
+            foreach (var column in Columns)
+            {
+                bool columnAdded = true;
+                foreach (var oldColumn in oldTable.Columns)
+                {
+                    if (column.Name.ToLower() == oldColumn.Name.ToLower())
+                    {
+                        var columnComparison = column.CompareTo(oldColumn);
+                        columnComparison.Name = column.Name;
+                        tableComparison.Columns.Add(columnComparison);
+                        columnAdded = false;
+                        break;
+                    }
+                }
+
+                if (columnAdded)
+                {
+                    tableComparison.Columns.Add(new ColumnComparison(column, null) { Name = column.Name, Added = true });
+                }
+            }
+
+            foreach (var oldColumn in oldTable.Columns)
+            {
+                bool columnRemoved = true;
+                foreach (var column in Columns)
+                {
+                    if (column.Name.ToLower() == oldColumn.Name.ToLower())
+                    {
+                        columnRemoved = false;
+                    }
+                }
+
+                if (columnRemoved)
+                {
+                    tableComparison.Columns.Add(new ColumnComparison(null, oldColumn) { Name = oldColumn.Name, Added = true });
+                }
+            }
+
+            foreach (dynamic col in tableComparison.Columns)
+            {
+                tableComparison.Modified = col.Modified || tableComparison.Modified;
+                tableComparison.ColumnsModified = col.Modified || tableComparison.ColumnsModified;
+            }
+
+            return tableComparison;
+        }
+    }
+
+    public class TableComparison
+    {
+        public bool Added { get; set; }
+        public List<ColumnComparison> Columns { get; set; }
+        public bool ColumnsModified { get; set; }
+        public bool DescriptionModified { get; set; }
+        public bool FolderModified { get; set; }
+        public bool Modified { get; set; }
+        public string Name { get; set; }
+        public Table NewTable { get; set; }
+        public Table OldTable { get; set; }
+        public bool Removed { get; set; }
+        public bool RowsModified { get; set; }
+
+        public TableComparison(Table newTable, Table oldTable)
+        {
+            NewTable = newTable;
+            OldTable = oldTable;
+            Columns = new List<ColumnComparison>();
+            Added = false;
+            Modified = false;
+            Removed = false;
+            DescriptionModified = false;
+            ColumnsModified = false;
+            RowsModified = false;
+            FolderModified = false;
+        }
     }
 
     public class TableReader : IDisposable

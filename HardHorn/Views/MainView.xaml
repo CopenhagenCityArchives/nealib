@@ -251,41 +251,65 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <GroupBox Header="Tabeller" Padding="5">
-                            <ListView x:Name="ComparedTableList" ItemsSource="{Binding TableComparisons}" ItemTemplate="{StaticResource ComparedTableItemTemplate}" >
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn Header="Navn" CellTemplate="{StaticResource ComparedTableItemTemplate}" />
-                                        <GridViewColumn Header="Beskrivelse">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding DescriptionModified}" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Rækkeantal">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding RowsModified}" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Mappe">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding FolderModified}" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="Felter">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding ColumnsModified}" />
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <ListView x:Name="ComparedTableList" ItemsSource="{Binding TableComparisons}" ItemTemplate="{StaticResource ComparedTableItemTemplate}" >
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Header="Navn" CellTemplate="{StaticResource ComparedTableItemTemplate}" />
+                                            <GridViewColumn Header="Beskrivelse">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding DescriptionModified}" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Header="Rækkeantal">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding RowsModified}" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Header="Mappe">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding FolderModified}" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Header="Felter">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding ColumnsModified}" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                    <Label>Sammenflet tabeller:</Label>
+                                    <ComboBox Width="120" x:Name="AddedCombo" ItemsSource="{Binding AddedTableComparisons}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding NewTable.Name}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <ComboBox Width="120" x:Name="RemovedCombo" ItemsSource="{Binding RemovedTableComparisons}" >
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding OldTable.Name}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button cal:Message.Attach="Merge(AddedCombo, RemovedCombo)">Sammenflet</Button>
+                                </StackPanel>
+                            </Grid>
 
                             <!--<ListBox x:Name="ComparedTableList" ItemsSource="{Binding TableComparisons}" ItemTemplate="{StaticResource ComparedTableItemTemplate}" />-->
                         </GroupBox>
@@ -530,7 +554,6 @@
                     </Grid>
                 </DockPanel>
             </TabItem>
-
 
             <TabItem Header="Status Log">
                 <Grid>

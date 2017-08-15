@@ -179,6 +179,13 @@ namespace HardHorn.Archiving
             return archiveVersion;
         }
 
+        /// <summary>
+        /// Load the tables from a table index XML file.
+        /// </summary>
+        /// <param name="archiveVersion">The archive version, the tables are a part of.</param>
+        /// <param name="path">The path to the table index file.</param>
+        /// <param name="log">The logger.</param>
+        /// <returns>An enumerable of the tables.</returns>
         public static IEnumerable<Table> LoadTableIndex(ArchiveVersion archiveVersion, string path, ILogger log)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
@@ -193,10 +200,13 @@ namespace HardHorn.Archiving
             }
         }
 
-        public IEnumerable<dynamic> CompareWithTables(IEnumerable<Table> compareTables)
+        /// <summary>
+        /// Compare the tables of this archive version, with another set of tables.
+        /// </summary>
+        /// <param name="compareTables">The tables to compare with.</param>
+        /// <returns>An enumerable of table comparisons.</returns>
+        public IEnumerable<TableComparison> CompareWithTables(IEnumerable<Table> compareTables)
         {
-            dynamic tableComparison, columnComparison;
-
             foreach (var table in Tables)
             {
                 bool tableAdded = true;
@@ -204,175 +214,7 @@ namespace HardHorn.Archiving
                 {
                     if (table.Name.ToLower() == oldTable.Name.ToLower())
                     {
-                        tableComparison = new ExpandoObject();
-                        tableComparison.Name = table.Name;
-                        tableComparison.NewTable = table;
-                        tableComparison.OldTable = oldTable;
-                        tableComparison.Columns = new List<dynamic>();
-                        tableComparison.Added = false;
-                        tableComparison.Modified = false;
-                        tableComparison.Removed = false;
-                        tableComparison.DescriptionModified = false;
-                        tableComparison.ColumnsModified = false;
-                        tableComparison.RowsModified = false;
-                        tableComparison.FolderModified = false;
-
-                        if (table.Rows != oldTable.Rows)
-                        {
-                            tableComparison.Modified = true;
-                            tableComparison.RowsModified = true;
-                        }
-
-                        if (table.Description != oldTable.Description)
-                        {
-                            tableComparison.Modified = true;
-                            tableComparison.DescriptionModified = true;
-                        }
-
-                        if (table.Folder != oldTable.Folder)
-                        {
-                            tableComparison.Modified = true;
-                            tableComparison.FolderModified = true;
-                        }
-
-                        foreach (var column in table.Columns)
-                        {
-                            bool columnAdded = true;
-                            foreach (var oldColumn in oldTable.Columns)
-                            {
-                                if (column.Name.ToLower() == oldColumn.Name.ToLower())
-                                {
-                                    columnComparison = new ExpandoObject();
-                                    columnComparison.Name = oldColumn.Name;
-                                    columnComparison.NewColumn = column;
-                                    columnComparison.OldColumn = oldColumn;
-                                    columnComparison.Added = false;
-                                    columnComparison.Modified = false;
-                                    columnComparison.Removed = false;
-                                    columnComparison.DataTypeModified = false;
-                                    columnComparison.NullableModified = false;
-                                    columnComparison.DescriptionModified = false;
-                                    columnComparison.IdModified = false;
-
-                                    if (column.Description != oldColumn.Description)
-                                    {
-                                        columnComparison.Modified = true;
-                                        columnComparison.DescriptionModified = true;
-                                    }
-
-                                    if (column.Type != oldColumn.Type)
-                                    {
-                                        columnComparison.Modified = true;
-                                        columnComparison.DataTypeModified = true;
-                                    }
-
-                                    if (column.Param == null && oldColumn.Param != null)
-                                    {
-                                        columnComparison.Modified = true;
-                                        columnComparison.DataTypeModified = true;
-                                    }
-                                    else if (column.Param != null && oldColumn.Param == null)
-                                    {
-                                        columnComparison.Modified = true;
-                                        columnComparison.DataTypeModified = true;
-                                    }
-                                    else if (column.Param == null && oldColumn.Param == null)
-                                    { }
-                                    else if (column.Param.Length != oldColumn.Param.Length)
-                                    {
-                                        columnComparison.Modified = true;
-                                        columnComparison.DataTypeModified = true;
-                                    }
-                                    else
-                                    {
-                                        for (int i = 0; i < column.Param.Length; i++)
-                                        {
-                                            if (column.Param[i] != oldColumn.Param[i])
-                                            {
-                                                columnComparison.Modified = true;
-                                                columnComparison.DataTypeModified = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    if (column.Nullable != oldColumn.Nullable)
-                                    {
-                                        columnComparison.Modified = true;
-                                        columnComparison.NullableModified = true;
-                                    }
-
-                                    if (column.ColumnId != oldColumn.ColumnId)
-                                    {
-                                        columnComparison.Modified = true;
-                                        columnComparison.IdModified = true;
-                                    }
-
-                                    if (columnComparison.Modified)
-                                    {
-                                        tableComparison.ColumnsModified = true;
-                                        tableComparison.Modified = true;
-                                    }
-
-                                    tableComparison.Columns.Add(columnComparison);
-
-                                    columnAdded = false;
-                                    break;
-                                }
-                            }
-
-                            if (columnAdded)
-                            {
-                                columnComparison = new ExpandoObject();
-                                columnComparison.Name = column.Name;
-                                columnComparison.NewColumn = column;
-                                columnComparison.OldColumn = null;
-                                columnComparison.Added = true;
-                                columnComparison.Modified = false;
-                                columnComparison.Removed = false;
-                                columnComparison.DataTypeModified = false;
-                                columnComparison.NullableModified = false;
-                                columnComparison.DescriptionModified = false;
-                                columnComparison.IdModified = false;
-                                tableComparison.Columns.Add(columnComparison);
-                            }
-                        }
-
-                        foreach (var oldColumn in oldTable.Columns)
-                        {
-                            bool columnRemoved = true;
-                            foreach (var column in table.Columns)
-                            {
-                                if (column.Name.ToLower() == oldColumn.Name.ToLower())
-                                {
-                                    columnRemoved = false;
-                                }
-                            }
-
-                            if (columnRemoved)
-                            {
-                                columnComparison = new ExpandoObject();
-                                columnComparison.Name = oldColumn.Name;
-                                columnComparison.NewColumn = null;
-                                columnComparison.OldColumn = oldColumn;
-                                columnComparison.Added = false;
-                                columnComparison.Modified = false;
-                                columnComparison.Removed = true;
-                                columnComparison.DataTypeModified = false;
-                                columnComparison.NullableModified = false;
-                                columnComparison.DescriptionModified = false;
-                                columnComparison.IdModified = false;
-                                tableComparison.Columns.Add(columnComparison);
-                            }
-                        }
-
-                        foreach (dynamic col in tableComparison.Columns)
-                        {
-                            tableComparison.Modified = col.Modified || tableComparison.Modified;
-                            tableComparison.ColumnsModified = col.Modified || tableComparison.ColumnsModified;
-                        }
-
-                        yield return tableComparison;
+                        yield return table.CompareTo(oldTable); ;
                         tableAdded = false;
                         break;
                     }
@@ -380,32 +222,12 @@ namespace HardHorn.Archiving
 
                 if (tableAdded)
                 {
-                    tableComparison = new ExpandoObject();
-                    tableComparison.Name = table.Name;
-                    tableComparison.NewTable = table;
-                    tableComparison.OldTable = null;
-                    tableComparison.Columns = table.Columns.Select(c =>
+                    var tableComparison = new TableComparison(table, null) { Name = table.Name, Added = true };
+                    tableComparison.Columns.AddRange(table.Columns.Select(c =>
                     {
-                        dynamic col = new ExpandoObject();
-                        col.Name = c.Name;
-                        col.OldColumn = null;
-                        col.NewColumn = c;
-                        col.Added = false;
-                        col.Removed = false;
-                        col.Modified = false;
-                        col.DataTypeModified = false;
-                        col.NullableModified = false;
-                        col.DescriptionModified = false;
-                        col.IdModified = false;
+                        var col = new ColumnComparison(null, c) { Name = c.Name };
                         return col;
-                    });
-                    tableComparison.Added = true;
-                    tableComparison.Removed = false;
-                    tableComparison.Modified = false;
-                    tableComparison.ColumnsModified = false;
-                    tableComparison.DescriptionModified = false;
-                    tableComparison.RowsModified = false;
-                    tableComparison.FolderModified = false;
+                    }));
                     yield return tableComparison;
                 }
             }
@@ -424,32 +246,12 @@ namespace HardHorn.Archiving
 
                 if (tableRemoved)
                 {
-                    tableComparison = new ExpandoObject();
-                    tableComparison.Name = oldTable.Name;
-                    tableComparison.NewTable = null;
-                    tableComparison.OldTable = oldTable;
-                    tableComparison.Columns = oldTable.Columns.Select(c =>
+                    var tableComparison = new TableComparison(null, oldTable) { Removed = true, Name = oldTable.Name };
+                    tableComparison.Columns.AddRange(oldTable.Columns.Select(c =>
                     {
-                        dynamic col = new ExpandoObject();
-                        col.Name = c.Name;
-                        col.OldColumn = c;
-                        col.NewColumn = null;
-                        col.Added = false;
-                        col.Removed = false;
-                        col.Modified = false;
-                        col.DataTypeModified = false;
-                        col.NullableModified = false;
-                        col.DescriptionModified = false;
-                        col.IdModified = false;
+                        var col = new ColumnComparison(null, c) { Name = c.Name };
                         return col;
-                    });
-                    tableComparison.Added = false;
-                    tableComparison.Removed = true;
-                    tableComparison.Modified = false;
-                    tableComparison.ColumnsModified = false;
-                    tableComparison.DescriptionModified = false;
-                    tableComparison.RowsModified = false;
-                    tableComparison.FolderModified = false;
+                    }));
                     yield return tableComparison;
                 }
             }
