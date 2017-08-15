@@ -154,7 +154,7 @@ namespace HardHorn.Archiving
 
                 if (columnRemoved)
                 {
-                    tableComparison.Columns.Add(new ColumnComparison(null, oldColumn) { Name = oldColumn.Name, Added = true });
+                    tableComparison.Columns.Add(new ColumnComparison(null, oldColumn) { Name = oldColumn.Name, Removed = true });
                 }
             }
 
