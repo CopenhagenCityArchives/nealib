@@ -608,6 +608,8 @@ namespace HardHorn.ViewModels
 
         private void _loadWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            NotifyOfPropertyChange("ArchiveVersion");
+
             ListTables.Clear();
             ListTableLookup.Clear();
 
