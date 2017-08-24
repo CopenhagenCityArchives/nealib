@@ -25,7 +25,7 @@ namespace HardHorn.ViewModels
         private IProgress<Tuple<string, LogLevel>> _progress;
 
         public void Log(string message, LogLevel level)
-        {
+    {
             _progress.Report(new Tuple<string, LogLevel>(message, level));
         }
 
@@ -56,18 +56,22 @@ namespace HardHorn.ViewModels
         public int DoneRows { get { return _doneRows; } set { _doneRows = value; NotifyOfPropertyChange("DoneRows"); } }
 
         ArchiveVersion _archiveVersion;
-        public ArchiveVersion ArchiveVersion { get { return _archiveVersion; } set { _archiveVersion = value; NotifyOfPropertyChange("ArchiveVersion"); } }
+        public ArchiveVersion ArchiveVersion
+        {
+            get { return _archiveVersion; }
+            set { _archiveVersion = value; NotifyOfPropertyChange("ArchiveVersion"); }
+        }
 
         bool _showErrorReports = true;
         public bool ShowErrorReports
         {
             get { return _showErrorReports; }
             set { _showErrorReports = value; UpdateInteractiveReportView(); }
-        }
+    }
 
         bool _showSuggestionReports = true;
         public bool ShowSuggestionReports
-        {
+    {
             get { return _showSuggestionReports; }
             set { _showSuggestionReports = value; UpdateInteractiveReportView(); }
         }
@@ -77,7 +81,7 @@ namespace HardHorn.ViewModels
         {
             get { return _showEmptyReports; }
             set { _showEmptyReports = value; UpdateInteractiveReportView(); }
-        }
+                }
 
         bool _testRunning = false;
         public bool TestRunning
@@ -88,7 +92,7 @@ namespace HardHorn.ViewModels
 
         bool _loadingTableIndex = false;
         public bool LoadingTableIndex
-        {
+    {
             get { return _loadingTableIndex; }
             set { _loadingTableIndex = value; NotifyOfPropertyChange("LoadingTableIndex"); }
         }
@@ -99,13 +103,13 @@ namespace HardHorn.ViewModels
             get
             {
                 return _testLoaded;
-            }
+                }
 
             set
-            {
+                {
                 _testLoaded = value; NotifyOfPropertyChange("TestLoaded");
+                }
             }
-        }
 
         int _testProgress;
         public int TestProgress
@@ -123,45 +127,45 @@ namespace HardHorn.ViewModels
 
         TableViewModel _SelectedTableViewModel = null;
         public TableViewModel SelectedTableViewModel
-        {
+            {
             get { return _SelectedTableViewModel; }
             set { _SelectedTableViewModel = value; UpdateInteractiveReportView(); NotifyOfPropertyChange("SelectedTableViewModel"); }
-        }
+            }
 
         object _selectedTableViewModelDataType;
         public object SelectedTableViewModelDataType
-        {
-            set
             {
+            set
+                {
                 _selectedTableViewModelDataType = value;
 
                 var dataType = value as DataType?;
                 if (dataType != null)
-                {
+                    {
                     FilteredTableViewModels.Clear();
                     foreach (var tableViewModel in TableViewModels)
                     {
                         if (tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == dataType))
                             FilteredTableViewModels.Add(tableViewModel);
-                    }
+                        }
                 }
-                else
-                {
+                        else
+                        {
                     FilteredTableViewModels.Clear();
                     foreach (var tableViewModel in TableViewModels)
                         FilteredTableViewModels.Add(tableViewModel);
-                }
+                        }
 
-            }
+                    }
 
             get
-            {
+        {
                 return _selectedTableViewModelDataType;
-            }
         }
+    }
 
         public string SpecTables
-        {
+    {
             set
             {
                 SpecTablesMatching = "";
@@ -184,13 +188,13 @@ namespace HardHorn.ViewModels
                         case ArchiveVersion.TableSpecStatus.SPEC_UNDEFINED:
                             SpecTablesUndefined += spec.Item2 + Environment.NewLine;
                             break;
-                    }
                 }
+            }
 
                 NotifyOfPropertyChange("SpecTablesMatching");
                 NotifyOfPropertyChange("SpecTablesMissing");
                 NotifyOfPropertyChange("SpecTablesUndefined");
-            }
+        }
         }
 
         public string SpecTablesMatching { get; set; }
@@ -219,27 +223,26 @@ namespace HardHorn.ViewModels
             TAB_SPECTABLE = 3,
             TAB_COMPARE = 4,
             TAB_STATUSLOG = 5
-        }
+            }
 
-        Analyzer _analyzer;
-        public Analyzer Analyzer { get { return _analyzer; } }
+        public Analyzer Analyzer { get; private set; }
         DataStatistics _stats;
 
         public IEnumerable<KeyValuePair<DataType, dynamic>> DataTypeStatistics
-        {
-            get
             {
+            get
+                {
                 if (_stats != null && _stats.DataTypeStatistics != null)
-                {
+                    {
                     return _stats.DataTypeStatistics.Cast<KeyValuePair<DataType, dynamic>>();
-                }
-                else
-                {
+                    }
+                    else
+                    {
                     return Enumerable.Empty<KeyValuePair<DataType, dynamic>>();
-                }
+                        }
                 
-            }
-        }
+                        }
+                    }
 
         public ObservableCollection<RegexTestViewModel> Regexes { get; private set; }
 
@@ -253,7 +256,7 @@ namespace HardHorn.ViewModels
 
         #region Constructors
         public MainViewModel()
-        {
+            {
             TableViewModels = new ObservableCollection<TableViewModel>();
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
@@ -265,12 +268,12 @@ namespace HardHorn.ViewModels
             AddedTableComparisons = new ObservableCollection<TableComparison>();
             CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
             Regexes = new ObservableCollection<RegexTestViewModel>();
-           
+
             if (Properties.Settings.Default.SelectedTestsBase64 == null)
-            {
+                {
                 SelectedTests = TestSelection.GetFullSelection();
                 SetDefaultSelectedTests();
-            }
+                }
             else
             {
                 //SelectedTests = GetDefaultSelectedTests();
@@ -279,20 +282,20 @@ namespace HardHorn.ViewModels
             }
 
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
-        }
+            }
         #endregion
 
         #region Methods
         public void UpdateInteractiveReportView()
-        {
+    {
             var table = SelectedTableViewModel == null ? null : SelectedTableViewModel.Table;
 
             CurrentColumnAnalyses.Clear();
-            if (table != null && _analyzer != null && _analyzer.TestHierachy.ContainsKey(table))
-            {
+            if (table != null && Analyzer != null && Analyzer.TestHierachy.ContainsKey(table))
+        {
 
-                foreach (var report in _analyzer.TestHierachy[table].Values)
-                {
+                foreach (var report in Analyzer.TestHierachy[table].Values)
+        {
                     if (((report.ErrorCount > 0 || report.Column.ParameterizedDataType.DataType == DataType.UNDEFINED) && ShowErrorReports) ||
                         (report.SuggestedType != null && ShowSuggestionReports) ||
                         (report.ErrorCount == 0 && report.SuggestedType == null && ShowEmptyReports))
@@ -306,25 +309,25 @@ namespace HardHorn.ViewModels
         }
 
         public TestSelection GetDefaultSelectedTests()
-        {
+            {
             TestSelection selection = null;
             var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
             using (var stream = new MemoryStream())
-            {
-                using (var writer = new BinaryWriter(stream))
                 {
+                using (var writer = new BinaryWriter(stream))
+                    {
                     writer.Write(Convert.FromBase64String(Properties.Settings.Default.SelectedTestsBase64));
                     writer.Flush();
                     stream.Position = 0;
 
                     try
-                    {
+                        {
                         selection = formatter.Deserialize(stream) as TestSelection;
                     }
                     catch (Exception)
-                    {
+                            {
                         selection = null;
-                    }
+                            }
                 }
             }
 
@@ -336,7 +339,7 @@ namespace HardHorn.ViewModels
         }
 
         public void SetDefaultSelectedTests()
-        {
+                            {
             var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
             using (var stream = new MemoryStream())
             {
@@ -345,10 +348,10 @@ namespace HardHorn.ViewModels
                     formatter.Serialize(stream, SelectedTests);
                     Properties.Settings.Default.SelectedTestsBase64 = Convert.ToBase64String(stream.ToArray());
                     Properties.Settings.Default.Save();
-                }
+                            }
                 catch (Exception) { }
-            }
-        }
+                        }
+                    }
 
         public void Log(string msg, LogLevel level = LogLevel.NORMAL)
         {
@@ -357,8 +360,8 @@ namespace HardHorn.ViewModels
             if (level == LogLevel.SECTION || level == LogLevel.ERROR)
             {
                 StatusText = msg;
+                }
             }
-        }
 
         public void OpenSelectedTableViewModel()
         {
@@ -377,7 +380,7 @@ namespace HardHorn.ViewModels
             if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter == null)
             {
                 SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = new Archiving.Parameter(false, new int[0]);
-            }
+        }
             SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.AddParameterItem(0);
         }
 
@@ -389,17 +392,17 @@ namespace HardHorn.ViewModels
             {
                 SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = null;
                 return;
-            }
+        }
             if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter.Count > 1)
                 SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.RemoveParameterItem(0);
-        }
+    }
 
         public void OnArchiveVersionException(Exception ex)
-        {
+    {
             ErrorViewModelBase errorViewModel;
 
             if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
-            {
+        {
                 if (ex is ArchiveVersionColumnParsingException)
                 {
                     errorViewModel = new ColumnParsingErrorViewModel();
@@ -412,21 +415,21 @@ namespace HardHorn.ViewModels
                 {
                     return;
                 }
-                
+
                 LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
                 Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
-                
-            }
-            else
-            {
-                errorViewModel = LoadingErrorViewModelIndex[ex.GetType()];
-            }
 
-            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
+        }
+            else
+        {
+                errorViewModel = LoadingErrorViewModelIndex[ex.GetType()];
         }
 
+            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
+    }
+
         public void OnTestError(object sender, AnalysisErrorsOccuredArgs e)
-        {
+    {
             var columnAnalysis = sender as ColumnAnalysis;
 
             ErrorViewModelBase errorViewModel;
@@ -500,7 +503,7 @@ namespace HardHorn.ViewModels
             catch (ArgumentException)
             {
                 Log(string.Format("Det regulære udtryk \"{0}\" er ikke gyldigt.", pattern), LogLevel.ERROR);
-            }
+        }
         }
 
         public void RemoveRegex(RegexTestViewModel regex)
@@ -541,19 +544,19 @@ namespace HardHorn.ViewModels
         }
 
         public void LoadState()
-        {
-            using (var dialog = new System.Windows.Forms.OpenFileDialog())
-            {
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
+            using (var dialog = new System.Windows.Forms.OpenFileDialog())
+                    {
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
                     MainViewModel loaded = null;
                     var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
                     using (var stream = dialog.OpenFile())
-                    {
+                            {
                         try
                         {
                             loaded = formatter.Deserialize(stream) as MainViewModel;
-                        }
+                            }
                         catch (Exception)
                         {
                             loaded = null;
@@ -561,7 +564,7 @@ namespace HardHorn.ViewModels
                     }
 
                     if (loaded != null)
-                    {
+                        {
                         TableViewModels = loaded.TableViewModels;
                         ListTableLookup = loaded.ListTableLookup;
                         SelectedTests = loaded.SelectedTests;
@@ -585,26 +588,26 @@ namespace HardHorn.ViewModels
                         SelectedTableViewModel = loaded.SelectedTableViewModel;
                         _stats = new DataStatistics(loaded.ArchiveVersion.Tables.ToArray());
                         DoneRows = loaded.DoneRows;
-                        _analyzer = loaded.Analyzer;
+                        Analyzer = loaded.Analyzer;
+                    }
+                        }
                     }
                 }
-            }
-        }
 
 
         public void SaveState()
         {
             using (var dialog = new System.Windows.Forms.SaveFileDialog())
-            {
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
                     var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
                     using (var stream = dialog.OpenFile())
-                    {
-                        try
                         {
+                        try
+                            {
                             formatter.Serialize(stream, this);
-                        }
+                    }
                         catch (Exception) { }
                     }
                 }
@@ -614,40 +617,40 @@ namespace HardHorn.ViewModels
         public void SaveLog()
         {
             using (var dialog = new System.Windows.Forms.SaveFileDialog())
-            {
+        {
                 dialog.OverwritePrompt = true;
                 dialog.Filter = "Tekstfil|*.txt|Logfil|*.log|Alle filtyper|*.*";
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
+            {
                     using (var stream = dialog.OpenFile())
-                    {
+            {
                         using (var writer = new StreamWriter(stream))
-                        {
+                {
                             bool first = true;
                             foreach (var item in LogItems)
-                            {
+        {
                                 if (item.Item1 == LogLevel.SECTION)
-                                {
+        {
                                     if (first)
-                                    {
+            {
                                         first = false;
                                     }
                                     else
-                                    {
+                {
                                         writer.Write(Environment.NewLine);
                                     }
                                     var section = item.Item2.ToLocalTime() + " " + item.Item3;
                                     writer.Write(section + Environment.NewLine + string.Concat(Enumerable.Repeat("-", section.Length)) + Environment.NewLine);
-                                }
-                                else
-                                {
+                }
+                else
+                {
                                     writer.Write(item.Item3 + Environment.NewLine);
                                 }
                             }
                         }
-                    }
-               } 
+                }
             }
+        }
         }
 
         public void ApplySuggestion()
@@ -660,8 +663,8 @@ namespace HardHorn.ViewModels
 
         public void ApplyAllSuggestions()
         {
-            foreach (var columnAnalysis in _analyzer.TestHierachy.Values.SelectMany(d => d.Values))
-            {
+            foreach (var columnAnalysis in Analyzer.TestHierachy.Values.SelectMany(d => d.Values))
+        {
                 columnAnalysis.ApplySuggestion();
             }
         }
@@ -672,24 +675,27 @@ namespace HardHorn.ViewModels
             {
                 dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
+            {
                     ArchiveVersion.TableIndex.ToXml().Save(dialog.FileName);
-                }
             }
+        }
 
         }
 
         public async void LoadTables()
         {
             if (Directory.Exists(TestLocation) && File.Exists(Path.Combine(TestLocation, "Indices", "tableIndex.xml")))
-            {
+        {
                 TableViewModels.Clear();
-                ListTableLookup.Clear();
+            ListTableLookup.Clear();
 
                 ErrorViewModels.Clear();
                 TestErrorViewModelIndex.Clear();
                 LoadingErrorViewModelIndex.Clear();
                 Regexes.Clear();
+
+                ArchiveVersion av = null;
+                Analyzer analyzer = null;
 
                 LoadingTableIndex = true;
                 TestLoaded = false;
@@ -699,8 +705,8 @@ namespace HardHorn.ViewModels
                     var logger = new ProgressLogger(this);
                     await Task.Run(() =>
                     {
-                        _archiveVersion = ArchiveVersion.Load(TestLocation, logger, OnArchiveVersionException);
-                        _analyzer = new Analyzer(_archiveVersion, logger);
+                        av = ArchiveVersion.Load(TestLocation, logger, OnArchiveVersionException);
+                        analyzer = new Analyzer(av, logger);
                     });
                 }
                 catch (Exception ex)
@@ -710,86 +716,88 @@ namespace HardHorn.ViewModels
                 }
                 finally
                 {
+                    ArchiveVersion = av;
+                    Analyzer = analyzer;
                     LoadingTableIndex = false;
                 }
 
                 WindowTitle = string.Format("{0} - HardHorn", ArchiveVersion.Id);
 
-                foreach (var table in ArchiveVersion.Tables)
-                {
+            foreach (var table in ArchiveVersion.Tables)
+            {
                     var tableViewModel = new TableViewModel(table) { Errors = table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED) };
                     ListTableLookup.Add(table.Name, tableViewModel);
                     TableViewModels.Add(tableViewModel);
-                }
+            }
                 SelectedTableViewModelDataType = SelectedTableViewModelDataType;
-                TestLoaded = true;
+            TestLoaded = true;
 
                 _stats = new DataStatistics(TableViewModels.Select(lt => lt.Table).ToArray());
-                foreach (dynamic stat in _stats.DataTypeStatistics.Values)
+            foreach (dynamic stat in _stats.DataTypeStatistics.Values)
+            {
+                stat.BarCharts = new ObservableCollection<ExpandoObject>();
+                foreach (var paramValues in stat.ParamValues)
                 {
-                    stat.BarCharts = new ObservableCollection<ExpandoObject>();
-                    foreach (var paramValues in stat.ParamValues)
-                    {
-                        dynamic b = new ExpandoObject();
-                        b.Values = paramValues;
-                        b.BucketCount = 10;
-                        stat.BarCharts.Add(b);
-                    }
+                    dynamic b = new ExpandoObject();
+                    b.Values = paramValues;
+                    b.BucketCount = 10;
+                    stat.BarCharts.Add(b);
                 }
-                NotifyOfPropertyChange("DataTypeStatistics");
-                Log("Statistik", LogLevel.SECTION);
-                foreach (var dataType in _stats.DataTypeStatistics.Keys)
-                {
-                    Log(string.Format("Datatype {0}:", dataType.ToString()));
-                    Log(string.Format("\tAntal kolonner: {0}", _stats.DataTypeStatistics[dataType].Count));
-                    if (_stats.DataTypeStatistics[dataType].MinParams != null)
-                    {
-                        Log(string.Format("\tMinimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MinParams)));
-                    }
-                    if (_stats.DataTypeStatistics[dataType].MaxParams != null)
-                    {
-                        Log(string.Format("\tMaksimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MaxParams)));
-                    }
-                }
-                Log("Indlæsning fuldført.", LogLevel.SECTION);
-
-                // Add to recent locations
-                if (Properties.Settings.Default.RecentLocations == null)
-                {
-                    Properties.Settings.Default.RecentLocations = new ObservableCollection<string>();
-                }
-                var location = TestLocation;
-                var index = -1;
-                for (int i = 0; i < Properties.Settings.Default.RecentLocations.Count; i++)
-                {
-                    var loc = Properties.Settings.Default.RecentLocations[i];
-                    if (loc.ToLower() == TestLocation.ToLower())
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-                if (index != -1)
-                {
-                    Properties.Settings.Default.RecentLocations.RemoveAt(index);
-                }
-                if (Properties.Settings.Default.RecentLocations.Count < 5)
-                {
-                    Properties.Settings.Default.RecentLocations.Add(null);
-                }
-                TestLocation = location;
-
-                for (int i = Properties.Settings.Default.RecentLocations.Count - 1; i > 0; i--)
-                {
-                    Properties.Settings.Default.RecentLocations[i] = Properties.Settings.Default.RecentLocations[i - 1];
-                }
-                Properties.Settings.Default.RecentLocations[0] = TestLocation;
-
-                Properties.Settings.Default.Save();
-                NotifyOfPropertyChange("RecentLocations");
-
-                SpecTables = "";
             }
+            NotifyOfPropertyChange("DataTypeStatistics");
+            Log("Statistik", LogLevel.SECTION);
+            foreach (var dataType in _stats.DataTypeStatistics.Keys)
+            {
+                Log(string.Format("Datatype {0}:", dataType.ToString()));
+                Log(string.Format("\tAntal kolonner: {0}", _stats.DataTypeStatistics[dataType].Count));
+                if (_stats.DataTypeStatistics[dataType].MinParams != null)
+                {
+                    Log(string.Format("\tMinimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MinParams)));
+                }
+                if (_stats.DataTypeStatistics[dataType].MaxParams != null)
+                {
+                    Log(string.Format("\tMaksimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MaxParams)));
+                }
+            }
+            Log("Indlæsning fuldført.", LogLevel.SECTION);
+
+            // Add to recent locations
+            if (Properties.Settings.Default.RecentLocations == null)
+            {
+                Properties.Settings.Default.RecentLocations = new ObservableCollection<string>();
+            }
+            var location = TestLocation;
+            var index = -1;
+            for (int i = 0; i < Properties.Settings.Default.RecentLocations.Count; i++)
+            {
+                var loc = Properties.Settings.Default.RecentLocations[i];
+                if (loc.ToLower() == TestLocation.ToLower())
+                {
+                    index = i;
+                    break;
+                }
+            }
+            if (index != -1)
+            {
+                Properties.Settings.Default.RecentLocations.RemoveAt(index);
+            }
+            if (Properties.Settings.Default.RecentLocations.Count < 5)
+            {
+                Properties.Settings.Default.RecentLocations.Add(null);
+            }
+            TestLocation = location;
+
+            for (int i = Properties.Settings.Default.RecentLocations.Count - 1; i > 0; i--)
+            {
+                Properties.Settings.Default.RecentLocations[i] = Properties.Settings.Default.RecentLocations[i - 1];
+            }
+            Properties.Settings.Default.RecentLocations[0] = TestLocation;
+
+            Properties.Settings.Default.Save();
+            NotifyOfPropertyChange("RecentLocations");
+
+            SpecTables = "";
+        }
             else
             {
                 Log(string.Format("Placeringen '{0}' er ikke en gyldig arkiveringsversion.", TestLocation), LogLevel.ERROR);
@@ -826,22 +834,22 @@ namespace HardHorn.ViewModels
                 }
                 ErrorViewModels.Clear();
                 foreach (var errorViewModel in filteredErrorViewModels)
-                {
+        {
                     ErrorViewModels.Add(errorViewModel);
-                }
+        }
 
-                foreach (var table in _analyzer.TestHierachy.Values)
+                foreach (var table in Analyzer.TestHierachy.Values)
                     foreach (var columnAnalysis in table.Values)
-                    {
+        {
                         columnAnalysis.Clear();
                         columnAnalysis.AnalysisErrorsOccured += OnTestError;
-                    }
+        }
 
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
                 var regexList = new List<RegexTestViewModel>();
                 foreach (var regex in Regexes)
-                {
-                    _analyzer.AddTest(regex.Column, regex.RegexTest);
+        {
+                    Analyzer.AddTest(regex.Column, regex.RegexTest);
                 }
 
                 TestProgress = 0;
@@ -873,7 +881,7 @@ namespace HardHorn.ViewModels
                                             break;
                                         case AnalysisTestType.FORMAT:
                                             switch (dataTypeSelection.DataType)
-                                            {
+            {
                                                 case DataType.TIMESTAMP:
                                                     test = Test.TimestampFormatTest();
                                                     break;
@@ -892,11 +900,11 @@ namespace HardHorn.ViewModels
                                                 default:
                                                     continue;
                                             }
-                                            break;
+                    break;
                                         default:
                                             continue;
                                     }
-                                    _analyzer.AddTest(column, test);
+                                    Analyzer.AddTest(column, test);
                                 }
                             }
                         }
@@ -910,14 +918,14 @@ namespace HardHorn.ViewModels
                 {
                     if (table == null) return;
                         var tableViewModel = ListTableLookup[table.Name];
-                        if (_analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
+                        if (Analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
                             tableViewModel.Errors = true;
                 });
 
                 IProgress<Table> showReportProgress = new Progress<Table>(table =>
                 {
 
-                    var tableReport = _analyzer.TestHierachy[table];
+                    var tableReport = Analyzer.TestHierachy[table];
                     Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
                         (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
                     int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
@@ -971,84 +979,84 @@ namespace HardHorn.ViewModels
 
                 // Run test worker
                 try
-                {
+            {
                     TestRunning = true;
 
                     await Task.Run(() =>
-                    {
-                        // Count total rows
-                        TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
-                        DoneRows = 0;
-                        int chunk = 10000;
+        {
+            // Count total rows
+            TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
+            DoneRows = 0;
+            int chunk = 10000;
 
-                        foreach (var table in ArchiveVersion.Tables)
-                        {
+            foreach (var table in ArchiveVersion.Tables)
+            {
                             logger.Log(string.Format("Tester tabellen '{0}' ({1})", table.Name, table.Folder), LogLevel.SECTION);
 
-                            ListTableLookup[table.Name].Busy = true;
-                            try
-                            {
-                                using (var reader = table.GetReader())
-                                {
-                                    int readRows = 0;
-                                    do
-                                    {
+                ListTableLookup[table.Name].Busy = true;
+                try
+                {
+                    using (var reader = table.GetReader())
+                    {
+                        int readRows = 0;
+                        do
+                        {
                                         if (token.IsCancellationRequested)
-                                            return;
+                                return;
 
-                                        Post[,] rows;
-                                        readRows = reader.Read(out rows, chunk);
+                            Post[,] rows;
+                            readRows = reader.Read(out rows, chunk);
 
                                         if (token.IsCancellationRequested)
-                                            return;
+                                return;
 
-                                        _analyzer.AnalyzeRows(table, rows, readRows);
+                            Analyzer.AnalyzeRows(table, rows, readRows);
 
                                         updateTableProgress.Report(table);
 
-                                        DoneRows += readRows;
+                            DoneRows += readRows;
 
                                         TestProgress = (DoneRows * 100) / TotalRows;
-                                    } while (readRows == chunk);
+                        } while (readRows == chunk);
 
                                     // TODO: Check if number of rows in table adds up
-                                }
-                            }
-                            catch (FileNotFoundException)
-                            {
+                    }
+                }
+                catch (FileNotFoundException)
+                {
                                 logger.Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", table.Name, table.Folder), LogLevel.ERROR);
-                            }
-
-                            foreach (var report in _analyzer.TestHierachy[table].Values)
-                            {
-                                report.SuggestType();
-                            }
+                }
+                
+                            foreach (var report in Analyzer.TestHierachy[table].Values)
+                {
+                    report.SuggestType();
+        }
 
                             showReportProgress.Report(table);
 
                             ListTableLookup[table.Name].Busy = false;
                             ListTableLookup[table.Name].Done = true;
-                        }
+        }
                     });
-                }
+            }
                 catch (Exception ex)
-                {
+            {
                     Log(string.Format("En fejl af typen '{0}' opstod med beskeden: '{1}'. Testen afbrydes.", ex.GetType(), ex.Message), LogLevel.ERROR);
-                }
+        }
                 finally
                 {
-                    var totalErrors = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
-                    var errorTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
-                    var totalSuggestions = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
-                    var suggestionTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
+                    var totalErrors = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
+                    var errorTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
+                    var totalSuggestions = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
+                    var suggestionTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
 
                     Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
 
                     TestRunning = false;
                     foreach (var tableViewModel in TableViewModels)
-                    {
+                        {
                         tableViewModel.Busy = false;
-                    }
+                }
                 }
             }
         }
@@ -1084,9 +1092,9 @@ namespace HardHorn.ViewModels
         public async void Compare(string location)
         {
             if (File.Exists(location))
-            {
-                Log(string.Format("Sammenligner '{0}' med {1}.", location, ArchiveVersion.Id), LogLevel.SECTION);
-                TableComparisons.Clear();
+        {
+            Log(string.Format("Sammenligner '{0}' med {1}.", location, ArchiveVersion.Id), LogLevel.SECTION);
+            TableComparisons.Clear();
 
                 try
                 {

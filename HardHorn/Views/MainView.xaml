@@ -617,6 +617,55 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="Metadata">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0">ArkiveringsversionsID</Label>
+                    <Label Grid.Row="0" Grid.Column="1" Content="{Binding ArchiveVersion.Id}" />
+
+                    <Label Grid.Row="1">Tidligere aflevering</Label>
+                    <Label Grid.Row="1" Grid.Column="1" Content="{Binding ArchiveVersion.PreviousId}" />
+                    
+                    <Label Grid.Row="2">Startdato</Label>
+                    <Label Grid.Row="2" Grid.Column="1" Content="{Binding ArchiveVersion.PeriodStart}" />
+                    
+                    <Label Grid.Row="3">Slutdato</Label>
+                    <Label Grid.Row="3" Grid.Column="1" Content="{Binding ArchiveVersion.PeriodEnd}" />
+                    
+                    <Label Grid.Row="4">FORM version</Label>
+                    <Label Grid.Row="4" Grid.Column="1" Content="{Binding ArchiveVersion.FORMVersion}" />
+                    
+                    <Label Grid.Row="5">FORM klassifikationer</Label>
+                    <ListView Grid.Row="5" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.FORMClassifications}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock>
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0}: {1}">
+                                                <Binding Path="Classification" />
+                                                <Binding Path="Text" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="Statistik">
                 <ScrollViewer>
                     <ItemsControl ItemsSource="{Binding DataTypeStatistics}" ItemTemplate="{StaticResource StatisticsItemTemplate}">
