@@ -88,7 +88,6 @@ namespace HardHorn.Archiving
             }
         }
 
-        string _id;
         /// <summary>
         /// The archive version id.
         /// </summary>
@@ -266,6 +265,7 @@ namespace HardHorn.Archiving
         {
             var archiveVersion = new ArchiveVersion(System.IO.Path.GetFileName(path), path, null);
             archiveVersion.LoadTableIndex(log, callback);
+            archiveVersion.LoadArchiveIndex(System.IO.Path.Combine(path, "Indices", "archiveIndex.xml"), log);
             return archiveVersion;
         }
 
@@ -379,7 +379,7 @@ namespace HardHorn.Archiving
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
-            var tableIndex = Archiving.TableIndex.ParseFile(System.IO.Path.Combine(Path, "Indices", "tableIndex.xml"), log, callback);
+            var tableIndex = TableIndex.ParseFile(System.IO.Path.Combine(Path, "Indices", "tableIndex.xml"), log, callback);
 
             foreach (var table in tableIndex.Tables)
             {
