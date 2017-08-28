@@ -39,11 +39,43 @@
                     </GroupBox.Header>
                     <StackPanel>
                         <DockPanel>
-                            <Button Margin="5 0 0 0" DockPanel.Dock="Right" Width="30" cal:Message.Attach="SelectLocation(LocationTextBox)">...</Button>
-                            <ComboBox IsEditable="True" DockPanel.Dock="Left" x:Name="LocationTextBox" Text="{Binding TestLocation, Mode=TwoWay}" ItemsSource="{Binding Source={x:Static properties:Settings.Default}, Path=RecentLocations}"></ComboBox>
+                            <Button Margin="5 0 0 0" DockPanel.Dock="Right" Width="30" cal:Message.Attach="SelectLocation(LocationTextBox)">
+                                <Button.Style>
+                                    <Style>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TestRunning}" Value="True">
+                                                <Setter Property="Button.IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                ...
+                            </Button>
+                            <ComboBox IsEditable="True" DockPanel.Dock="Left" x:Name="LocationTextBox" Text="{Binding TestLocation, Mode=TwoWay}" ItemsSource="{Binding Source={x:Static properties:Settings.Default}, Path=RecentLocations}">
+                                <ComboBox.Style>
+                                    <Style>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TestRunning}" Value="True">
+                                                <Setter Property="ComboBox.IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ComboBox.Style>
+                            </ComboBox>
                         </DockPanel>
 
-                        <Button  Margin="0 5 0 0" MinWidth="120" cal:Message.Attach="LoadTables()">Indlæs tabelindex</Button>
+                        <Button  Margin="0 5 0 0" MinWidth="120" cal:Message.Attach="LoadTables()">
+                            <Button.Style>
+                                <Style>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TestRunning}" Value="True">
+                                            <Setter Property="Button.IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            Indlæs tabelindex
+                        </Button>
                     </StackPanel>
                 </GroupBox>
 
