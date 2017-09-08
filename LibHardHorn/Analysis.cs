@@ -136,9 +136,9 @@ namespace HardHorn.Analysis
                     }
                     break;
                 case DataType.DECIMAL:
-                    if (MaxLengths[0] + MaxLengths[1] != Column.Param[0] || MaxLengths[1] != Column.Param[1])
+                    if (MaxLengths[0] != Column.Param[0] || MaxLengths[1] != Column.Param[1])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.DECIMAL, new DataTypeParam(new int[] { MaxLengths[0] + MaxLengths[1], MaxLengths[1] }));
+                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.DECIMAL, new DataTypeParam(new int[] { MaxLengths[0], MaxLengths[1] }));
                     }
                     break;
             }
