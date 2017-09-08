@@ -101,10 +101,10 @@
             <ItemsControl Margin="5" ItemsSource="{Binding Tests}" ItemTemplate="{StaticResource TestTypeItemTemplate}" />
             <TreeView ItemsSource="{Binding Children}">
                 <TreeView.Resources>
-                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteTestType}">
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestTypeSelection}">
                         <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType}" />
                     </HierarchicalDataTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteDataTypeTest}" ItemsSource="{Binding Tests}">
+                    <HierarchicalDataTemplate DataType="{x:Type vm:DataTypeSelection}" ItemsSource="{Binding Tests}">
                         <TextBlock Text="{Binding DataType}" />
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>

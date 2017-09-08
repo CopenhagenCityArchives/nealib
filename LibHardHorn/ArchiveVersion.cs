@@ -48,6 +48,19 @@ namespace HardHorn.Archiving
         /// </summary>
         public IEnumerable<Table> Tables { get; private set; }
 
+        /// <summary>
+        /// The columns of the archive version.
+        /// </summary>
+        public IEnumerable<Column> Columns
+        {
+            get
+            {
+                foreach (var table in Tables)
+                    foreach (var column in table.Columns)
+                        yield return column;
+            }
+        }
+
         string _id;
         /// <summary>
         /// The archive version id.

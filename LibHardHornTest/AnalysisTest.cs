@@ -28,7 +28,7 @@ namespace LibHardHornTest
                     }))
                 });
 
-            var analyzer = new DataAnalyzer(av, new TestLogger());
+            var analyzer = new Analyzer(av, new TestLogger());
         }
 
         [TestMethod]

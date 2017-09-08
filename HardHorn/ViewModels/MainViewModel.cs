@@ -28,7 +28,7 @@ namespace HardHorn.ViewModels
         TABLE_NOT_FOUND
     }
 
-    class ListTable : PropertyChangedBase
+    class TableViewModel : PropertyChangedBase
     {
         public Table Table { get; set; }
 
@@ -56,10 +56,10 @@ namespace HardHorn.ViewModels
         private bool _done = false;
     }
 
-    class TestSuiteDataTypeTest : PropertyChangedBase
+    class DataTypeSelection : PropertyChangedBase
     {
         public DataType DataType { get; private set; }
-        public TestSuiteTestType ParentTest { get; set; }
+        public TestTypeSelection ParentTest { get; set; }
 
         bool? _selected = true;
         public bool? Selected
@@ -76,18 +76,18 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public TestSuiteDataTypeTest(DataType dataType, TestSuiteTestType parentTest)
+        public DataTypeSelection(DataType dataType, TestTypeSelection parentTest)
         {
             DataType = dataType;
             ParentTest = parentTest;
         }
     }
 
-    class TestSuiteTestType : PropertyChangedBase
+    class TestTypeSelection : PropertyChangedBase
     {
-        public AnalysisErrorType TestType { get; private set; }
-        public IEnumerable<TestSuiteDataTypeTest> DataTypeTests { get; set; }
-        public TestSuiteCategory Category { get; private set; }
+        public TestSelectionType TestType { get; private set; }
+        public IEnumerable<DataTypeSelection> DataTypeTests { get; set; }
+        public TestSelectionCategory Category { get; private set; }
 
         bool? _selected = true;
         public bool? Selected
@@ -144,18 +144,18 @@ namespace HardHorn.ViewModels
             NotifyOfPropertyChange("Selected");
         }
 
-        public TestSuiteTestType(AnalysisErrorType testType, TestSuiteCategory category)
+        public TestTypeSelection(TestSelectionType testType, TestSelectionCategory category)
         {
             Category = category;
             TestType = testType;
-            DataTypeTests = Enumerable.Empty<TestSuiteDataTypeTest>();
+            DataTypeTests = Enumerable.Empty<DataTypeSelection>();
         }
     }
 
-    class TestSuiteCategory : PropertyChangedBase
+    class TestSelectionCategory : PropertyChangedBase
     {
         public string Name { get; private set; }
-        public ObservableCollection<TestSuiteTestType> TestTypes { get; private set; }
+        public ObservableCollection<TestTypeSelection> TestTypes { get; private set; }
 
         bool? _selected = true;
         public bool? Selected
@@ -208,75 +208,52 @@ namespace HardHorn.ViewModels
         }
 
 
-        public TestSuiteCategory(string name, DataType[] dataTypes, AnalysisErrorType[] testTypes)
+        public TestSelectionCategory(string name, DataType[] dataTypes, TestSelectionType[] testTypes)
         {
             Name = name;
 
-            TestTypes = new ObservableCollection<TestSuiteTestType>();
+            TestTypes = new ObservableCollection<TestTypeSelection>();
 
             foreach (var testType in testTypes)
             {
-                var test = new TestSuiteTestType(testType, this);
-                var dataTypeTests = new List<TestSuiteDataTypeTest>();
+                var test = new TestTypeSelection(testType, this);
+                var dataTypeTests = new List<DataTypeSelection>();
 
                 foreach (var dataType in dataTypes)
                 {
-                    var dataTypeTest = new TestSuiteDataTypeTest(dataType, test);
+                    var dataTypeTest = new DataTypeSelection(dataType, test);
                     dataTypeTests.Add(dataTypeTest);
                 }
 
-                test.DataTypeTests = dataTypeTests.Cast<TestSuiteDataTypeTest>();
+                test.DataTypeTests = dataTypeTests.Cast<DataTypeSelection>();
                 TestTypes.Add(test);
             }
         }
     }
 
-    class TestSuite : PropertyChangedBase, IEnumerable<TestSuiteCategory>
+    enum TestSelectionType
     {
-        List<TestSuiteCategory> testCategories = new List<TestSuiteCategory>();
+        UNDERFLOW, OVERFLOW, FORMAT, BLANK
+    }
 
-        public TestSuite()
+    class TestSelection : PropertyChangedBase, IEnumerable<TestSelectionCategory>
+    {
+        List<TestSelectionCategory> testCategories = new List<TestSelectionCategory>();
+
+        public TestSelection()
         {
-            testCategories.Add(new TestSuiteCategory("Strengtyper",
+            testCategories.Add(new TestSelectionCategory("Strengtyper",
                 new DataType[] { DataType.CHARACTER, DataType.CHARACTER_VARYING, DataType.NATIONAL_CHARACTER, DataType.NATIONAL_CHARACTER_VARYING },
-                new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW, AnalysisErrorType.UNDERFLOW, AnalysisErrorType.BLANK }));
-            testCategories.Add(new TestSuiteCategory("Tidstyper",
+                new TestSelectionType[] { TestSelectionType.OVERFLOW, TestSelectionType.UNDERFLOW, TestSelectionType.BLANK }));
+            testCategories.Add(new TestSelectionCategory("Tidstyper",
                 new DataType[] { DataType.TIME, DataType.TIMESTAMP, DataType.INTERVAL },
-                new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW, AnalysisErrorType.FORMAT }));
-            testCategories.Add(new TestSuiteCategory("Decimaltalstyper",
+                new TestSelectionType[] { TestSelectionType.OVERFLOW, TestSelectionType.FORMAT }));
+            testCategories.Add(new TestSelectionCategory("Decimaltalstyper",
                 new DataType[] { DataType.DECIMAL, DataType.DOUBLE_PRECISION, DataType.FLOAT, DataType.REAL },
-                new AnalysisErrorType[] { AnalysisErrorType.OVERFLOW }));
+                new TestSelectionType[] { TestSelectionType.OVERFLOW }));
         }
 
-        public Dictionary<DataType, HashSet<AnalysisErrorType>> GetTestDictionary()
-        {
-            var dict = new Dictionary<DataType, HashSet<AnalysisErrorType>>();
-
-            foreach (var testCategory in testCategories)
-            {
-                foreach (var testType in testCategory.TestTypes)
-                {
-                    foreach (var dataType in testType.DataTypeTests)
-                    {
-                        if (dataType.Selected.HasValue && dataType.Selected.Value)
-                        {
-                            if (!dict.ContainsKey(dataType.DataType))
-                            {
-                                dict.Add(dataType.DataType, new HashSet<AnalysisErrorType>(new AnalysisErrorType[] { testType.TestType }));
-                            }
-                            else
-                            {
-                                dict[dataType.DataType].Add(testType.TestType);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return dict;
-        }
-
-        public IEnumerator<TestSuiteCategory> GetEnumerator()
+        public IEnumerator<TestSelectionCategory> GetEnumerator()
         {
             return testCategories.GetEnumerator();
         }
@@ -315,7 +292,7 @@ namespace HardHorn.ViewModels
         public ObservableCollection<TableComparison> RemovedTableComparisons { get; set; }
         public ObservableCollection<TableComparison> AddedTableComparisons { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
-        public TestSuite TestSuite { get; set; }
+        public TestSelection TestSuite { get; set; }
         public int[] BarChartValues { get; set; }
 
         int _totalRows;
@@ -388,8 +365,8 @@ namespace HardHorn.ViewModels
             get; set;
         }
 
-        ListTable _currentTable = null;
-        public ListTable CurrentTable
+        TableViewModel _currentTable = null;
+        public TableViewModel CurrentTable
         {
             get { return _currentTable; }
             set { _currentTable = value;  UpdateInteractiveReportView(); NotifyOfPropertyChange("CurrentTable"); }
@@ -465,10 +442,10 @@ namespace HardHorn.ViewModels
             {
                 TableReports = null;
             }
-            else if (_analyzer != null && _analyzer.Report.ContainsKey(table.Name))
+            else if (_analyzer != null && _analyzer.TestHierachy.ContainsKey(table))
             {
-                TableReports = new ObservableCollection<AnalysisReport>();
-                foreach (var report in _analyzer.Report[table.Name].Values)
+                TableReports = new ObservableCollection<ColumnAnalysis>();
+                foreach (var report in _analyzer.TestHierachy[table].Values)
                 {
                     if ((report.ErrorCount > 0 && ShowErrorReports) ||
                         (report.SuggestedType != null && ShowSuggestionReports) ||
@@ -478,21 +455,21 @@ namespace HardHorn.ViewModels
             }
         }
 
-        ObservableCollection<AnalysisReport> _tableReports;
-        public ObservableCollection<AnalysisReport> TableReports
+        ObservableCollection<ColumnAnalysis> _tableReports;
+        public ObservableCollection<ColumnAnalysis> TableReports
         {
             get { return _tableReports; }
             set { _tableReports = value; NotifyOfPropertyChange("TableReports"); }
         }
 
-        Dictionary<string, ListTable> ListTableLookup = new Dictionary<string, ListTable>();
-        public ObservableCollection<ListTable> ListTables { get; set; }
+        Dictionary<string, TableViewModel> ListTableLookup = new Dictionary<string, TableViewModel>();
+        public ObservableCollection<TableViewModel> ListTables { get; set; }
 
         BackgroundWorker _loadWorker = new BackgroundWorker();
         BackgroundWorker _testWorker = new BackgroundWorker();
         BackgroundWorker _compareWorker = new BackgroundWorker();
 
-        DataAnalyzer _analyzer;
+        Analyzer _analyzer;
         DataStatistics _stats;
 
         public IEnumerable<KeyValuePair<DataType, dynamic>> DataTypeStatistics
@@ -511,7 +488,7 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public ObservableCollection<dynamic> Regexes { get; private set; }
+        public ObservableCollection<RegexTestViewModel> Regexes { get; private set; }
 
         string _statusText = "";
         public string StatusText { get { return _statusText; } set { _statusText = value; NotifyOfPropertyChange("StatusText"); } }
@@ -524,14 +501,14 @@ namespace HardHorn.ViewModels
         #region Constructors
         public MainViewModel()
         {
-            ListTables = new ObservableCollection<ListTable>();
+            ListTables = new ObservableCollection<TableViewModel>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
             TableComparisons = new ObservableCollection<TableComparison>();
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
-            Regexes = new ObservableCollection<dynamic>();
-            TestSuite = new TestSuite();
+            Regexes = new ObservableCollection<RegexTestViewModel>();
+            TestSuite = new TestSelection();
 
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
 
@@ -619,7 +596,7 @@ namespace HardHorn.ViewModels
 
             foreach (var table in ArchiveVersion.Tables)
             {
-                var listTable = new ListTable() { Table = table, Errors = false };
+                var listTable = new TableViewModel() { Table = table, Errors = false };
                 ListTableLookup.Add(table.Name, listTable);
                 ListTables.Add(listTable);
             }
@@ -702,7 +679,7 @@ namespace HardHorn.ViewModels
         {
             var loadLogger = new LoadWorkerLogger(sender as BackgroundWorker);
             _archiveVersion = ArchiveVersion.Load(e.Argument as string, loadLogger);
-            _analyzer = new DataAnalyzer(_archiveVersion, loadLogger);
+            _analyzer = new Analyzer(_archiveVersion, loadLogger);
         }
 
         void _testWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -724,11 +701,11 @@ namespace HardHorn.ViewModels
                     table = state.Data as Table;
                     if (table == null) return;
                     var listTable = ListTableLookup[table.Name];
-                    if (_analyzer.Report[table.Name].Values.Any(rep => rep.ErrorCount > 0))
+                    if (_analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
                         listTable.Errors = true;
                     break;
                 case TestWorkerUpdate.TABLE_REPORT:
-                    var tableReport = state.Data as Dictionary<string, AnalysisReport>;
+                    var tableReport = state.Data as Dictionary<string, ColumnAnalysis>;
                     Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
                         (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
                     int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
@@ -737,22 +714,22 @@ namespace HardHorn.ViewModels
                     {
                         Log("Fejl:");
                     }
-                    foreach (var columnReport in tableReport.Values)
+                    foreach (var columnAnalysis in tableReport.Values)
                     {
-                        var column = columnReport.Column;
-                        if (columnReport.ErrorCount > 0)
+                        var column = columnAnalysis.Column;
+                        if (columnAnalysis.ErrorCount > 0)
                         {
                             Log(string.Format("\t- Felt '{0}' af typen '{1} {2}'", column.Name, column.Type, column.Param));
-                            foreach (var error in columnReport.Errors.Values)
+                            foreach (var test in columnAnalysis.Tests)
                             {
-                                if (error.Count == 0)
+                                if (test.ErrorCount == 0)
                                     continue;
 
-                                Log(string.Format("\t\t- {0} ({1} forekomster)", error.Type, error.Count));
+                                Log(string.Format("\t\t- {0} ({1} forekomster)", test.GetType(), test.ErrorCount));
                                 int i = 0;
-                                foreach (var post in error.Posts)
+                                foreach (var post in test.ErrorPosts)
                                 {
-                                    if (i >= Math.Min(10, error.Count))
+                                    if (i >= Math.Min(10, test.ErrorCount))
                                         break;
 
                                     string pos = string.Format("({0}, {1})", post.Line, post.Position);
@@ -779,10 +756,10 @@ namespace HardHorn.ViewModels
 
                     break;
                 case TestWorkerUpdate.TEST_DONE:
-                    var totalErrors = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Aggregate(0, (m, columnReport) => columnReport.ErrorCount + m) + n);
-                    var errorTables = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Any(columnReport => columnReport.ErrorCount > 0) ? n + 1 : n);
-                    var totalSuggestions = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => n + columnReports.Values.Aggregate(0, (m, columnReport) => columnReport.SuggestedType != null ? m + 1 : m));
-                    var suggestionTables = _analyzer.Report.Values.Aggregate(0, (n, columnReports) => columnReports.Values.Any(columnReport => columnReport.SuggestedType != null) ? n + 1 : n);
+                    var totalErrors = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
+                    var errorTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
+                    var totalSuggestions = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
+                    var suggestionTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
 
                     Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
                     break;
@@ -840,9 +817,9 @@ namespace HardHorn.ViewModels
                 }
                 
 
-                worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TABLE_REPORT, Data = _analyzer.Report[table.Name] });
+                worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TABLE_REPORT, Data = _analyzer.TestHierachy[table] });
 
-                foreach (var report in _analyzer.Report[table.Name].Values)
+                foreach (var report in _analyzer.TestHierachy[table].Values)
                 {
                     report.SuggestType();
                     worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.COLUMN_REPORT, Data = report });
@@ -869,25 +846,21 @@ namespace HardHorn.ViewModels
             RemovedTableComparisons.Remove(removed);
         }
 
-        public void AddRegex(string regexText, Column regexColumn)
+        public void AddRegex(string pattern, Column column)
         {
-            if (regexColumn == null)
+            if (pattern == null || pattern.Length == 0 || column == null)
             {
                 return;
             }
 
-            dynamic regex = new ExpandoObject();
             try
             {
-                regex.Regex = new Regex(regexText);
+                var regex = new Regex(pattern);
             }
             catch (ArgumentException)
             {
-                Log(string.Format("Det regulære udtryk \"{0}\" er ikke gyldigt.", regexText), LogLevel.ERROR);
+                Log(string.Format("Det regulære udtryk \"{0}\" er ikke gyldigt.", pattern), LogLevel.ERROR);
             }
-           
-            regex.Column = regexColumn;
-            Regexes.Add(regex);
         }
 
         public void RemoveRegex(dynamic regex)
@@ -972,31 +945,58 @@ namespace HardHorn.ViewModels
                 }
 
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
-                var regexList = new List<RegexTest>();
-                foreach (dynamic regex in Regexes)
+                var regexList = new List<RegexTestViewModel>();
+                foreach (var regex in Regexes)
                 {
-                    var dict = new Dictionary<string, HashSet<string>>();
-                    var hset = new HashSet<string>();
-                    dict.Add(regex.Column.Table.Name, new HashSet<string>() { regex.Column.Name });
-                    regexList.Add(new RegexTest(regex.Regex, dict));
+                    _analyzer.AddTest(regex.Column, regex.RegexTest);
                 }
-                _analyzer.RegexTests = regexList;
-                TestProgress = 0;
-                _analyzer.TestSelection = TestSuite.GetTestDictionary();
 
-                foreach (var pair in _analyzer.TestSelection)
+                TestProgress = 0;
+
+                foreach (var category in TestSuite)
                 {
-                    if (pair.Value.Count > 0)
+                    foreach (var type in category.TestTypes)
                     {
-                        Log(pair.Key.ToString());
-                        foreach (var testType in pair.Value)
+                        foreach (var dttest in type.DataTypeTests)
                         {
-                            Log(string.Format("\t- {0}", testType.ToString()));
+                            foreach (var column in ArchiveVersion.Columns)
+                            {
+                                if (dttest.DataType == column.Type)
+                                {
+                                    Test test;
+                                    switch (dttest.ParentTest.TestType)
+                                    {
+                                        case TestSelectionType.BLANK:
+                                            test = new Test.Blank();
+                                            break;
+                                        case TestSelectionType.OVERFLOW:
+                                            test = new Test.Overflow();
+                                            break;
+                                        case TestSelectionType.UNDERFLOW:
+                                            test = new Test.Underflow();
+                                            break;
+                                        default:
+                                            continue;
+                                    }
+                                    _analyzer.AddTest(column, test);
+                                }
+                            }
                         }
                     }
                 }
 
-                _analyzer.PrepareReports();
+                //foreach (var pair in _analyzer.TestSelection)
+                //{
+                //    if (pair.Value.Count > 0)
+                //    {
+                //        Log(pair.Key.ToString());
+                //        foreach (var testType in pair.Value)
+                //        {
+                //            Log(string.Format("\t- {0}", testType.ToString()));
+                //        }
+                //    }
+                //}
+
                 foreach (var listTable in ListTables)
                 {
                     listTable.Errors = false;

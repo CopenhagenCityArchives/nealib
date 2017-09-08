@@ -87,13 +87,13 @@
                     <StackPanel>
                         <TreeView ItemsSource="{Binding TestSuite}" MinHeight="200">
                             <TreeView.Resources>
-                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteCategory}" ItemsSource="{Binding TestTypes}">
+                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSelectionCategory}" ItemsSource="{Binding TestTypes}">
                                     <CheckBox IsChecked="{Binding Selected}" Content="{Binding Name}" />
                                 </HierarchicalDataTemplate>
-                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteTestType}" ItemsSource="{Binding DataTypeTests}">
+                                <HierarchicalDataTemplate DataType="{x:Type vm:TestTypeSelection}" ItemsSource="{Binding DataTypeTests}">
                                     <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType, Converter={StaticResource AnalysisErrorTypeToStringConverter}}" />
                                 </HierarchicalDataTemplate>
-                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSuiteDataTypeTest}">
+                                <HierarchicalDataTemplate DataType="{x:Type vm:DataTypeSelection}">
                                     <CheckBox IsChecked="{Binding Selected}" Content="{Binding DataType}" />
                                 </HierarchicalDataTemplate>
                             </TreeView.Resources>

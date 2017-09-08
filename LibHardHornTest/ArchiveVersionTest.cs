@@ -139,7 +139,7 @@ namespace LibHardHornTest
         public void TestLoadTableIndex()
         {
             var AV = ArchiveVersion.Load(@"TestResources\AVID.TEST.1.1", new TestLogger());
-            var analyzer = new DataAnalyzer(AV, new TestLogger());
+            var analyzer = new Analyzer(AV, new TestLogger());
             var tables = AV.Tables.ToList();
 
             Assert.AreEqual(2, tables.Count);

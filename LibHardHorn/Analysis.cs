@@ -8,6 +8,7 @@ using HardHorn.Archiving;
 using System.Text.RegularExpressions;
 using System.Dynamic;
 using HardHorn.Logging;
+using System.ComponentModel;
 
 namespace HardHorn.Analysis
 {
@@ -21,74 +22,226 @@ namespace HardHorn.Analysis
         REGEX
     }
 
-    public class AnalysisError
+    public abstract class Test
     {
-        int _count = 0;
-        public int Count { get { return _count; } }
-        List<Post> _instances = new List<Post>();
+        public static readonly int MAX_ERROR_POSTS = 10;
 
-        public IEnumerable<Post> Posts { get { return _instances; } }
-        public AnalysisErrorType Type { get; private set; }
-        public RegexTest Regex { get; private set; }
-        public Column Column { get; private set; }
-
-        public AnalysisError(AnalysisErrorType type, Column column, RegexTest regex = null)
+        public enum Result
         {
-            Type = type;
-            Regex = regex;
-            Column = column;
+            ERROR,
+            OKAY
         }
+
+        public int ErrorCount { get; private set; }
+
+        List<Post> _posts = new List<Post>();
+        public IEnumerable<Post> ErrorPosts { get { return _posts; } }
 
         public void Add(Post post)
         {
-            if (_count < AnalysisReport.MAX_ERROR_INSTANCES)
+            if (ErrorCount < MAX_ERROR_POSTS)
             {
-                _instances.Add(post);
+                _posts.Add(post);
             }
-            _count++;
+            ErrorCount++;
         }
 
-        public override string ToString()
+        public Result Run(Post post, Column column)
         {
-            string repr = string.Format("{{{0}, count={1}}}", Type, Count);
-            foreach (dynamic instance in _instances)
+            var result = GetResult(post, column);
+            if (result == Result.ERROR)
             {
-                repr += Environment.NewLine + string.Format("[{0},{1}]({2})", instance.Line, instance.Pos, instance.Data);
+                Add(post);
             }
-            return repr;
+            return result;
+        }
+
+        public abstract Result GetResult(Post post, Column column);
+
+        public class Overflow : Test
+        {
+            public override Result GetResult(Post post, Column column)
+            {
+                bool overflow = false;
+
+                switch (column.Type)
+                {
+                    case DataType.NATIONAL_CHARACTER:
+                    case DataType.CHARACTER:
+                    case DataType.NATIONAL_CHARACTER_VARYING:
+                    case DataType.CHARACTER_VARYING:
+                        overflow = post.Data.Length > column.Param[0];
+                        break;
+                    case DataType.DECIMAL:
+                        var components = post.Data.Split('.');
+                        // No separator
+                        if (components.Length == 1)
+                            overflow = components[0].Length > column.Param[0];
+                        // With separator
+                        if (components.Length == 2)
+                            overflow = components[0].Length + components[1].Length > column.Param[0] || components[1].Length > column.Param[1];
+                        break;
+                }
+
+                return overflow ? Result.ERROR : Result.OKAY;
+            }
+        }
+
+        public class Underflow : Test
+        {
+            public override Result GetResult(Post post, Column column)
+            {
+                var underflow = false;
+                switch (column.Type)
+                {
+                    case DataType.NATIONAL_CHARACTER:
+                    case DataType.CHARACTER:
+                        underflow = post.Data.Length < column.Param[0];
+                        break;
+                }
+                return underflow ? Result.ERROR : Result.OKAY;
+            }
+        }
+
+        public class Blank : Test
+        {
+            bool IsWhitespace(char c)
+            {
+                return c == ' ' || c == '\n' || c == '\t' || c == '\r';
+            }
+
+            public override Result GetResult(Post post, Column column)
+            {
+                return IsWhitespace(post.Data[0]) || (post.Data.Length > 0 && IsWhitespace(post.Data[post.Data.Length - 1])) ? Result.ERROR : Result.OKAY;
+            }
+        }
+
+        public class Pattern : Test
+        {
+            public Regex Regex { get; private set; }
+            public Func<MatchCollection, Result> HandleMatches { get; private set; }
+
+            public Pattern(Regex regex, Func<MatchCollection, Result> handleMatches = null)
+            {
+                Regex = regex;
+                HandleMatches = handleMatches;
+            }
+
+            public override Result GetResult(Post post, Column column)
+            {
+                var matches = Regex.Matches(post.Data);
+
+                if (HandleMatches == null)
+                {
+                    return matches.Count > 0 ? Result.OKAY : Result.ERROR;
+                }
+
+                return HandleMatches(matches);
+            }
         }
     }
 
-    public class AnalysisReport
+    public class ColumnAnalysis
     {
+        public event EventHandler<ErrorOccuredEventArgs> ErrorOccured = delegate { };
+
+        public class ErrorOccuredEventArgs : EventArgs
+        {
+            public Test Test { get; private set; }
+
+            public ErrorOccuredEventArgs(Test test)
+            {
+                Test = test;
+            }
+        }
+
         public int ErrorCount { get; private set; }
-        public Column Column { get; set; }
-        public Dictionary<AnalysisErrorType, AnalysisError> Errors { get; set; }
-        public int[] MinLengths { get; set; }
-        public int[] MaxLengths { get; set; }
-        public static readonly int MAX_ERROR_INSTANCES = 10;
+        public List<Test> Tests { get; private set; }
+        public int[] MinLengths { get; private set; }
+        public int[] MaxLengths { get; private set; }
         public Tuple<DataType, DataTypeParam> SuggestedType { get; set; }
+        public Column Column { get; private set; }
         public bool AnalysisFirstRow { get; set; }
 
-        public AnalysisReport(Column column)
+        public ColumnAnalysis(Column column)
         {
             AnalysisFirstRow = false;
             Column = column;
             ErrorCount = 0;
             MinLengths = new int[column.Param != null ? column.Param.Length : 1];
             MaxLengths = new int[column.Param != null ? column.Param.Length : 1];
-            Errors = new Dictionary<AnalysisErrorType, AnalysisError>();
+            Tests = new List<Test>();
         }
 
-        public void ReportError(Post post, AnalysisErrorType errorType, RegexTest regexTest = null)
+        public void RunTests(Post post)
         {
-            ErrorCount++;
-            if (!Errors.ContainsKey(errorType))
+            foreach (var test in Tests)
             {
-                Errors.Add(errorType, new AnalysisError(errorType, Column, regexTest));
+                var result = test.Run(post, Column);
+                if (result == Test.Result.ERROR)
+                {
+                    ErrorOccured(this, new ErrorOccuredEventArgs(test));
+                    ErrorCount++;
+                }
             }
+        }
 
-            Errors[errorType].Add(post);
+        /// <summary>
+        /// Update the length measurements given the new data.
+        /// </summary>
+        /// <param name="data"></param>
+        public void UpdateLengthStatistics(string data)
+        {
+            switch (Column.Type)
+            {
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.CHARACTER:
+                    if (AnalysisFirstRow)
+                    {
+                        MinLengths[0] = Math.Min(MinLengths[0], data.Length);
+                        MaxLengths[0] = Math.Max(MaxLengths[0], data.Length);
+                    }
+                    else
+                    {
+                        MinLengths[0] = data.Length;
+                        MaxLengths[0] = data.Length;
+                    }
+                    break;
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                case DataType.CHARACTER_VARYING:
+                    if (AnalysisFirstRow)
+                    {
+                        MinLengths[0] = Math.Min(MinLengths[0], data.Length);
+                        MaxLengths[0] = Math.Max(MaxLengths[0], data.Length);
+                    }
+                    else
+                    {
+                        MinLengths[0] = data.Length;
+                        MaxLengths[0] = data.Length;
+                    }
+                    break;
+                case DataType.DECIMAL:
+                    var components = data.Split('.');
+                    if (AnalysisFirstRow)
+                    {
+                        MinLengths[0] = Math.Min(MinLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                        MaxLengths[0] = Math.Max(MaxLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                        MinLengths[1] = Math.Min(MinLengths[1], components.Length == 1 ? 0 : components[1].Length);
+                        MaxLengths[1] = Math.Max(MaxLengths[1], components.Length == 1 ? 0 : components[1].Length);
+                    }
+                    else
+                    {
+                        MinLengths[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                        MaxLengths[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                        MinLengths[1] = components.Length == 1 ? 0 : components[1].Length;
+                        MaxLengths[1] = components.Length == 1 ? 0 : components[1].Length;
+                    }
+                    break;
+                case DataType.TIME:
+                case DataType.DATE:
+                case DataType.TIMESTAMP:
+                    break;
+            }
         }
 
         public void SuggestType()
@@ -143,66 +296,41 @@ namespace HardHorn.Analysis
                     break;
             }
         }
-
-        public override string ToString()
-        {
-            string repr = string.Format("[{0}, {1}{2}{3}]",
-                Column.Name,
-                Column.Type.ToString(),
-                Column.Param != null && Column.Param.Length > 0 ? "(" + string.Join(",", Column.Param) + ")" : string.Empty,
-                Column.Nullable ? ", nullable" : string.Empty,
-                ErrorCount);
-
-            foreach (var errorType in Errors.Keys)
-            {
-                var errors = Errors[errorType];
-                if (errors.Count > 0)
-                {
-                    repr += Environment.NewLine + string.Join(Environment.NewLine, errors);
-                }
-            }
-            return repr;
-        }
     }
 
-    public class DataAnalyzer
+    public class Analyzer
     {
-        ArchiveVersion _archiveVersion;
-        public ArchiveVersion ArchiveVersion { get { return _archiveVersion; } }
-        public Dictionary<DataType, HashSet<AnalysisErrorType>> TestSelection { get; set; }
-        public IEnumerable<RegexTest> RegexTests { get; set; }
+        public ArchiveVersion ArchiveVersion { get; private set; }
         ILogger _log;
 
-        Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
-        Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
-        Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
+        static Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
+        static Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
+        static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
+        static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
+        static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
         static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
 
-        public Dictionary<string, Dictionary<string, AnalysisReport>> Report { get; private set; }
+        public Dictionary<Table, Dictionary<Column, ColumnAnalysis>> TestHierachy { get; private set; }
 
-        public DataAnalyzer(ArchiveVersion archiveVersion, ILogger log)
+        public Analyzer(ArchiveVersion archiveVersion, ILogger log)
         {
             _log = log;
-            _archiveVersion = archiveVersion;
-            TestSelection = new Dictionary<DataType, HashSet<AnalysisErrorType>>();
-            Report = new Dictionary<string, Dictionary<string, AnalysisReport>>();
-            PrepareReports();
-        }
+            ArchiveVersion = archiveVersion;
 
-        public void PrepareReports()
-        {
-            Report.Clear();
-            foreach (var table in ArchiveVersion.Tables)
+            TestHierachy = new Dictionary<Table, Dictionary<Column, ColumnAnalysis>>();
+            foreach (var table in archiveVersion.Tables)
             {
-                var columnReports = new Dictionary<string, AnalysisReport>();
+                TestHierachy.Add(table, new Dictionary<Column, ColumnAnalysis>());
                 foreach (var column in table.Columns)
                 {
-                    columnReports.Add(column.Name, new AnalysisReport(column));
+                    TestHierachy[table].Add(column, new ColumnAnalysis(column));
                 }
-                Report.Add(table.Name, columnReports);
             }
+        }
+
+        public void AddTest(Column column, Test test)
+        {
+            TestHierachy[column.Table][column].Tests.Add(test);
         }
 
         /// <summary>
@@ -212,14 +340,14 @@ namespace HardHorn.Analysis
         /// <returns>The number of rows analyzed.</returns>
         public void AnalyzeRows(Table table, Post[,] rows, int n)
         {
-            // analyize the rows
+            // analyze the rows
             for (int i = 0; i < n; i++)
             {
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
                     var post = rows[i,j];
-                    AnalyzeLengths(Report[table.Name][table.Columns[j].Name], post.Data);
-                    AnalyzePost(table.Columns[j], post, Report[table.Name][table.Columns[j].Name]);
+                    TestHierachy[table][table.Columns[j]].UpdateLengthStatistics(post.Data);
+                    TestHierachy[table][table.Columns[j]].RunTests(post);
                 }
             }
         }
@@ -229,7 +357,7 @@ namespace HardHorn.Analysis
         /// </summary>
         /// <param name="report"></param>
         /// <param name="data"></param>
-        void AnalyzeLengths(AnalysisReport report, string data)
+        void AnalyzeLengths(ColumnAnalysis report, string data)
         {
             switch (report.Column.Type)
             {
@@ -288,216 +416,6 @@ namespace HardHorn.Analysis
         }
 
         /// <summary>
-        /// Analyze a post.
-        /// </summary>
-        /// <param name="line"></param>
-        /// <param name="pos"></param>
-        /// <param name="column"></param>
-        /// <param name="data"></param>
-        /// <param name="isNull"></param>
-        /// <param name="report"></param>
-        void AnalyzePost(Column column, Post post, AnalysisReport report)
-        {
-            if (RegexTests != null)
-            {
-                foreach (var regexTest in RegexTests)
-                {
-                    if (regexTest.ShouldPerformMatch(column) && !post.IsNull && !regexTest.MatchData(post.Data))
-                    {
-                        report.ReportError(post, AnalysisErrorType.REGEX, regexTest);
-                    }
-                }
-            }
-
-            Match match;
-            if (!TestSelection.ContainsKey(column.Type))
-            {
-                return;
-            }
-            var currentTests = TestSelection[column.Type];
-            if (currentTests.Count == 0)
-            {
-                return;
-            }
-
-            switch (column.Type)
-            {
-                case DataType.NATIONAL_CHARACTER:
-                case DataType.CHARACTER:
-                    if (currentTests.Contains(AnalysisErrorType.UNDERFLOW) && post.Data.Length < column.Param[0])
-                    {
-                        report.ReportError(post, AnalysisErrorType.UNDERFLOW);
-                    }
-                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && post.Data.Length > column.Param[0])
-                    {
-                        report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                    }
-                    break;
-                case DataType.NATIONAL_CHARACTER_VARYING:
-                case DataType.CHARACTER_VARYING:
-                    // Data too long
-                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && post.Data.Length > column.Param[0])
-                    {
-                        report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                    }
-                    break;
-                case DataType.DECIMAL:
-                    var components = post.Data.Split('.');
-                    // No separator
-                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && components.Length == 1)
-                    {
-                        if (components[0].Length > column.Param[0])
-                        {
-                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                        }
-                    }
-                    // With separator
-                    if (currentTests.Contains(AnalysisErrorType.OVERFLOW) && components.Length == 2)
-                    {
-                        if (components[0].Length + components[1].Length > column.Param[0] || components[1].Length > column.Param[1])
-                        {
-                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                        }
-                    }
-                    break;
-                case DataType.DATE:
-                    match = date_regex.Match(post.Data);
-                    if (match.Success)
-                    {
-                        int year = int.Parse(match.Groups[1].Value);
-                        int month = int.Parse(match.Groups[2].Value);
-                        int day = int.Parse(match.Groups[3].Value);
-                        if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
-                        {
-                            report.ReportError(post, AnalysisErrorType.FORMAT);
-                        }
-                    }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
-                    {
-                        report.ReportError(post, AnalysisErrorType.FORMAT);
-                    }
-                    break;
-                case DataType.TIME:
-                    match = time_regex.Match(post.Data);
-                    if (match.Success)
-                    {
-                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
-                            column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0])
-                        {
-                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                        }
-                        int year = int.Parse(match.Groups[1].Value);
-                        int month = int.Parse(match.Groups[2].Value);
-                        int day = int.Parse(match.Groups[3].Value);
-                        if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
-                        {
-                            report.ReportError(post, AnalysisErrorType.FORMAT);
-                        }
-                    }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
-                    {
-                        report.ReportError(post, AnalysisErrorType.FORMAT);
-                    }
-                    break;
-                case DataType.TIME_WITH_TIME_ZONE:
-                    match = time_timezone_regex.Match(post.Data);
-                    if (match.Success)
-                    {
-                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
-                            column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0])
-                        {
-                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                        }
-                        int year = int.Parse(match.Groups[1].Value);
-                        int month = int.Parse(match.Groups[2].Value);
-                        int day = int.Parse(match.Groups[3].Value);
-                        if (currentTests.Contains(AnalysisErrorType.FORMAT) && invalidDate(year, month, day))
-                        {
-                            report.ReportError(post, AnalysisErrorType.FORMAT);
-                        }
-                    }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
-                    {
-                        report.ReportError(post, AnalysisErrorType.FORMAT);
-                    }
-                    break;
-                case DataType.TIMESTAMP:
-                    match = timestamp_regex.Match(post.Data);
-                    if (match.Success)
-                    {
-                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
-                            column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0])
-                        {
-                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                        }
-
-                        if (currentTests.Contains(AnalysisErrorType.FORMAT))
-                        {
-                            // validate datetime
-                            int year = int.Parse(match.Groups[1].Value);
-                            int month = int.Parse(match.Groups[2].Value);
-                            int day = int.Parse(match.Groups[3].Value);
-                            int hour = int.Parse(match.Groups[4].Value);
-                            int minute = int.Parse(match.Groups[5].Value);
-                            int second = int.Parse(match.Groups[6].Value);
-
-                            if (invalidDate(year, month, day) || invalidTime(hour, minute, second))
-                            {
-                                report.ReportError(post, AnalysisErrorType.FORMAT);
-                            }
-                        }
-                    }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
-                    {
-                        report.ReportError(post, AnalysisErrorType.FORMAT);
-                    }
-                    break;
-                case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                    match = timestamp_timezone_regex.Match(post.Data);
-                    if (match.Success)
-                    {
-                        if (currentTests.Contains(AnalysisErrorType.OVERFLOW) &&
-                            column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0])
-                        {
-                            report.ReportError(post, AnalysisErrorType.OVERFLOW);
-                        }
-
-                        if (currentTests.Contains(AnalysisErrorType.FORMAT))
-                        {
-                            // validate datetime
-                            int year = int.Parse(match.Groups[1].Value);
-                            int month = int.Parse(match.Groups[2].Value);
-                            int day = int.Parse(match.Groups[3].Value);
-                            int hour = int.Parse(match.Groups[4].Value);
-                            int minute = int.Parse(match.Groups[5].Value);
-                            int second = int.Parse(match.Groups[6].Value);
-
-                            if (invalidDate(year, month, day) || invalidTime(hour, minute, second))
-                            {
-                                report.ReportError(post, AnalysisErrorType.FORMAT);
-                            }
-                        }
-                    }
-                    else if (currentTests.Contains(AnalysisErrorType.FORMAT) && !(post.Data.Length == 0 && column.Nullable && post.IsNull))
-                    {
-                        report.ReportError(post, AnalysisErrorType.FORMAT);
-                    }
-                    break;
-            }
-
-            if (currentTests.Contains(AnalysisErrorType.BLANK) && post.Data.Length > 0 &&
-                (post.Data[0] == ' ' ||
-                 post.Data[0] == '\n' ||
-                 post.Data[0] == '\t' ||
-                 post.Data[post.Data.Length - 1] == ' ' ||
-                 post.Data[post.Data.Length - 1] == '\n' ||
-                 post.Data[post.Data.Length - 1] == '\t'))
-            {
-                report.ReportError(post, AnalysisErrorType.BLANK);
-            }
-
-            report.AnalysisFirstRow = true;
-        }
 
         bool invalidTime(int hour, int minute, int second)
         {
@@ -505,7 +423,7 @@ namespace HardHorn.Analysis
                    hour < 0 ||
                    minute > 59 ||
                    minute < 0 ||
-                   second > 60 ||
+                   second > 59 ||
                    second < 0;
         }
 
@@ -517,29 +435,6 @@ namespace HardHorn.Analysis
                    day < 1 ||
                    month == 2 && leap && day > months[2] - 1 ||
                    day > months[month - 1];
-        }
-    }
-
-    public class RegexTest
-    {
-        public Regex Regex { get; private set; }
-        public Dictionary<string, HashSet<string>> Columns { get; private set; }
-
-        public RegexTest(Regex regex, Dictionary<string, HashSet<string>> columns)
-        {
-            Regex = regex;
-            Columns = columns;
-        }
-
-        public bool ShouldPerformMatch(Column column)
-        {
-            return Columns.ContainsKey(column.Table.Name) && Columns[column.Table.Name].Contains(column.Name);
-        }
-
-        public bool MatchData(string data)
-        {
-            var match = Regex.Match(data);
-            return match.Success;
         }
     }
 }
