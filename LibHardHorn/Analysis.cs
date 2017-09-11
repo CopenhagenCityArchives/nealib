@@ -62,6 +62,7 @@ namespace HardHorn.Analysis
         {
             public override Result GetResult(Post post, Column column)
             {
+                Match match;
                 bool overflow = false;
 
                 switch (column.Type)
@@ -80,6 +81,34 @@ namespace HardHorn.Analysis
                         // With separator
                         if (components.Length == 2)
                             overflow = components[0].Length + components[1].Length > column.Param[0] || components[1].Length > column.Param[1];
+                        break;
+                    case DataType.TIME:
+                        match = Analyzer.time_regex.Match(post.Data);
+                        if (match.Success)
+                        {
+                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0];
+                        }
+                        break;
+                    case DataType.TIME_WITH_TIME_ZONE:
+                        match = Analyzer.time_timezone_regex.Match(post.Data);
+                        if (match.Success)
+                        {
+                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0];
+                        }
+                        break;
+                    case DataType.TIMESTAMP:
+                        match = Analyzer.timestamp_regex.Match(post.Data);
+                        if (match.Success)
+                        {
+                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0];
+                        }
+                        break;
+                    case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                        match = Analyzer.timestamp_timezone_regex.Match(post.Data);
+                        if (match.Success)
+                        {
+                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0];
+                        }
                         break;
                 }
 
@@ -112,7 +141,7 @@ namespace HardHorn.Analysis
 
             public override Result GetResult(Post post, Column column)
             {
-                return IsWhitespace(post.Data[0]) || (post.Data.Length > 0 && IsWhitespace(post.Data[post.Data.Length - 1])) ? Result.ERROR : Result.OKAY;
+                return post.Data.Length > 0  && (IsWhitespace(post.Data[0]) || IsWhitespace(post.Data[post.Data.Length - 1])) ? Result.ERROR : Result.OKAY;
             }
         }
 
@@ -303,12 +332,12 @@ namespace HardHorn.Analysis
         public ArchiveVersion ArchiveVersion { get; private set; }
         ILogger _log;
 
-        static Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
-        static Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
-        static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
-        static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
+        public static Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
+        public static Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
+        public static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
+        public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
+        public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
+        public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
 
         public Dictionary<Table, Dictionary<Column, ColumnAnalysis>> TestHierachy { get; private set; }
 
@@ -417,7 +446,7 @@ namespace HardHorn.Analysis
 
         /// <summary>
 
-        bool invalidTime(int hour, int minute, int second)
+        public static bool invalidTime(int hour, int minute, int second)
         {
             return hour > 23 ||
                    hour < 0 ||
@@ -427,7 +456,7 @@ namespace HardHorn.Analysis
                    second < 0;
         }
 
-        bool invalidDate(int year, int month, int day)
+        public static bool invalidDate(int year, int month, int day)
         {
             bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
             return year <= 0 ||

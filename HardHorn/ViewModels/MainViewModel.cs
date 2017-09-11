@@ -156,6 +156,15 @@ namespace HardHorn.ViewModels
     {
         public string Name { get; private set; }
         public ObservableCollection<TestTypeSelection> TestTypes { get; private set; }
+        public IEnumerable<DataTypeSelection> DataTypes
+        {
+            get
+            {
+                foreach (var testType in TestTypes)
+                    foreach (var dataType in testType.DataTypeTests)
+                        yield return dataType;
+            }
+        }
 
         bool? _selected = true;
         public bool? Selected
@@ -239,6 +248,15 @@ namespace HardHorn.ViewModels
     class TestSelection : PropertyChangedBase, IEnumerable<TestSelectionCategory>
     {
         List<TestSelectionCategory> testCategories = new List<TestSelectionCategory>();
+        public IEnumerable<DataTypeSelection> DataTypes
+        {
+            get
+            {
+                foreach (var category in testCategories)
+                    foreach (var dataType in category.DataTypes)
+                        yield return dataType;
+            }
+        }
 
         public TestSelection()
         {
@@ -292,7 +310,7 @@ namespace HardHorn.ViewModels
         public ObservableCollection<TableComparison> RemovedTableComparisons { get; set; }
         public ObservableCollection<TableComparison> AddedTableComparisons { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
-        public TestSelection TestSuite { get; set; }
+        public TestSelection SelectedTests { get; set; }
         public int[] BarChartValues { get; set; }
 
         int _totalRows;
@@ -508,7 +526,7 @@ namespace HardHorn.ViewModels
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
             Regexes = new ObservableCollection<RegexTestViewModel>();
-            TestSuite = new TestSelection();
+            SelectedTests = new TestSelection();
 
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
 
@@ -705,7 +723,7 @@ namespace HardHorn.ViewModels
                         listTable.Errors = true;
                     break;
                 case TestWorkerUpdate.TABLE_REPORT:
-                    var tableReport = state.Data as Dictionary<string, ColumnAnalysis>;
+                    var tableReport = state.Data as Dictionary<Column, ColumnAnalysis>;
                     Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
                         (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
                     int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
@@ -953,49 +971,115 @@ namespace HardHorn.ViewModels
 
                 TestProgress = 0;
 
-                foreach (var category in TestSuite)
+                foreach (var dataType in SelectedTests.DataTypes)
                 {
-                    foreach (var type in category.TestTypes)
+                    foreach (var column in ArchiveVersion.Columns)
                     {
-                        foreach (var dttest in type.DataTypeTests)
+                        if (dataType.DataType == column.Type)
                         {
-                            foreach (var column in ArchiveVersion.Columns)
+                            Test test;
+                            switch (dataType.ParentTest.TestType)
                             {
-                                if (dttest.DataType == column.Type)
-                                {
-                                    Test test;
-                                    switch (dttest.ParentTest.TestType)
+                                case TestSelectionType.BLANK:
+                                    test = new Test.Blank();
+                                    break;
+                                case TestSelectionType.OVERFLOW:
+                                    test = new Test.Overflow();
+                                    break;
+                                case TestSelectionType.UNDERFLOW:
+                                    test = new Test.Underflow();
+                                    break;
+                                case TestSelectionType.FORMAT:
+                                    switch (dataType.DataType)
                                     {
-                                        case TestSelectionType.BLANK:
-                                            test = new Test.Blank();
+                                        case DataType.TIMESTAMP:
+                                            test = new Test.Pattern(Analyzer.timestamp_regex, m => {
+                                                int year = int.Parse(m[0].Groups[1].Value);
+                                                int month = int.Parse(m[0].Groups[2].Value);
+                                                int day = int.Parse(m[0].Groups[3].Value);
+                                                int hour = int.Parse(m[0].Groups[4].Value);
+                                                int minute = int.Parse(m[0].Groups[5].Value);
+                                                int second = int.Parse(m[0].Groups[6].Value);
+
+                                                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
+                                                {
+                                                    return Test.Result.ERROR;
+                                                }
+
+                                                return Test.Result.OKAY;
+                                            });
                                             break;
-                                        case TestSelectionType.OVERFLOW:
-                                            test = new Test.Overflow();
+                                        case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                                            test = new Test.Pattern(Analyzer.timestamp_timezone_regex, m => {
+                                                int year = int.Parse(m[0].Groups[1].Value);
+                                                int month = int.Parse(m[0].Groups[2].Value);
+                                                int day = int.Parse(m[0].Groups[3].Value);
+                                                int hour = int.Parse(m[0].Groups[4].Value);
+                                                int minute = int.Parse(m[0].Groups[5].Value);
+                                                int second = int.Parse(m[0].Groups[6].Value);
+
+                                                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
+                                                {
+                                                    return Test.Result.ERROR;
+                                                }
+
+                                                return Test.Result.OKAY;
+                                            });
                                             break;
-                                        case TestSelectionType.UNDERFLOW:
-                                            test = new Test.Underflow();
+                                        case DataType.DATE:
+                                            test = new Test.Pattern(Analyzer.date_regex, m => {
+                                                int year = int.Parse(m[0].Groups[1].Value);
+                                                int month = int.Parse(m[0].Groups[2].Value);
+                                                int day = int.Parse(m[0].Groups[3].Value);
+
+                                                if (Analyzer.invalidDate(year, month, day))
+                                                {
+                                                    return Test.Result.ERROR;
+                                                }
+
+                                                return Test.Result.OKAY;
+                                            });
+                                            break;
+                                        case DataType.TIME:
+                                            test = new Test.Pattern(Analyzer.time_regex, m => {
+                                                int hour = int.Parse(m[0].Groups[1].Value);
+                                                int minute = int.Parse(m[0].Groups[2].Value);
+                                                int second = int.Parse(m[0].Groups[3].Value);
+
+                                                if (Analyzer.invalidTime(hour, minute, second))
+                                                {
+                                                    return Test.Result.ERROR;
+                                                }
+
+                                                return Test.Result.OKAY;
+                                            });
+                                            break;
+                                        case DataType.TIME_WITH_TIME_ZONE:
+                                            test = new Test.Pattern(Analyzer.time_timezone_regex, m => {
+
+                                                int hour = int.Parse(m[0].Groups[1].Value);
+                                                int minute = int.Parse(m[0].Groups[2].Value);
+                                                int second = int.Parse(m[0].Groups[3].Value);
+
+                                                if (Analyzer.invalidTime(hour, minute, second))
+                                                {
+                                                    return Test.Result.ERROR;
+                                                }
+
+                                                return Test.Result.OKAY;
+                                            });
                                             break;
                                         default:
                                             continue;
                                     }
-                                    _analyzer.AddTest(column, test);
-                                }
+                                    break;
+                                default:
+                                    continue;
                             }
+                            _analyzer.AddTest(column, test);
                         }
                     }
                 }
-
-                //foreach (var pair in _analyzer.TestSelection)
-                //{
-                //    if (pair.Value.Count > 0)
-                //    {
-                //        Log(pair.Key.ToString());
-                //        foreach (var testType in pair.Value)
-                //        {
-                //            Log(string.Format("\t- {0}", testType.ToString()));
-                //        }
-                //    }
-                //}
 
                 foreach (var listTable in ListTables)
                 {
