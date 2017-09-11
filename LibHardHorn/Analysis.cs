@@ -261,6 +261,10 @@ namespace HardHorn.Analysis
                     break;
                 case DataType.DECIMAL:
                     var components = data.Split('.');
+                    if (components.Length > 0 && components[0][0] == '-')
+                    {
+                        components[0] = components[0].Substring(1);
+                    }
                     if (report.AnalysisFirstRow)
                     {
                         report.MinLengths[0] = Math.Min(report.MinLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
