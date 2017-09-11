@@ -96,8 +96,6 @@ namespace HardHorn.Archiving
         {
             _param = param;
         }
-
-
     }
 
     public class ColumnComparison
