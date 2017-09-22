@@ -238,11 +238,11 @@
                                                 </TextBlock.Text>
                                                 <TextBlock.Style>
                                                     <Style>
-                                                        <!--<Style.Triggers>
+                                                        <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Column.ParameterizedDataType.DataType}" Value="{x:Static av:DataType.UNDEFINED}">
                                                                 <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
                                                             </DataTrigger>
-                                                        </Style.Triggers>-->
+                                                        </Style.Triggers>
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
