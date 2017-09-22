@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Dynamic;
 using HardHorn.Logging;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace HardHorn.Analysis
 {
@@ -22,9 +23,18 @@ namespace HardHorn.Analysis
         REGEX
     }
 
-    public abstract class Test
+    public abstract class Test : INotifyPropertyChanged
     {
-        public static readonly int MAX_ERROR_POSTS = 10;
+        public static readonly int MAX_ERROR_POSTS = 50;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void NotifyOfPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
 
         public enum Result
         {
@@ -33,6 +43,7 @@ namespace HardHorn.Analysis
         }
 
         public int ErrorCount { get; private set; }
+        public abstract string Name { get; }
 
         List<Post> _posts = new List<Post>();
         public IEnumerable<Post> ErrorPosts { get { return _posts; } }
@@ -42,12 +53,17 @@ namespace HardHorn.Analysis
             if (ErrorCount < MAX_ERROR_POSTS)
             {
                 _posts.Add(post);
+                NotifyOfPropertyChanged("ErrorPosts");
             }
             ErrorCount++;
+            NotifyOfPropertyChanged("ErrorCount");
         }
 
         public Result Run(Post post, Column column)
         {
+            if (post.IsNull)
+                return Result.OKAY;
+
             var result = GetResult(post, column);
             if (result == Result.ERROR)
             {
@@ -58,56 +74,174 @@ namespace HardHorn.Analysis
 
         public abstract Result GetResult(Post post, Column column);
 
+        #region Predefined format tests
+        public static Test DateFormatTest()
+        {
+            return new Pattern(Analyzer.date_regex, m => {
+                int year = int.Parse(m[0].Groups[1].Value);
+                int month = int.Parse(m[0].Groups[2].Value);
+                int day = int.Parse(m[0].Groups[3].Value);
+
+                if (Analyzer.invalidDate(year, month, day))
+                {
+                    return Result.ERROR;
+                }
+
+                return Result.OKAY;
+            }, "DATE format");
+        }
+
+        public static Test TimeFormatTest()
+        {
+            return new Pattern(Analyzer.time_regex, m => {
+                int hour = int.Parse(m[0].Groups[1].Value);
+                int minute = int.Parse(m[0].Groups[2].Value);
+                int second = int.Parse(m[0].Groups[3].Value);
+
+                if (Analyzer.invalidTime(hour, minute, second))
+                {
+                    return Result.ERROR;
+                }
+
+                return Result.OKAY;
+            }, "TIME format");
+        }
+
+        public static Test TimeWithTimeZoneTest()
+        {
+            return new Pattern(Analyzer.time_timezone_regex, m => {
+                int hour = int.Parse(m[0].Groups[1].Value);
+                int minute = int.Parse(m[0].Groups[2].Value);
+                int second = int.Parse(m[0].Groups[3].Value);
+                if (m[0].Groups[5].Value == "Z")
+                {
+
+                }
+                else
+                {
+                    int tzHour = int.Parse(m[0].Groups[6].Value);
+                    int tzMinute = int.Parse(m[0].Groups[7].Value);
+                    if (tzHour > 12 || tzMinute > 59)
+                        return Result.ERROR;
+                }
+
+                if (Analyzer.invalidTime(hour, minute, second))
+                {
+                    return Result.ERROR;
+                }
+
+                return Result.OKAY;
+            }, "TIME format");
+        }
+
+        public static Test TimestampWithTimeZoneFormatTest()
+        {
+            return new Pattern(Analyzer.timestamp_timezone_regex, m => {
+                int year = int.Parse(m[0].Groups[1].Value);
+                int month = int.Parse(m[0].Groups[2].Value);
+                int day = int.Parse(m[0].Groups[3].Value);
+                int hour = int.Parse(m[0].Groups[4].Value);
+                int minute = int.Parse(m[0].Groups[5].Value);
+                int second = int.Parse(m[0].Groups[6].Value);
+                if (m[0].Groups[8].Value == "Z")
+                {
+
+                }
+                else
+                {
+                    int tzHour = int.Parse(m[0].Groups[9].Value);
+                    int tzMinute = int.Parse(m[0].Groups[10].Value);
+                    if (tzHour > 12 || tzMinute > 59)
+                        return Result.ERROR;
+                }
+
+                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
+                {
+                    return Result.ERROR;
+                }
+
+                return Result.OKAY;
+            }, "TIMESTAMP WITH TIME ZONE format");
+        }
+
+        public static Test TimestampFormatTest()
+        {
+            return new Pattern(Analyzer.timestamp_regex, m =>
+            {
+                int year = int.Parse(m[0].Groups[1].Value);
+                int month = int.Parse(m[0].Groups[2].Value);
+                int day = int.Parse(m[0].Groups[3].Value);
+                int hour = int.Parse(m[0].Groups[4].Value);
+                int minute = int.Parse(m[0].Groups[5].Value);
+                int second = int.Parse(m[0].Groups[6].Value);
+
+                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
+                {
+                    return Result.ERROR;
+                }
+
+                return Result.OKAY;
+            }, "TIMESTAMP format");
+        }
+        #endregion
+
         public class Overflow : Test
         {
+            public override string Name { get { return "Overflow"; } }
+
             public override Result GetResult(Post post, Column column)
             {
                 Match match;
                 bool overflow = false;
 
-                switch (column.Type)
+                switch (column.ParameterizedDataType.DataType)
                 {
                     case DataType.NATIONAL_CHARACTER:
                     case DataType.CHARACTER:
                     case DataType.NATIONAL_CHARACTER_VARYING:
                     case DataType.CHARACTER_VARYING:
-                        overflow = post.Data.Length > column.Param[0];
+                        overflow = post.Data.Length > column.ParameterizedDataType.Parameter[0];
                         break;
                     case DataType.DECIMAL:
                         var components = post.Data.Split('.');
+                        // Remove negation
+                        if (components.Length > 0 && components[0][0] == '-')
+                        {
+                            components[0] = components[0].Substring(1);
+                        }
                         // No separator
                         if (components.Length == 1)
-                            overflow = components[0].Length > column.Param[0];
+                            overflow = components[0].Length > column.ParameterizedDataType.Parameter[0];
                         // With separator
                         if (components.Length == 2)
-                            overflow = components[0].Length + components[1].Length > column.Param[0] || components[1].Length > column.Param[1];
+                            overflow = components[0].Length + components[1].Length > column.ParameterizedDataType.Parameter[0] || components[1].Length > column.ParameterizedDataType.Parameter[1];
                         break;
                     case DataType.TIME:
                         match = Analyzer.time_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0];
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter[0];
                         }
                         break;
                     case DataType.TIME_WITH_TIME_ZONE:
                         match = Analyzer.time_timezone_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[4].Length > column.Param[0];
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter[0];
                         }
                         break;
                     case DataType.TIMESTAMP:
                         match = Analyzer.timestamp_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0];
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter[0];
                         }
                         break;
                     case DataType.TIMESTAMP_WITH_TIME_ZONE:
                         match = Analyzer.timestamp_timezone_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.Param != null && match.Groups.Count == 8 && match.Groups[7].Length > column.Param[0];
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter[0];
                         }
                         break;
                 }
@@ -118,14 +252,16 @@ namespace HardHorn.Analysis
 
         public class Underflow : Test
         {
+            public override string Name { get { return "Underflow"; } }
+
             public override Result GetResult(Post post, Column column)
             {
                 var underflow = false;
-                switch (column.Type)
+                switch (column.ParameterizedDataType.DataType)
                 {
                     case DataType.NATIONAL_CHARACTER:
                     case DataType.CHARACTER:
-                        underflow = post.Data.Length < column.Param[0];
+                        underflow = post.Data.Length < column.ParameterizedDataType.Parameter[0];
                         break;
                 }
                 return underflow ? Result.ERROR : Result.OKAY;
@@ -134,6 +270,8 @@ namespace HardHorn.Analysis
 
         public class Blank : Test
         {
+            public override string Name { get { return "Blank"; } }
+
             bool IsWhitespace(char c)
             {
                 return c == ' ' || c == '\n' || c == '\t' || c == '\r';
@@ -147,20 +285,24 @@ namespace HardHorn.Analysis
 
         public class Pattern : Test
         {
+            string _name;
+            public override string Name { get { return _name; } }
+
             public Regex Regex { get; private set; }
             public Func<MatchCollection, Result> HandleMatches { get; private set; }
 
-            public Pattern(Regex regex, Func<MatchCollection, Result> handleMatches = null)
+            public Pattern(Regex regex, Func<MatchCollection, Result> handleMatches = null, string name = null)
             {
                 Regex = regex;
                 HandleMatches = handleMatches;
+                _name = name ?? regex.ToString();
             }
 
             public override Result GetResult(Post post, Column column)
             {
                 var matches = Regex.Matches(post.Data);
 
-                if (HandleMatches == null)
+                if (HandleMatches == null || matches.Count == 0)
                 {
                     return matches.Count > 0 ? Result.OKAY : Result.ERROR;
                 }
@@ -168,37 +310,36 @@ namespace HardHorn.Analysis
                 return HandleMatches(matches);
             }
         }
+
+        internal void Clear()
+        {
+            ErrorCount = 0;
+            _posts.Clear();
+        }
     }
 
-    public class ColumnAnalysis
+    public class ColumnAnalysis : INotifyPropertyChanged
     {
-        public event EventHandler<ErrorOccuredEventArgs> ErrorOccured = delegate { };
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
-        public class ErrorOccuredEventArgs : EventArgs
-        {
-            public Test Test { get; private set; }
-
-            public ErrorOccuredEventArgs(Test test)
-            {
-                Test = test;
-            }
-        }
+        Test _selectedTest;
+        public Test SelectedTest { get { return _selectedTest; } set { _selectedTest = Tests.IndexOf(value) == -1 ? _selectedTest : value; PropertyChanged(this, new PropertyChangedEventArgs("SelectedTest")); } }
 
         public int ErrorCount { get; private set; }
         public List<Test> Tests { get; private set; }
-        public int[] MinLengths { get; private set; }
-        public int[] MaxLengths { get; private set; }
-        public Tuple<DataType, DataTypeParam> SuggestedType { get; set; }
+        public DataTypeParam MinParam { get; private set; }
+        public DataTypeParam MaxParam { get; private set; }
+        public ParameterizedDataType SuggestedType { get; set; }
         public Column Column { get; private set; }
-        public bool AnalysisFirstRow { get; set; }
+        public bool FirstRowAnalyzed { get; set; }
 
         public ColumnAnalysis(Column column)
         {
-            AnalysisFirstRow = false;
+            FirstRowAnalyzed = false;
             Column = column;
             ErrorCount = 0;
-            MinLengths = new int[column.Param != null ? column.Param.Length : 1];
-            MaxLengths = new int[column.Param != null ? column.Param.Length : 1];
+            MinParam = new DataTypeParam(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Length : 1]);
+            MaxParam = new DataTypeParam(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Length : 1]);
             Tests = new List<Test>();
         }
 
@@ -209,8 +350,8 @@ namespace HardHorn.Analysis
                 var result = test.Run(post, Column);
                 if (result == Test.Result.ERROR)
                 {
-                    ErrorOccured(this, new ErrorOccuredEventArgs(test));
                     ErrorCount++;
+                    PropertyChanged(this, new PropertyChangedEventArgs("ErrorCount"));
                 }
             }
         }
@@ -221,49 +362,53 @@ namespace HardHorn.Analysis
         /// <param name="data"></param>
         public void UpdateLengthStatistics(string data)
         {
-            switch (Column.Type)
+            switch (Column.ParameterizedDataType.DataType)
             {
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.CHARACTER:
-                    if (AnalysisFirstRow)
+                    if (FirstRowAnalyzed)
                     {
-                        MinLengths[0] = Math.Min(MinLengths[0], data.Length);
-                        MaxLengths[0] = Math.Max(MaxLengths[0], data.Length);
+                        MinParam[0] = Math.Min(MinParam[0], data.Length);
+                        MaxParam[0] = Math.Max(MaxParam[0], data.Length);
                     }
                     else
                     {
-                        MinLengths[0] = data.Length;
-                        MaxLengths[0] = data.Length;
+                        MinParam[0] = data.Length;
+                        MaxParam[0] = data.Length;
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
                 case DataType.CHARACTER_VARYING:
-                    if (AnalysisFirstRow)
+                    if (FirstRowAnalyzed)
                     {
-                        MinLengths[0] = Math.Min(MinLengths[0], data.Length);
-                        MaxLengths[0] = Math.Max(MaxLengths[0], data.Length);
+                        MinParam[0] = Math.Min(MinParam[0], data.Length);
+                        MaxParam[0] = Math.Max(MaxParam[0], data.Length);
                     }
                     else
                     {
-                        MinLengths[0] = data.Length;
-                        MaxLengths[0] = data.Length;
+                        MinParam[0] = data.Length;
+                        MaxParam[0] = data.Length;
                     }
                     break;
                 case DataType.DECIMAL:
                     var components = data.Split('.');
-                    if (AnalysisFirstRow)
+                    if (components.Length > 0 && components[0][0] == '-')
                     {
-                        MinLengths[0] = Math.Min(MinLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        MaxLengths[0] = Math.Max(MaxLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        MinLengths[1] = Math.Min(MinLengths[1], components.Length == 1 ? 0 : components[1].Length);
-                        MaxLengths[1] = Math.Max(MaxLengths[1], components.Length == 1 ? 0 : components[1].Length);
+                        components[0] = components[0].Substring(1);
+                    }
+                    if (FirstRowAnalyzed)
+                    {
+                        MinParam[0] = Math.Min(MinParam[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                        MaxParam[0] = Math.Max(MaxParam[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                        MinParam[1] = Math.Min(MinParam[1], components.Length == 1 ? 0 : components[1].Length);
+                        MaxParam[1] = Math.Max(MaxParam[1], components.Length == 1 ? 0 : components[1].Length);
                     }
                     else
                     {
-                        MinLengths[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        MaxLengths[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        MinLengths[1] = components.Length == 1 ? 0 : components[1].Length;
-                        MaxLengths[1] = components.Length == 1 ? 0 : components[1].Length;
+                        MinParam[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                        MaxParam[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                        MinParam[1] = components.Length == 1 ? 0 : components[1].Length;
+                        MaxParam[1] = components.Length == 1 ? 0 : components[1].Length;
                     }
                     break;
                 case DataType.TIME:
@@ -275,55 +420,63 @@ namespace HardHorn.Analysis
 
         public void SuggestType()
         {
-            switch (Column.Type)
+            switch (Column.ParameterizedDataType.DataType)
             {
                 case DataType.CHARACTER:
-                    if (MinLengths[0] == MaxLengths[0] && MaxLengths[0] > Column.Param[0])
+                    if (MinParam[0] == MaxParam[0] && MaxParam[0] > Column.ParameterizedDataType.Parameter[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.CHARACTER, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new DataTypeParam(MaxParam[0]));
                     }
-                    else if (MinLengths[0] != MaxLengths[0])
+                    else if (MinParam[0] != MaxParam[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.CHARACTER_VARYING, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new DataTypeParam(MaxParam[0]));
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER:
-                    if (MinLengths[0] == MaxLengths[0] && MaxLengths[0] > Column.Param[0])
+                    if (MinParam[0] == MaxParam[0] && MaxParam[0] > Column.ParameterizedDataType.Parameter[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.NATIONAL_CHARACTER, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new DataTypeParam(MaxParam[0]));
                     }
-                    else if (MinLengths[0] != MaxLengths[0])
+                    else if (MinParam[0] != MaxParam[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.NATIONAL_CHARACTER_VARYING, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new DataTypeParam(MaxParam[0]));
                     }
                     break;
                 case DataType.CHARACTER_VARYING:
-                    if (MinLengths[0] == MaxLengths[0])
+                    if (MinParam[0] == MaxParam[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.CHARACTER, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new DataTypeParam(MaxParam[0]));
                     }
-                    else if (MaxLengths[0] != Column.Param[0])
+                    else if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.CHARACTER_VARYING, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new DataTypeParam(MaxParam[0]));
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    if (MinLengths[0] == MaxLengths[0])
+                    if (MinParam[0] == MaxParam[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.NATIONAL_CHARACTER, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new DataTypeParam(MaxParam[0]));
                     }
-                    else if (MaxLengths[0] != Column.Param[0])
+                    else if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.NATIONAL_CHARACTER_VARYING, new DataTypeParam(MaxLengths[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new DataTypeParam(MaxParam[0]));
                     }
                     break;
                 case DataType.DECIMAL:
-                    if (MaxLengths[0] != Column.Param[0] || MaxLengths[1] != Column.Param[1])
+                    if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0] || MaxParam[1] != Column.ParameterizedDataType.Parameter[1])
                     {
-                        SuggestedType = new Tuple<DataType, DataTypeParam>(DataType.DECIMAL, new DataTypeParam(new int[] { MaxLengths[0], MaxLengths[1] }));
+                        SuggestedType = new ParameterizedDataType(DataType.DECIMAL, new DataTypeParam(new int[] { MaxParam[0], MaxParam[1] }));
                     }
                     break;
             }
+
+            PropertyChanged(this, new PropertyChangedEventArgs("SuggestedType"));
+        }
+
+        public void Clear()
+        {
+            ErrorCount = 0;
+            Tests.Clear();
         }
     }
 
@@ -335,8 +488,8 @@ namespace HardHorn.Analysis
         public static Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
         public static Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
         public static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
-        public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?(\+|-)(\d\d:\d\d)$");
+        public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
+        public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
         public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
 
         public Dictionary<Table, Dictionary<Column, ColumnAnalysis>> TestHierachy { get; private set; }
@@ -360,6 +513,10 @@ namespace HardHorn.Analysis
         public void AddTest(Column column, Test test)
         {
             TestHierachy[column.Table][column].Tests.Add(test);
+            if (TestHierachy[column.Table][column].Tests.Count == 1)
+            {
+                TestHierachy[column.Table][column].SelectedTest = test;
+            }
         }
 
         /// <summary>
@@ -378,73 +535,12 @@ namespace HardHorn.Analysis
                     TestHierachy[table][table.Columns[j]].UpdateLengthStatistics(post.Data);
                     TestHierachy[table][table.Columns[j]].RunTests(post);
                 }
+
+                if (i == 0)
+                    foreach (var analysis in TestHierachy[table].Values)
+                        analysis.FirstRowAnalyzed = true;
             }
         }
-
-        /// <summary>
-        /// Analyze the lengths of the columns of the archive version.
-        /// </summary>
-        /// <param name="report"></param>
-        /// <param name="data"></param>
-        void AnalyzeLengths(ColumnAnalysis report, string data)
-        {
-            switch (report.Column.Type)
-            {
-                case DataType.NATIONAL_CHARACTER:
-                case DataType.CHARACTER:
-                    if (report.AnalysisFirstRow)
-                    {
-                        report.MinLengths[0] = Math.Min(report.MinLengths[0], data.Length);
-                        report.MaxLengths[0] = Math.Max(report.MaxLengths[0], data.Length);
-                    }
-                    else
-                    {
-                        report.MinLengths[0] = data.Length;
-                        report.MaxLengths[0] = data.Length;
-                    }
-                    break;
-                case DataType.NATIONAL_CHARACTER_VARYING:
-                case DataType.CHARACTER_VARYING:
-                    if (report.AnalysisFirstRow)
-                    {
-                        report.MinLengths[0] = Math.Min(report.MinLengths[0], data.Length);
-                        report.MaxLengths[0] = Math.Max(report.MaxLengths[0], data.Length);
-                    }
-                    else
-                    {
-                        report.MinLengths[0] = data.Length;
-                        report.MaxLengths[0] = data.Length;
-                    }
-                    break;
-                case DataType.DECIMAL:
-                    var components = data.Split('.');
-                    if (components.Length > 0 && components[0][0] == '-')
-                    {
-                        components[0] = components[0].Substring(1);
-                    }
-                    if (report.AnalysisFirstRow)
-                    {
-                        report.MinLengths[0] = Math.Min(report.MinLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        report.MaxLengths[0] = Math.Max(report.MaxLengths[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        report.MinLengths[1] = Math.Min(report.MinLengths[1], components.Length == 1 ? 0 : components[1].Length);
-                        report.MaxLengths[1] = Math.Max(report.MaxLengths[1], components.Length == 1 ? 0 : components[1].Length);
-                    }
-                    else
-                    {
-                        report.MinLengths[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        report.MaxLengths[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        report.MinLengths[1] = components.Length == 1 ? 0 : components[1].Length;
-                        report.MaxLengths[1] = components.Length == 1 ? 0 : components[1].Length;
-                    }
-                    break;
-                case DataType.TIME:
-                case DataType.DATE:
-                case DataType.TIMESTAMP:
-                    break;
-            }
-        }
-
-        /// <summary>
 
         public static bool invalidTime(int hour, int minute, int second)
         {
@@ -460,7 +556,8 @@ namespace HardHorn.Analysis
         {
             bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
             return year <= 0 ||
-                   month > 12 && month < 1 ||
+                   month > 12 ||
+                   month < 1 ||
                    day < 1 ||
                    month == 2 && leap && day > months[2] - 1 ||
                    day > months[month - 1];

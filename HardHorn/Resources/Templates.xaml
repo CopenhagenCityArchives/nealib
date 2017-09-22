@@ -58,7 +58,7 @@
                 <MultiBinding StringFormat="{}{0}.{1}: &quot;{2}&quot;">
                     <Binding Path="Column.Table.Name" />
                     <Binding Path="Column.Name" />
-                    <Binding Path="Regex" />
+                    <Binding Path="RegexTest.Regex" />
                 </MultiBinding>
             </TextBlock.Text>
         </TextBlock>
@@ -260,8 +260,8 @@
                         <TextBlock Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}{0}{1}">
-                                    <Binding Path="Column.Type" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
-                                    <Binding Path="Column.Param"></Binding>
+                                    <Binding Path="Column.ParameterizedDataType.DataType" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
+                                    <Binding Path="Column.ParameterizedDataType.Parameter"></Binding>
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>
@@ -326,16 +326,16 @@
             <TextBlock Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0}{1}">
-                        <Binding Path="Column.Type" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
-                        <Binding Path="Column.Param"></Binding>
+                        <Binding Path="Column.ParameterizedDataType.DataType" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
+                        <Binding Path="Column.ParameterizedDataType.Parameter"></Binding>
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
             <TextBlock x:Name="SuggestTypeTextBlock" Foreground="DarkGreen">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0}{1}">
-                        <Binding Path="SuggestedType.Item1" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
-                        <Binding Path="SuggestedType.Item2"></Binding>
+                        <Binding Path="SuggestedType.DataType" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
+                        <Binding Path="SuggestedType.Parameter"></Binding>
                     </MultiBinding>
                 </TextBlock.Text>
                 <TextBlock.Style>
@@ -374,8 +374,8 @@
             <TextBlock Foreground="{Binding ErrorCount, Converter={StaticResource ErrorCountColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0}{1}">
-                        <Binding Path="Column.Type" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
-                        <Binding Path="Column.Param"></Binding>
+                        <Binding Path="Column.ParameterizedDataType.DataType" Converter="{StaticResource DataTypeToStringConverter}"></Binding>
+                        <Binding Path="Column.ParameterizedDataType.Parameter"></Binding>
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Caliburn.Micro;
 using System.ComponentModel;
 using HardHorn.Analysis;
@@ -10,8 +8,6 @@ using HardHorn.Statistics;
 using HardHorn.Archiving;
 using System.IO;
 using System.Collections.ObjectModel;
-using System.Windows.Media;
-using System.Collections;
 using HardHorn.Logging;
 using System.Dynamic;
 using System.Text.RegularExpressions;
@@ -31,6 +27,9 @@ namespace HardHorn.ViewModels
     class TableViewModel : PropertyChangedBase
     {
         public Table Table { get; set; }
+
+        ColumnAnalysis _selectedColumnAnalysis;
+        public ColumnAnalysis SelectedColumnAnalysis { get { return _selectedColumnAnalysis; } set { _selectedColumnAnalysis = value;  NotifyOfPropertyChange("SelectedColumnAnalysis"); } }
 
         public bool Errors
         {
@@ -56,232 +55,6 @@ namespace HardHorn.ViewModels
         private bool _done = false;
     }
 
-    class DataTypeSelection : PropertyChangedBase
-    {
-        public DataType DataType { get; private set; }
-        public TestTypeSelection ParentTest { get; set; }
-
-        bool? _selected = true;
-        public bool? Selected
-        {
-            get { return _selected; }
-            set
-            {
-                _selected = value;
-                if (ParentTest != null)
-                {
-                    ParentTest.ChildSetTo(value);
-                }
-                NotifyOfPropertyChange("Selected");
-            }
-        }
-
-        public DataTypeSelection(DataType dataType, TestTypeSelection parentTest)
-        {
-            DataType = dataType;
-            ParentTest = parentTest;
-        }
-    }
-
-    class TestTypeSelection : PropertyChangedBase
-    {
-        public TestSelectionType TestType { get; private set; }
-        public IEnumerable<DataTypeSelection> DataTypeTests { get; set; }
-        public TestSelectionCategory Category { get; private set; }
-
-        bool? _selected = true;
-        public bool? Selected
-        {
-            get { return _selected; }
-            set
-            {
-                _selected = value;
-                if (Category != null)
-                {
-                    Category.ChildSetTo(value);
-                }
-                foreach (var test in DataTypeTests)
-                {
-                    test.Selected = value;
-                }
-                NotifyOfPropertyChange("Selected");
-            }
-        }
-
-        public void ChildSetTo(bool? value)
-        {
-            if (!value.HasValue || (Selected.HasValue && value.HasValue && Selected.Value != value.Value))
-            {
-                _selected = null;
-            }
-            else if (!Selected.HasValue && value.HasValue)
-            {
-                bool? newValue = null;
-                bool init = true;
-                foreach (var test in DataTypeTests)
-                {
-                    if (init)
-                    {
-                        newValue = test.Selected;
-                        init = false;
-                    }
-                    else
-                    {
-                        if (test.Selected.HasValue && newValue.HasValue && test.Selected.Value == newValue.Value)
-                        {
-                            newValue = test.Selected.Value;
-                        }
-                        else
-                        {
-                            newValue = null;
-                            break;
-                        }
-                    }
-                }
-                _selected = newValue;
-            }
-            Category.ChildSetTo(_selected);
-            NotifyOfPropertyChange("Selected");
-        }
-
-        public TestTypeSelection(TestSelectionType testType, TestSelectionCategory category)
-        {
-            Category = category;
-            TestType = testType;
-            DataTypeTests = Enumerable.Empty<DataTypeSelection>();
-        }
-    }
-
-    class TestSelectionCategory : PropertyChangedBase
-    {
-        public string Name { get; private set; }
-        public ObservableCollection<TestTypeSelection> TestTypes { get; private set; }
-        public IEnumerable<DataTypeSelection> DataTypes
-        {
-            get
-            {
-                foreach (var testType in TestTypes)
-                    foreach (var dataType in testType.DataTypeTests)
-                        yield return dataType;
-            }
-        }
-
-        bool? _selected = true;
-        public bool? Selected
-        {
-            get { return _selected; }
-            set
-            {
-                _selected = value;
-                foreach (var testType in TestTypes)
-                {
-                    testType.Selected = value;
-                }
-                NotifyOfPropertyChange("Selected");
-            }
-        }
-
-        public void ChildSetTo(bool? value)
-        {
-            if (!value.HasValue || (Selected.HasValue && value.HasValue && Selected.Value != value.Value))
-            {
-                _selected = null;
-            }
-            else if (!Selected.HasValue && value.HasValue)
-            {
-                bool? newValue = null;
-                bool init = true;
-                foreach (var test in TestTypes)
-                {
-                    if (init)
-                    {
-                        newValue = test.Selected;
-                        init = false;
-                    }
-                    else
-                    {
-                        if (test.Selected.HasValue && newValue.HasValue && test.Selected.Value == newValue.Value)
-                        {
-                            newValue = test.Selected.Value;
-                        }
-                        else
-                        {
-                            newValue = null;
-                            break;
-                        }
-                    }
-                }
-                _selected = newValue;
-            }
-            NotifyOfPropertyChange("Selected");
-        }
-
-
-        public TestSelectionCategory(string name, DataType[] dataTypes, TestSelectionType[] testTypes)
-        {
-            Name = name;
-
-            TestTypes = new ObservableCollection<TestTypeSelection>();
-
-            foreach (var testType in testTypes)
-            {
-                var test = new TestTypeSelection(testType, this);
-                var dataTypeTests = new List<DataTypeSelection>();
-
-                foreach (var dataType in dataTypes)
-                {
-                    var dataTypeTest = new DataTypeSelection(dataType, test);
-                    dataTypeTests.Add(dataTypeTest);
-                }
-
-                test.DataTypeTests = dataTypeTests.Cast<DataTypeSelection>();
-                TestTypes.Add(test);
-            }
-        }
-    }
-
-    enum TestSelectionType
-    {
-        UNDERFLOW, OVERFLOW, FORMAT, BLANK
-    }
-
-    class TestSelection : PropertyChangedBase, IEnumerable<TestSelectionCategory>
-    {
-        List<TestSelectionCategory> testCategories = new List<TestSelectionCategory>();
-        public IEnumerable<DataTypeSelection> DataTypes
-        {
-            get
-            {
-                foreach (var category in testCategories)
-                    foreach (var dataType in category.DataTypes)
-                        yield return dataType;
-            }
-        }
-
-        public TestSelection()
-        {
-            testCategories.Add(new TestSelectionCategory("Strengtyper",
-                new DataType[] { DataType.CHARACTER, DataType.CHARACTER_VARYING, DataType.NATIONAL_CHARACTER, DataType.NATIONAL_CHARACTER_VARYING },
-                new TestSelectionType[] { TestSelectionType.OVERFLOW, TestSelectionType.UNDERFLOW, TestSelectionType.BLANK }));
-            testCategories.Add(new TestSelectionCategory("Tidstyper",
-                new DataType[] { DataType.TIME, DataType.TIMESTAMP, DataType.INTERVAL },
-                new TestSelectionType[] { TestSelectionType.OVERFLOW, TestSelectionType.FORMAT }));
-            testCategories.Add(new TestSelectionCategory("Decimaltalstyper",
-                new DataType[] { DataType.DECIMAL, DataType.DOUBLE_PRECISION, DataType.FLOAT, DataType.REAL },
-                new TestSelectionType[] { TestSelectionType.OVERFLOW }));
-        }
-
-        public IEnumerator<TestSelectionCategory> GetEnumerator()
-        {
-            return testCategories.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return testCategories.GetEnumerator();
-        }
-    }
-
     class LoadWorkerLogger : ILogger
     {
         private BackgroundWorker _worker;
@@ -305,12 +78,12 @@ namespace HardHorn.ViewModels
     class MainViewModel : PropertyChangedBase, ILogger
     {
         #region Properties
-        public object Item { get; set; }
         public ObservableCollection<TableComparison> TableComparisons { get; set; }
         public ObservableCollection<TableComparison> RemovedTableComparisons { get; set; }
         public ObservableCollection<TableComparison> AddedTableComparisons { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
         public TestSelection SelectedTests { get; set; }
+
         public int[] BarChartValues { get; set; }
 
         int _totalRows;
@@ -376,11 +149,6 @@ namespace HardHorn.ViewModels
         {
             get { return _testLocation; }
             set { _testLocation = value; NotifyOfPropertyChange("TestLocation"); }
-        }
-
-        public ObservableCollection<AnalysisErrorType> DataTypeErrors
-        {
-            get; set;
         }
 
         TableViewModel _currentTable = null;
@@ -450,35 +218,8 @@ namespace HardHorn.ViewModels
         public string SpecTablesMatching { get; set; }
         public string SpecTablesMissing { get; set; }
         public string SpecTablesUndefined { get; set; }
-      
 
-        public void UpdateInteractiveReportView()
-        {
-            var table = CurrentTable == null ? null : CurrentTable.Table;
-
-            if (table == null)
-            {
-                TableReports = null;
-            }
-            else if (_analyzer != null && _analyzer.TestHierachy.ContainsKey(table))
-            {
-                TableReports = new ObservableCollection<ColumnAnalysis>();
-                foreach (var report in _analyzer.TestHierachy[table].Values)
-                {
-                    if ((report.ErrorCount > 0 && ShowErrorReports) ||
-                        (report.SuggestedType != null && ShowSuggestionReports) ||
-                        (report.ErrorCount == 0 && report.SuggestedType == null && ShowEmptyReports))
-                        TableReports.Add(report);
-                }
-            }
-        }
-
-        ObservableCollection<ColumnAnalysis> _tableReports;
-        public ObservableCollection<ColumnAnalysis> TableReports
-        {
-            get { return _tableReports; }
-            set { _tableReports = value; NotifyOfPropertyChange("TableReports"); }
-        }
+        public ObservableCollection<ColumnAnalysis> CurrentColumnAnalyses { get; set; }
 
         Dictionary<string, TableViewModel> ListTableLookup = new Dictionary<string, TableViewModel>();
         public ObservableCollection<TableViewModel> ListTables { get; set; }
@@ -488,6 +229,7 @@ namespace HardHorn.ViewModels
         BackgroundWorker _compareWorker = new BackgroundWorker();
 
         Analyzer _analyzer;
+        public Analyzer Analyzer { get { return _analyzer; } }
         DataStatistics _stats;
 
         public IEnumerable<KeyValuePair<DataType, dynamic>> DataTypeStatistics
@@ -516,17 +258,33 @@ namespace HardHorn.ViewModels
 
         #endregion
 
+
+
         #region Constructors
         public MainViewModel()
         {
             ListTables = new ObservableCollection<TableViewModel>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
-            DataTypeErrors = new ObservableCollection<AnalysisErrorType>();
             TableComparisons = new ObservableCollection<TableComparison>();
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
+            CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
             Regexes = new ObservableCollection<RegexTestViewModel>();
-            SelectedTests = new TestSelection();
+           
+            if (Properties.Settings.Default.SelectedTestsBase64 == null)
+            {
+                SelectedTests = TestSelection.GetFullSelection();
+                SetDefaultSelectedTests();
+            }
+            else
+            {
+                SelectedTests = GetDefaultSelectedTests();
+                if (SelectedTests == null)
+                {
+                    SelectedTests = TestSelection.GetFullSelection();
+                    SetDefaultSelectedTests();
+                }
+            }
 
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
 
@@ -550,6 +308,73 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Methods
+        public void UpdateInteractiveReportView()
+        {
+            var table = CurrentTable == null ? null : CurrentTable.Table;
+
+            CurrentColumnAnalyses.Clear();
+            if (table != null && _analyzer != null && _analyzer.TestHierachy.ContainsKey(table))
+            {
+
+                foreach (var report in _analyzer.TestHierachy[table].Values)
+                {
+                    if (((report.ErrorCount > 0 || report.Column.ParameterizedDataType.DataType == DataType.UNDEFINED) && ShowErrorReports) ||
+                        (report.SuggestedType != null && ShowSuggestionReports) ||
+                        (report.ErrorCount == 0 && report.SuggestedType == null && ShowEmptyReports))
+                        CurrentColumnAnalyses.Add(report);
+                }
+                if (CurrentTable != null && CurrentColumnAnalyses.Count > 0)
+                {
+                    CurrentTable.SelectedColumnAnalysis = CurrentColumnAnalyses[0];
+                }
+            }
+        }
+
+        public TestSelection GetDefaultSelectedTests()
+        {
+            TestSelection selection = null;
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            using (var stream = new MemoryStream())
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    writer.Write(Convert.FromBase64String(Properties.Settings.Default.SelectedTestsBase64));
+                    writer.Flush();
+                    stream.Position = 0;
+
+                    try
+                    {
+                        selection = formatter.Deserialize(stream) as TestSelection;
+                    }
+                    catch (Exception)
+                    {
+                        selection = null;
+                    }
+                }
+            }
+
+            if (selection != null)
+                foreach (var category in selection)
+                    category.HookupEvents();
+
+            return selection;
+        }
+
+        public void SetDefaultSelectedTests()
+        {
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            using (var stream = new MemoryStream())
+            {
+                try
+                {
+                    formatter.Serialize(stream, SelectedTests);
+                    Properties.Settings.Default.SelectedTestsBase64 = Convert.ToBase64String(stream.ToArray());
+                    Properties.Settings.Default.Save();
+                }
+                catch (Exception) { }
+            }
+        }
+
         public void Log(string msg, LogLevel level = LogLevel.NORMAL)
         {
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
@@ -568,6 +393,7 @@ namespace HardHorn.ViewModels
             var path = Path.Combine(TestLocation, "tables", CurrentTable.Table.Folder, CurrentTable.Table.Folder + ".xml");
             System.Diagnostics.Process.Start(path);
         }
+
         #endregion
 
         #region Background workers
@@ -605,6 +431,7 @@ namespace HardHorn.ViewModels
         {
             ListTables.Clear();
             ListTableLookup.Clear();
+            Regexes.Clear();
 
             if (e.Error != null)
             {
@@ -614,7 +441,7 @@ namespace HardHorn.ViewModels
 
             foreach (var table in ArchiveVersion.Tables)
             {
-                var listTable = new TableViewModel() { Table = table, Errors = false };
+                var listTable = new TableViewModel() { Table = table, Errors = table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED) };
                 ListTableLookup.Add(table.Name, listTable);
                 ListTables.Add(listTable);
             }
@@ -737,7 +564,7 @@ namespace HardHorn.ViewModels
                         var column = columnAnalysis.Column;
                         if (columnAnalysis.ErrorCount > 0)
                         {
-                            Log(string.Format("\t- Felt '{0}' af typen '{1} {2}'", column.Name, column.Type, column.Param));
+                            Log(string.Format("\t- Felt '{0}' af typen '{1} {2}'", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter));
                             foreach (var test in columnAnalysis.Tests)
                             {
                                 if (test.ErrorCount == 0)
@@ -769,7 +596,7 @@ namespace HardHorn.ViewModels
                         if (suggestion == null)
                             continue;
 
-                        Log(string.Format("\t- Felt '{0}' kan ændres: {1} {2} => {3} {4}", column.Name, column.Type, column.Param, suggestion.Item1, suggestion.Item2));
+                        Log(string.Format("\t- Felt '{0}' kan ændres: {1} {2} => {3} {4}", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter, suggestion.DataType, suggestion.Parameter));
                     }
 
                     break;
@@ -874,6 +701,7 @@ namespace HardHorn.ViewModels
             try
             {
                 var regex = new Regex(pattern);
+                Regexes.Add(new RegexTestViewModel(new Test.Pattern(regex), column));
             }
             catch (ArgumentException)
             {
@@ -881,7 +709,7 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public void RemoveRegex(dynamic regex)
+        public void RemoveRegex(RegexTestViewModel regex)
         {
             Regexes.Remove(regex);
         }
@@ -889,6 +717,76 @@ namespace HardHorn.ViewModels
         public void ClearLog()
         {
             LogItems.Clear();
+        }
+
+        public void SaveState()
+        {
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    using (var stream = dialog.OpenFile())
+                    {
+                        try
+                        {
+                            formatter.Serialize(stream, this);
+                        }
+                        catch (Exception) { }
+                    }
+                }
+            }
+        }
+
+        public void LoadState()
+        {
+            using (var dialog = new System.Windows.Forms.OpenFileDialog())
+            {
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    MainViewModel loaded = null;
+                    var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    using (var stream = dialog.OpenFile())
+                    {
+                        try
+                        {
+                            loaded = formatter.Deserialize(stream) as MainViewModel;
+                        }
+                        catch (Exception)
+                        {
+                            loaded = null;
+                        }
+                    }
+
+                    if (loaded != null)
+                    {
+                        ListTables = loaded.ListTables;
+                        ListTableLookup = loaded.ListTableLookup;
+                        SelectedTests = loaded.SelectedTests;
+                        AddedTableComparisons = loaded.AddedTableComparisons;
+                        RemovedTableComparisons = loaded.RemovedTableComparisons;
+                        TableComparisons = loaded.TableComparisons;
+                        TestLoaded = loaded.TestLoaded;
+                        SpecTablesMatching = loaded.SpecTablesMatching;
+                        SpecTablesMissing = loaded.SpecTablesMissing;
+                        SpecTablesUndefined = loaded.SpecTablesUndefined;
+                        StatusText = loaded.StatusText;
+                        LogItems = loaded.LogItems;
+                        TestLocation = loaded.TestLocation;
+                        TestRunning = loaded.TestRunning;
+                        TotalRows = loaded.TotalRows;
+                        Regexes = loaded.Regexes;
+                        ArchiveVersion = loaded.ArchiveVersion;
+                        BarChartValues = loaded.BarChartValues;
+                        CompareLocation = loaded.CompareLocation;
+                        CurrentColumnAnalyses = loaded.CurrentColumnAnalyses;
+                        CurrentTable = loaded.CurrentTable;
+                        _stats = new DataStatistics(loaded.ArchiveVersion.Tables.ToArray());
+                        DoneRows = loaded.DoneRows;
+                        _analyzer = loaded.Analyzer;
+                    }
+                }
+            }
         }
 
         public void SaveLog()
@@ -962,6 +860,10 @@ namespace HardHorn.ViewModels
                     listTable.Done = false;
                 }
 
+                foreach (var table in _analyzer.TestHierachy.Values)
+                    foreach (var columnAnalysis in table.Values)
+                        columnAnalysis.Clear();
+
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
                 var regexList = new List<RegexTestViewModel>();
                 foreach (var regex in Regexes)
@@ -971,119 +873,64 @@ namespace HardHorn.ViewModels
 
                 TestProgress = 0;
 
-                foreach (var dataType in SelectedTests.DataTypes)
-                {
-                    foreach (var column in ArchiveVersion.Columns)
-                    {
-                        if (dataType.DataType == column.Type)
+                SetDefaultSelectedTests();
+
+                foreach (var testSelectionCategory in SelectedTests)
+                    foreach (var testTypeSelection in testSelectionCategory)
+                        foreach (var dataTypeSelection in testTypeSelection)
                         {
-                            Test test;
-                            switch (dataType.ParentTest.TestType)
+                            if (!dataTypeSelection.Selected.HasValue || !dataTypeSelection.Selected.Value)
+                                continue;
+
+                            foreach (var column in ArchiveVersion.Columns)
                             {
-                                case TestSelectionType.BLANK:
-                                    test = new Test.Blank();
-                                    break;
-                                case TestSelectionType.OVERFLOW:
-                                    test = new Test.Overflow();
-                                    break;
-                                case TestSelectionType.UNDERFLOW:
-                                    test = new Test.Underflow();
-                                    break;
-                                case TestSelectionType.FORMAT:
-                                    switch (dataType.DataType)
+                                if (dataTypeSelection.DataType == column.ParameterizedDataType.DataType)
+                                {
+                                    Test test;
+                                    switch (testTypeSelection.TestType)
                                     {
-                                        case DataType.TIMESTAMP:
-                                            test = new Test.Pattern(Analyzer.timestamp_regex, m => {
-                                                int year = int.Parse(m[0].Groups[1].Value);
-                                                int month = int.Parse(m[0].Groups[2].Value);
-                                                int day = int.Parse(m[0].Groups[3].Value);
-                                                int hour = int.Parse(m[0].Groups[4].Value);
-                                                int minute = int.Parse(m[0].Groups[5].Value);
-                                                int second = int.Parse(m[0].Groups[6].Value);
-
-                                                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
-                                                {
-                                                    return Test.Result.ERROR;
-                                                }
-
-                                                return Test.Result.OKAY;
-                                            });
+                                        case TestSelectionType.BLANK:
+                                            test = new Test.Blank();
                                             break;
-                                        case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                                            test = new Test.Pattern(Analyzer.timestamp_timezone_regex, m => {
-                                                int year = int.Parse(m[0].Groups[1].Value);
-                                                int month = int.Parse(m[0].Groups[2].Value);
-                                                int day = int.Parse(m[0].Groups[3].Value);
-                                                int hour = int.Parse(m[0].Groups[4].Value);
-                                                int minute = int.Parse(m[0].Groups[5].Value);
-                                                int second = int.Parse(m[0].Groups[6].Value);
-
-                                                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
-                                                {
-                                                    return Test.Result.ERROR;
-                                                }
-
-                                                return Test.Result.OKAY;
-                                            });
+                                        case TestSelectionType.OVERFLOW:
+                                            test = new Test.Overflow();
                                             break;
-                                        case DataType.DATE:
-                                            test = new Test.Pattern(Analyzer.date_regex, m => {
-                                                int year = int.Parse(m[0].Groups[1].Value);
-                                                int month = int.Parse(m[0].Groups[2].Value);
-                                                int day = int.Parse(m[0].Groups[3].Value);
-
-                                                if (Analyzer.invalidDate(year, month, day))
-                                                {
-                                                    return Test.Result.ERROR;
-                                                }
-
-                                                return Test.Result.OKAY;
-                                            });
+                                        case TestSelectionType.UNDERFLOW:
+                                            test = new Test.Underflow();
                                             break;
-                                        case DataType.TIME:
-                                            test = new Test.Pattern(Analyzer.time_regex, m => {
-                                                int hour = int.Parse(m[0].Groups[1].Value);
-                                                int minute = int.Parse(m[0].Groups[2].Value);
-                                                int second = int.Parse(m[0].Groups[3].Value);
-
-                                                if (Analyzer.invalidTime(hour, minute, second))
-                                                {
-                                                    return Test.Result.ERROR;
-                                                }
-
-                                                return Test.Result.OKAY;
-                                            });
-                                            break;
-                                        case DataType.TIME_WITH_TIME_ZONE:
-                                            test = new Test.Pattern(Analyzer.time_timezone_regex, m => {
-
-                                                int hour = int.Parse(m[0].Groups[1].Value);
-                                                int minute = int.Parse(m[0].Groups[2].Value);
-                                                int second = int.Parse(m[0].Groups[3].Value);
-
-                                                if (Analyzer.invalidTime(hour, minute, second))
-                                                {
-                                                    return Test.Result.ERROR;
-                                                }
-
-                                                return Test.Result.OKAY;
-                                            });
+                                        case TestSelectionType.FORMAT:
+                                            switch (dataTypeSelection.DataType)
+                                            {
+                                                case DataType.TIMESTAMP:
+                                                    test = Test.TimestampFormatTest();
+                                                    break;
+                                                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                                                    test = Test.TimestampWithTimeZoneFormatTest();
+                                                    break;
+                                                case DataType.DATE:
+                                                    test = Test.DateFormatTest();
+                                                    break;
+                                                case DataType.TIME:
+                                                    test = Test.TimeFormatTest();
+                                                    break;
+                                                case DataType.TIME_WITH_TIME_ZONE:
+                                                    test = Test.TimeWithTimeZoneTest();
+                                                    break;
+                                                default:
+                                                    continue;
+                                            }
                                             break;
                                         default:
                                             continue;
                                     }
-                                    break;
-                                default:
-                                    continue;
+                                    _analyzer.AddTest(column, test);
+                                }
                             }
-                            _analyzer.AddTest(column, test);
                         }
-                    }
-                }
 
                 foreach (var listTable in ListTables)
                 {
-                    listTable.Errors = false;
+                    listTable.Errors = listTable.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
                 }
                 _testWorker.RunWorkerAsync();
                 TestRunning = true;
@@ -1120,9 +967,16 @@ namespace HardHorn.ViewModels
 
         public void Compare(string location)
         {
-            Log(string.Format("Sammenligner '{0}' med {1}.", location, ArchiveVersion.Id), LogLevel.SECTION);
-            TableComparisons.Clear();
-            _compareWorker.RunWorkerAsync(location);
+            if (File.Exists(location))
+            {
+                Log(string.Format("Sammenligner '{0}' med {1}.", location, ArchiveVersion.Id), LogLevel.SECTION);
+                TableComparisons.Clear();
+                _compareWorker.RunWorkerAsync(location);
+            }
+            else
+            {
+                Log(string.Format("Placeringen '{0}' er ikke en fil.", location), LogLevel.ERROR);
+            }
         }
         #endregion
     }

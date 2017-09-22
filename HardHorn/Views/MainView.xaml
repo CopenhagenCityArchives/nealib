@@ -6,7 +6,9 @@
         xmlns:local="clr-namespace:HardHorn"
         xmlns:cal="http://www.caliburnproject.org"
         xmlns:vm="clr-namespace:HardHorn.ViewModels"
+        xmlns:av="clr-namespace:HardHorn.Archiving;assembly=LibHardHorn"
         xmlns:ctl="clr-namespace:HardHorn.Controls"
+        xmlns:util="clr-namespace:HardHorn.Utilities"
         xmlns:properties="clr-namespace:HardHorn.Properties"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         ResizeMode="CanResizeWithGrip"
@@ -85,12 +87,12 @@
                     </GroupBox.Header>
 
                     <StackPanel>
-                        <TreeView ItemsSource="{Binding TestSuite}" MinHeight="200">
+                        <TreeView ItemsSource="{Binding SelectedTests}" MinHeight="200">
                             <TreeView.Resources>
-                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSelectionCategory}" ItemsSource="{Binding TestTypes}">
+                                <HierarchicalDataTemplate DataType="{x:Type vm:TestSelectionCategory}" ItemsSource="{Binding}">
                                     <CheckBox IsChecked="{Binding Selected}" Content="{Binding Name}" />
                                 </HierarchicalDataTemplate>
-                                <HierarchicalDataTemplate DataType="{x:Type vm:TestTypeSelection}" ItemsSource="{Binding DataTypeTests}">
+                                <HierarchicalDataTemplate DataType="{x:Type vm:TestTypeSelection}" ItemsSource="{Binding}">
                                     <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType, Converter={StaticResource AnalysisErrorTypeToStringConverter}}" />
                                 </HierarchicalDataTemplate>
                                 <HierarchicalDataTemplate DataType="{x:Type vm:DataTypeSelection}">
@@ -159,15 +161,14 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition MinWidth="250" Width="Auto" />
                         <ColumnDefinition Width="5" />
-                        <ColumnDefinition Width="195*" />
-                        <ColumnDefinition Width="502*"/>
+                        <ColumnDefinition MinWidth="250" Width="*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Margin="0,0,0,595" Grid.RowSpan="2">
+                    <StackPanel Grid.Column="2">
                         <StackPanel Orientation="Horizontal">
                             <Button Margin="0 5 0 5" cal:Message.Attach="OpenCurrentTable()">
                                 <Button.Content>
@@ -183,6 +184,11 @@
                             <TextBlock Margin="5 0 0 0"  FontWeight="Black" Text="{Binding CurrentTable.Table.Name}" VerticalAlignment="Center" />
                         </StackPanel>
                         <TextBox Height="35" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding CurrentTable.Table.Description, Mode=OneWay}" />
+                        <WrapPanel Grid.Row="2" Grid.Column="2" Margin="5" Grid.ColumnSpan="2">
+                            <CheckBox IsChecked="{Binding ShowErrorReports}" Margin="0 0 10 0">Vis fejl</CheckBox>
+                            <CheckBox IsChecked="{Binding ShowSuggestionReports}" Margin="0 0 10 0">Vis forslag</CheckBox>
+                            <CheckBox IsChecked="{Binding ShowEmptyReports}" Margin="0 0 10 0">Vis resten</CheckBox>
+                        </WrapPanel>
                         <StackPanel.Style>
                             <Style>
                                 <Setter Property="StackPanel.Visibility" Value="Visible"></Setter>
@@ -196,20 +202,114 @@
                     </StackPanel>
 
                     <ListBox Grid.RowSpan="3" ItemsSource="{Binding ListTables}" SelectedItem="{Binding CurrentTable, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
-                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Margin="0,0,0,23" Grid.RowSpan="2"></GridSplitter>
-                    <ListView Grid.Row="1" Grid.Column="2" ItemsSource="{Binding TableReports, Mode=OneWay}" ItemTemplate="{StaticResource ReportListItem}" Grid.ColumnSpan="2" Margin="0,0,0,23" Grid.RowSpan="2">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="Focusable" Value="False" />
-                            </Style>
-                        </ListView.ItemContainerStyle>
+                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
+                    <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding CurrentTable.SelectedColumnAnalysis}" ItemsSource="{Binding CurrentColumnAnalyses, Mode=OneWay}" util:GridViewSort.AutoSort="True">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Id" Width="50" DisplayMemberBinding="{Binding Column.ColumnId}" util:GridViewSort.PropertyName="Column.ColumnIdNumber"></GridViewColumn>
+                                <GridViewColumn Header="Navn" Width="150" DisplayMemberBinding="{Binding Column.Name}" util:GridViewSort.PropertyName="Column.Name"></GridViewColumn>
+                                <GridViewColumn Header="Fejl" Width="80" util:GridViewSort.PropertyName="ErrorCount">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ErrorCount}">
+                                                <TextBlock.Style>
+                                                    <Style>
+                                                        <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ErrorCount}" Value="0">
+                                                                <Setter Property="TextBlock.Foreground" Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}"></Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Datatype" Width="170" util:GridViewSort.PropertyName="Column.ParameterizedDataType">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock>
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}{0} {1}">
+                                                        <Binding Path="Column.ParameterizedDataType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
+                                                        <Binding Path="Column.ParameterizedDataType.Parameter" />
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                                <TextBlock.Style>
+                                                    <Style>
+                                                        <!--<Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Column.ParameterizedDataType.DataType}" Value="{x:Static av:DataType.UNDEFINED}">
+                                                                <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>-->
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Datatypeforslag" Width="170" util:GridViewSort.PropertyName="Column.SuggestedType">
+                                    <GridViewColumn.DisplayMemberBinding>
+                                        <MultiBinding StringFormat="{}{0} {1}">
+                                            <Binding Path="SuggestedType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
+                                            <Binding Path="SuggestedType.Parameter" />
+                                        </MultiBinding>
+                                    </GridViewColumn.DisplayMemberBinding>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding MinParam}"  util:GridViewSort.PropertyName="MinParam"></GridViewColumn>
+                                <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding MaxParam}" util:GridViewSort.PropertyName="MaxParam"></GridViewColumn>
+                            </GridView>
+                        </ListView.View>
                     </ListView>
-                    <!--<TreeView Grid.Row="1" x:Name="ReportTreeView" Grid.Column="2" DockPanel.Dock="Right" ItemsSource="{Binding TableReports, Mode=OneWay}" ItemContainerStyle="{StaticResource ReportTreeContainerStyle}"></TreeView>-->
-                    <WrapPanel Grid.Row="2" Grid.Column="2" Margin="5,18,5,5" Grid.ColumnSpan="2">
-                        <CheckBox IsChecked="{Binding ShowErrorReports}" Margin="0 0 10 0">Vis fejl</CheckBox>
-                        <CheckBox IsChecked="{Binding ShowSuggestionReports}" Margin="0 0 10 0">Vis forslag</CheckBox>
-                        <CheckBox IsChecked="{Binding ShowEmptyReports}" Margin="0 0 10 0">Vis resten</CheckBox>
-                    </WrapPanel>
+                    <TabControl Grid.Row="2" Grid.Column="2" SelectedItem="{Binding Path=SelectedItem.SelectedTest, ElementName=ColumnAnalysesListView}" ItemsSource="{Binding Path=SelectedItem.Tests, ElementName=ColumnAnalysesListView}">
+                        <TabControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} ({1})">
+                                            <Binding Path="Name" />
+                                            <Binding Path="ErrorCount" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </TabControl.ItemTemplate>
+                        <TabControl.ContentTemplate>
+                            <DataTemplate>
+                                <ListView ItemsSource="{Binding ErrorPosts}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Header="Line" Width="80" DisplayMemberBinding="{Binding Line}"></GridViewColumn>
+                                            <GridViewColumn Header="Position" Width="80" DisplayMemberBinding="{Binding Position}"></GridViewColumn>
+                                            <GridViewColumn Header="Er null" Width="50" DisplayMemberBinding="{Binding IsNull}"></GridViewColumn>
+                                            <GridViewColumn Header="Længde" Width="50" DisplayMemberBinding="{Binding Data.Length}"></GridViewColumn>
+                                            <GridViewColumn Header="Data" Width="700">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBox x:Name="DataTextBox" BorderThickness="0" Text="{Binding Data}">
+                                                            <TextBox.Style>
+                                                                <Style>
+                                                                    <Setter Property="TextBox.Background" Value="{StaticResource {x:Static SystemColors.WindowBrushKey}}"></Setter>
+                                                                    <Setter Property="TextBox.Foreground" Value="Black"></Setter>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=IsSelected}" Value="True">
+                                                                            <Setter Property="TextBox.Background" Value="{StaticResource {x:Static SystemColors.HighlightBrushKey}}"></Setter>
+                                                                            <Setter Property="TextBox.Foreground" Value="{StaticResource {x:Static SystemColors.HighlightTextBrushKey}}"></Setter>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBox.Style>
+                                                        </TextBox>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </DataTemplate>
+                        </TabControl.ContentTemplate>
+                    </TabControl>
                 </Grid>
             </TabItem>
 
@@ -566,8 +666,8 @@
                                 <TextBlock Grid.Row="7" Grid.Column="1">
                                     <TextBlock.Text>
                                         <MultiBinding StringFormat="{}{0} {1}">
-                                            <Binding Path="SelectedItem.OldColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
-                                            <Binding Path="SelectedItem.OldColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
+                                            <Binding Path="SelectedItem.OldColumn.ParameterizedDataType.DataType" ElementName="ComparedColumnList" Mode="OneWay" />
+                                            <Binding Path="SelectedItem.OldColumn.ParameterizedDataType.Parameter" ElementName="ComparedColumnList" Mode="OneWay" />
                                         </MultiBinding>
                                     </TextBlock.Text>
                                 </TextBlock>
@@ -575,8 +675,8 @@
                                 <TextBlock Grid.Row="8" Grid.Column="1">
                                     <TextBlock.Text>
                                         <MultiBinding StringFormat="{}{0} {1}">
-                                            <Binding Path="SelectedItem.NewColumn.Type" ElementName="ComparedColumnList" Mode="OneWay" />
-                                            <Binding Path="SelectedItem.NewColumn.Param" ElementName="ComparedColumnList" Mode="OneWay" />
+                                            <Binding Path="SelectedItem.NewColumn.ParameterizedDataType.DataType" ElementName="ComparedColumnList" Mode="OneWay" />
+                                            <Binding Path="SelectedItem.NewColumn.ParameterizedDataType.Parameter" ElementName="ComparedColumnList" Mode="OneWay" />
                                         </MultiBinding>
                                     </TextBlock.Text>
                                 </TextBlock>

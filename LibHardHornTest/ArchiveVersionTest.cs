@@ -35,10 +35,10 @@ namespace LibHardHornTest
         {
             var testTables = new List<Table>();
             var table1 = new Table(null, "TABLE1", "table1", 10, "A table.", new List<Column>());
-            table1.Columns.Add(new Column(table1, "COLUMN1", DataType.INTEGER, false, null, "A column.", "c1"));
-            table1.Columns.Add(new Column(table1, "COLUMN2", DataType.DECIMAL, true, new int[] { 5, 10 }, "A column.", "c2"));
+            table1.Columns.Add(new Column(table1, "COLUMN1", DataType.INTEGER, false, null, "A column.", "c1", 1));
+            table1.Columns.Add(new Column(table1, "COLUMN2", DataType.DECIMAL, true, new int[] { 5, 10 }, "A column.", "c2", 2));
             var table2 = new Table(null, "TABLE2", "table2", 5, "Another table.", new List<Column>());
-            table2.Columns.Add(new Column(table2, "COLUMN1", DataType.INTEGER, false, null, "A column", "c1"));
+            table2.Columns.Add(new Column(table2, "COLUMN1", DataType.INTEGER, false, null, "A column", "c1", 1));
             testTables.Add(table1);
             testTables.Add(table2);
             AV = new ArchiveVersion("avid.test.10", "path", testTables);

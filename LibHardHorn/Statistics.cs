@@ -18,43 +18,43 @@ namespace HardHorn.Statistics
             {
                 foreach (var column in table.Columns)
                 {
-                    if (DataTypeStatistics.ContainsKey(column.Type))
+                    if (DataTypeStatistics.ContainsKey(column.ParameterizedDataType.DataType))
                     {
-                        DataTypeStatistics[column.Type].Count++;
-                        for (int i = 0; column.Param != null && i < column.Param.Length; i++)
+                        DataTypeStatistics[column.ParameterizedDataType.DataType].Count++;
+                        for (int i = 0; column.ParameterizedDataType.Parameter != null && i < column.ParameterizedDataType.Parameter.Length; i++)
                         {
-                            if (DataTypeStatistics[column.Type].MinParams[i] > column.Param[i])
+                            if (DataTypeStatistics[column.ParameterizedDataType.DataType].MinParams[i] > column.ParameterizedDataType.Parameter[i])
                             {
-                                DataTypeStatistics[column.Type].MinParams[i] = column.Param[i];
+                                DataTypeStatistics[column.ParameterizedDataType.DataType].MinParams[i] = column.ParameterizedDataType.Parameter[i];
                             }
-                            if (DataTypeStatistics[column.Type].MaxParams[i] < column.Param[i])
+                            if (DataTypeStatistics[column.ParameterizedDataType.DataType].MaxParams[i] < column.ParameterizedDataType.Parameter[i])
                             {
-                                DataTypeStatistics[column.Type].MaxParams[i] = column.Param[i];
+                                DataTypeStatistics[column.ParameterizedDataType.DataType].MaxParams[i] = column.ParameterizedDataType.Parameter[i];
                             }
-                            DataTypeStatistics[column.Type].ParamValues[i].Add(column.Param[i]);
+                            DataTypeStatistics[column.ParameterizedDataType.DataType].ParamValues[i].Add(column.ParameterizedDataType.Parameter[i]);
                         }
                     }
                     else
                     {
                         dynamic dataTypeStat = new ExpandoObject();
                         dataTypeStat.Count = 1;
-                        dataTypeStat.MaxParams = column.Param == null ? null : new DataTypeParam(new int[column.Param.Length]);
-                        dataTypeStat.MinParams = column.Param == null ? null : new DataTypeParam(new int[column.Param.Length]);
-                        if (column.Param != null && column.Param.Length > 0)
+                        dataTypeStat.MaxParams = column.ParameterizedDataType.Parameter == null ? null : new DataTypeParam(new int[column.ParameterizedDataType.Parameter.Length]);
+                        dataTypeStat.MinParams = column.ParameterizedDataType.Parameter == null ? null : new DataTypeParam(new int[column.ParameterizedDataType.Parameter.Length]);
+                        if (column.ParameterizedDataType.Parameter != null && column.ParameterizedDataType.Parameter.Length > 0)
                         {
-                            dataTypeStat.ParamValues = new List<int>[column.Param.Length];
+                            dataTypeStat.ParamValues = new List<int>[column.ParameterizedDataType.Parameter.Length];
                         } else
                         {
                             dataTypeStat.ParamValues = new List<int>[0];
                         }
-                        for (int i = 0; i < (column.Param == null ? 0 : column.Param.Length); i++)
+                        for (int i = 0; i < (column.ParameterizedDataType.Parameter == null ? 0 : column.ParameterizedDataType.Parameter.Length); i++)
                         {
-                            dataTypeStat.MaxParams[i] = column.Param[i];
-                            dataTypeStat.MinParams[i] = column.Param[i];
+                            dataTypeStat.MaxParams[i] = column.ParameterizedDataType.Parameter[i];
+                            dataTypeStat.MinParams[i] = column.ParameterizedDataType.Parameter[i];
                             dataTypeStat.ParamValues[i] = new List<int>();
-                            dataTypeStat.ParamValues[i].Add(column.Param[i]);
+                            dataTypeStat.ParamValues[i].Add(column.ParameterizedDataType.Parameter[i]);
                         }
-                        DataTypeStatistics.Add(column.Type, dataTypeStat);
+                        DataTypeStatistics.Add(column.ParameterizedDataType.DataType, dataTypeStat);
                     }
                 }
             }

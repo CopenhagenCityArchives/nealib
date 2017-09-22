@@ -83,17 +83,17 @@ namespace HardHorn
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var error = value as AnalysisErrorType?;
+            var error = value as ViewModels.TestSelectionType?;
 
             switch (error)
             {
-                case AnalysisErrorType.UNDERFLOW:
+                case ViewModels.TestSelectionType.UNDERFLOW:
                     return "Underudfyldelse";
-                case AnalysisErrorType.OVERFLOW:
+                case ViewModels.TestSelectionType.OVERFLOW:
                     return "Overskridelse";
-                case AnalysisErrorType.BLANK:
+                case ViewModels.TestSelectionType.BLANK:
                     return "Foran- eller efterstillede blanktegn";
-                case AnalysisErrorType.FORMAT:
+                case ViewModels.TestSelectionType.FORMAT:
                     return "Formateringsfejl";
                 default:
                     return string.Empty;

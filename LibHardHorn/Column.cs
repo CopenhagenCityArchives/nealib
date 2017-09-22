@@ -21,11 +21,13 @@ namespace HardHorn.Archiving
     {
         public string Name { get; set; }
         public string Type { get; set; }
+        public string Id { get; set; }
 
-        public ArchiveVersionColumnTypeParsingException(string message, string name, string type, XElement element) : base(message, element)
+        public ArchiveVersionColumnTypeParsingException(string message, string id, string name, string type, XElement element) : base(message, element)
         {
             Name = name;
             Type = type;
+            Id = id;
         }
     }
 
@@ -54,13 +56,50 @@ namespace HardHorn.Archiving
         TIMESTAMP,
         TIMESTAMP_WITH_TIME_ZONE,
         INTERVAL,
-        NOT_DEFINED,
+        UNDEFINED,
+    }
+
+    public class ParameterizedDataType : IComparable
+    {
+        public DataType DataType { get; private set; }
+        public DataTypeParam Parameter { get; private set; }
+
+        public ParameterizedDataType(DataType dataType, DataTypeParam parameter)
+        {
+            DataType = dataType;
+            Parameter = parameter;
+        }
+
+        public int CompareTo(object obj)
+        {
+            var other = obj as ParameterizedDataType;
+            if (other != null)
+            {
+                var dataTypeComp = DataType.CompareTo(other.DataType);
+                if (dataTypeComp != 0)
+                {
+                    return dataTypeComp;
+                }
+                else if (Parameter != null)
+                {
+                    return Parameter.CompareTo(other.Parameter);
+                }
+                else
+                {
+                    return other.Parameter == null ? 0 : -1;
+                }
+            }
+            else
+            {
+                return 1;
+            }
+        }
     }
 
     /// <summary>
     /// A parameter list.
     /// </summary>
-    public class DataTypeParam
+    public class DataTypeParam : IComparable
     {
         int[] _param;
 
@@ -85,6 +124,62 @@ namespace HardHorn.Archiving
             else
             {
                 return "(" + string.Join(", ", _param.Select(p => p.ToString())) + ")";
+            }
+        }
+
+        public int CompareTo(object obj)
+        {
+            var other = obj as DataTypeParam;
+            if (other != null)
+            {
+                if (Length == other.Length)
+                {
+                    for (int i = 0; i < Length; ++i)
+                    {
+                        var comp = this[i].CompareTo(other[i]);
+                        if (comp != 0)
+                        {
+                            return comp;
+                        }
+                    }
+                    return 0;
+                }
+                else if (Length > other.Length)
+                {
+                    for (int i = 0; i < other.Length; ++i)
+                    {
+                        var comp = this[i].CompareTo(other[i]);
+                        if (comp != 0)
+                        {
+                            return comp;
+                        }
+                    }
+                    return 1;
+                }
+                else // Length < other.Length
+                {
+                    for (int i = 0; i < Length; ++i)
+                    {
+                        var comp = this[i].CompareTo(other[i]);
+                        if (comp != 0)
+                        {
+                            return comp;
+                        }
+                    }
+                    return -1;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < Length; ++i)
+                {
+                    var comp = this[i].CompareTo(obj);
+                    if (comp != 0)
+                    {
+                        return comp;
+                    }
+                }
+                return 0;
             }
         }
 
@@ -133,8 +228,8 @@ namespace HardHorn.Archiving
         string _name;
         public string Name { get { return _name; } }
 
-        DataType _type;
-        public DataType Type { get { return _type; } }
+        ParameterizedDataType _dataType;
+        public ParameterizedDataType ParameterizedDataType { get { return _dataType; } }
 
         string _desc;
         public string Description { get { return _desc; } }
@@ -142,11 +237,11 @@ namespace HardHorn.Archiving
         string _colId;
         public string ColumnId { get { return _colId; } }
 
+        int _colIdNum;
+        public int ColumnIdNumber { get { return _colIdNum; } }
+
         bool _nullable;
         public bool Nullable { get { return _nullable; } }
-
-        DataTypeParam _param;
-        public DataTypeParam Param { get { return _param; } }
 
         Table _table;
         public Table Table { get { return _table; } }
@@ -164,15 +259,15 @@ namespace HardHorn.Archiving
         /// <param name="param">The parameters of the column datatype.</param>
         /// <param name="desc">The description of the column.</param>
         /// <param name="colId">The id of the column.</param>
-        public Column(Table table, string name, DataType type, bool nullable, int[] param, string desc, string colId)
+        public Column(Table table, string name, DataType type, bool nullable, int[] param, string desc, string colId, int colIdNum)
         {
             _table = table;
             _name = name;
-            _type = type;
-            _param = param != null ? new DataTypeParam(param) : null;
+            _dataType = new ParameterizedDataType(type, param != null ? new DataTypeParam(param) : null);
             _nullable = nullable;
             _desc = desc;
             _colId = colId;
+            _colIdNum = colIdNum;
         }
 
         public ColumnComparison CompareTo(Column oldColumn)
@@ -185,34 +280,34 @@ namespace HardHorn.Archiving
                 comparison.DescriptionModified = true;
             }
 
-            if (Type != oldColumn.Type)
+            if (ParameterizedDataType.DataType != oldColumn.ParameterizedDataType.DataType)
             {
                 comparison.Modified = true;
                 comparison.DataTypeModified = true;
             }
 
-            if (Param == null && oldColumn.Param != null)
+            if (ParameterizedDataType.Parameter == null && oldColumn.ParameterizedDataType.Parameter != null)
             {
                 comparison.Modified = true;
                 comparison.DataTypeModified = true;
             }
-            else if (Param != null && oldColumn.Param == null)
+            else if (ParameterizedDataType.Parameter != null && oldColumn.ParameterizedDataType.Parameter == null)
             {
                 comparison.Modified = true;
                 comparison.DataTypeModified = true;
             }
-            else if (Param == null && oldColumn.Param == null)
+            else if (ParameterizedDataType.Parameter == null && oldColumn.ParameterizedDataType.Parameter == null)
             { }
-            else if (Param.Length != oldColumn.Param.Length)
+            else if (ParameterizedDataType.Parameter.Length != oldColumn.ParameterizedDataType.Parameter.Length)
             {
                 comparison.Modified = true;
                 comparison.DataTypeModified = true;
             }
             else
             {
-                for (int i = 0; i < Param.Length; i++)
+                for (int i = 0; i < ParameterizedDataType.Parameter.Length; i++)
                 {
-                    if (Param[i] != oldColumn.Param[i])
+                    if (ParameterizedDataType.Parameter[i] != oldColumn.ParameterizedDataType.Parameter[i])
                     {
                         comparison.Modified = true;
                         comparison.DataTypeModified = true;
@@ -310,6 +405,7 @@ namespace HardHorn.Archiving
 
             string desc = xdesc.Value;
             string colId = xcolid.Value;
+            int colIdNum = int.Parse(colId.Substring(1));
 
             // parse type
             string stype = xtype.Value.ToUpper();
@@ -318,57 +414,57 @@ namespace HardHorn.Archiving
             // Text / string / hexadecimal types
             if ((stype.StartsWith("CHARACTER VARYING") && ParseParam(1, stype.Substring(17), out param)) ||
                 (stype.StartsWith("VARCHAR") && ParseParam(1, stype.Substring(7), out param)))
-                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId, colIdNum);
             else if ((stype.StartsWith("CHARACTER") && ParseParam(1, stype.Substring(9), out param)) ||
                      (stype.StartsWith("CHAR") && ParseParam(1, stype.Substring(4), out param)))
-                column = new Column(table, name, DataType.CHARACTER, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.CHARACTER, nullable, param, desc, colId, colIdNum);
             else if ((stype.StartsWith("NATIONAL CHARACTER VARYING") && ParseParam(1, stype.Substring(26), out param)) ||
                      (stype.StartsWith("NATIONAL VARCHAR") && ParseParam(1, stype.Substring(16), out param)) ||
                      (stype.StartsWith("NVARCHAR") && ParseParam(1, stype.Substring(8), out param)))
-                column = new Column(table, name, DataType.NATIONAL_CHARACTER_VARYING, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.NATIONAL_CHARACTER_VARYING, nullable, param, desc, colId, colIdNum);
             else if ((stype.StartsWith("NATIONAL CHARACTER") && ParseParam(1, stype.Substring(18), out param)) ||
                      (stype.StartsWith("NATIONAL CHAR") && ParseParam(1, stype.Substring(13), out param)) ||
                      (stype.StartsWith("NCHAR") && ParseParam(1, stype.Substring(5), out param)))
-                column = new Column(table, name, DataType.NATIONAL_CHARACTER, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.NATIONAL_CHARACTER, nullable, param, desc, colId, colIdNum);
             // Integer types
             else if (stype.StartsWith("INTEGER"))
-                column = new Column(table, name, DataType.INTEGER, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.INTEGER, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("SMALL INTEGER"))
-                column = new Column(table, name, DataType.SMALL_INTEGER, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.SMALL_INTEGER, nullable, null, desc, colId, colIdNum);
             // Decimal types
             else if (stype.StartsWith("NUMERIC") && ParseParam(1, 2, stype.Substring(7), out param))
-                column = new Column(table, name, DataType.NUMERIC, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.NUMERIC, nullable, param, desc, colId, colIdNum);
             else if (stype.StartsWith("DECIMAL") && ParseParam(1, 2, stype.Substring(7), out param))
-                column = new Column(table, name, DataType.DECIMAL, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.DECIMAL, nullable, param, desc, colId, colIdNum);
             else if (stype.StartsWith("FLOAT") && ParseParam(1, stype.Substring(5), out param))
-                column = new Column(table, name, DataType.FLOAT, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.FLOAT, nullable, param, desc, colId, colIdNum);
             else if (stype.StartsWith("DOUBLE PRECISION"))
-                column = new Column(table, name, DataType.DOUBLE_PRECISION, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.DOUBLE_PRECISION, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("REAL"))
-                column = new Column(table, name, DataType.REAL, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.REAL, nullable, null, desc, colId, colIdNum);
             // Boolean types
             else if (stype.StartsWith("BOOLEAN"))
-                column = new Column(table, name, DataType.BOOLEAN, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.BOOLEAN, nullable, null, desc, colId, colIdNum);
             // Date / time types
             else if (stype.StartsWith("DATE"))
-                column = new Column(table, name, DataType.DATE, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.DATE, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("TIMESTAMP WITH TIME ZONE"))
-                column = new Column(table, name, DataType.TIMESTAMP_WITH_TIME_ZONE, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIMESTAMP_WITH_TIME_ZONE, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("TIMESTAMP WITHOUT TIME ZONE"))
-                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("TIMESTAMP"))
-                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("TIME WITHOUT TIME ZONE"))
-                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("TIME WITH TIME ZONE"))
-                column = new Column(table, name, DataType.TIME_WITH_TIME_ZONE, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIME_WITH_TIME_ZONE, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("TIME"))
-                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId);
+                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId, colIdNum);
             else if (stype.StartsWith("INTERVAL") && ParseParam(1, stype.Substring(16), out param))
-                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId);
+                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId, colIdNum);
 
             if (column == null)
-                throw new ArchiveVersionColumnTypeParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", name, stype, xtype);
+                throw new ArchiveVersionColumnTypeParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", colId, name, stype, xtype);
             else
                 return column;
         }
