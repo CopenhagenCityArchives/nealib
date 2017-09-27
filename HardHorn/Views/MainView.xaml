@@ -7,13 +7,14 @@
         xmlns:cal="http://www.caliburnproject.org"
         xmlns:vm="clr-namespace:HardHorn.ViewModels"
         xmlns:av="clr-namespace:HardHorn.Archiving;assembly=LibHardHorn"
+        xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
         xmlns:ctl="clr-namespace:HardHorn.Controls"
         xmlns:util="clr-namespace:HardHorn.Utilities"
         xmlns:properties="clr-namespace:HardHorn.Properties"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d"
-        Title="HardHorn" Height="1024" Width="1680"
+        Title="{Binding WindowTitle}" Height="1024" Width="1680"
         Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
     <Grid>
         <Grid.RowDefinitions>
@@ -141,7 +142,7 @@
                         </Grid.ColumnDefinitions>
 
                         <Label Grid.Row="0">Tabel:</Label>
-                        <ComboBox Grid.Row="0" x:Name="RegexTableListBox" Grid.Column="1" Height="22" ItemsSource="{Binding ListTables}" ItemTemplate="{StaticResource RegexTableTemplate}" IsEnabled="{Binding TestLoaded}"/>
+                        <ComboBox Grid.Row="0" x:Name="RegexTableListBox" Grid.Column="1" Height="22" ItemsSource="{Binding TableViewModels}" ItemTemplate="{StaticResource RegexTableTemplate}" IsEnabled="{Binding TestLoaded}"/>
                         <Label Grid.Row="1">Kolonne:</Label>
                         <ComboBox x:Name="RegexColumnListBox" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Path=SelectedItem.Table.Columns, ElementName=RegexTableListBox}" ItemTemplate="{StaticResource RegexColumnTemplate}" IsEnabled="{Binding TestLoaded}"/>
                         <Label Grid.Row="2">Udtryk:</Label>
@@ -182,6 +183,13 @@
                                 </Button.Content>
                             </Button>
                             <TextBlock Margin="5 0 0 0"  FontWeight="Black" Text="{Binding CurrentTable.Table.Name}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5 0 0 0" VerticalAlignment="Center">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}({0} rækker)">
+                                        <Binding Path="CurrentTable.Table.Rows" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </StackPanel>
                         <TextBox Height="35" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding CurrentTable.Table.Description, Mode=OneWay}" />
                         <WrapPanel Grid.Row="2" Grid.Column="2" Margin="5" Grid.ColumnSpan="2">
@@ -201,7 +209,25 @@
                         </StackPanel.Style>
                     </StackPanel>
 
-                    <ListBox Grid.RowSpan="3" ItemsSource="{Binding ListTables}" SelectedItem="{Binding CurrentTable, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
+                    <DockPanel Grid.RowSpan="3">
+                        <ComboBox SelectedIndex="0" DockPanel.Dock="Top" SelectedItem="{Binding SelectedTableViewModelDataType, Mode=OneWayToSource}">
+                            <ComboBox.Resources>
+                                <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+                                    <ObjectDataProvider.MethodParameters>
+                                        <x:Type TypeName="av:DataType"></x:Type>
+                                    </ObjectDataProvider.MethodParameters>
+                                </ObjectDataProvider>
+                            </ComboBox.Resources>
+                            <ComboBox.ItemsSource>
+                                <CompositeCollection>
+                                    <ComboBoxItem>Ingen filtrering</ComboBoxItem>
+                                    <CollectionContainer Collection="{Binding Source={StaticResource DataTypeEnumValues}}"></CollectionContainer>
+                                </CompositeCollection>
+                            </ComboBox.ItemsSource>
+                        </ComboBox>
+                        <ListBox ItemsSource="{Binding FilteredTableViewModels}" SelectedItem="{Binding CurrentTable, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
+                    </DockPanel>
+                    
                     <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
                     <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding CurrentTable.SelectedColumnAnalysis}" ItemsSource="{Binding CurrentColumnAnalyses, Mode=OneWay}" util:GridViewSort.AutoSort="True">
                         <ListView.View>
@@ -249,7 +275,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Datatypeforslag" Width="170" util:GridViewSort.PropertyName="Column.SuggestedType">
+                                <GridViewColumn Header="Datatypeforslag" Width="170" util:GridViewSort.PropertyName="SuggestedType">
                                     <GridViewColumn.DisplayMemberBinding>
                                         <MultiBinding StringFormat="{}{0} {1}">
                                             <Binding Path="SuggestedType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
@@ -262,53 +288,94 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <TabControl Grid.Row="2" Grid.Column="2" SelectedItem="{Binding Path=SelectedItem.SelectedTest, ElementName=ColumnAnalysesListView}" ItemsSource="{Binding Path=SelectedItem.Tests, ElementName=ColumnAnalysesListView}">
-                        <TabControl.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <TextBlock.Text>
-                                        <MultiBinding StringFormat="{}{0} ({1})">
-                                            <Binding Path="Name" />
-                                            <Binding Path="ErrorCount" />
-                                        </MultiBinding>
-                                    </TextBlock.Text>
-                                </TextBlock>
-                            </DataTemplate>
-                        </TabControl.ItemTemplate>
-                        <TabControl.ContentTemplate>
-                            <DataTemplate>
-                                <ListView ItemsSource="{Binding ErrorPosts}">
+                    <TabControl Grid.Row="2" Grid.Column="2">
+                        <TabItem Header="Postvisning">
+                            <DockPanel>
+                                <StackPanel Margin="5" Orientation="Horizontal" DockPanel.Dock="Top">
+                                    <TextBlock VerticalAlignment="Center">Viser</TextBlock>
+                                    <TextBox Margin="5 0 0 0" Text="{Binding CurrentTable.BrowseCount}" Width="35" IsEnabled="{Binding CurrentTable.BrowseReady}"></TextBox>
+                                    <TextBlock Margin="5 0 0 0" VerticalAlignment="Center">rækker fra række</TextBlock>
+                                    <TextBox Margin="5 0 0 0" Text="{Binding CurrentTable.BrowseOffset}" Width="70" IsEnabled="{Binding CurrentTable.BrowseReady}"></TextBox>
+                                    <Button Margin="5 0 0 0" cal:Message.Attach="UpdateCurrentTableBrowseRows" IsEnabled="{Binding CurrentTable.BrowseReady}">
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style>
+                                                    <Setter Property="TextBlock.Text" Value="Opdater"></Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CurrentTable.BrowseReady}" Value="false">
+                                                            <Setter Property="TextBlock.Text">
+                                                                <Setter.Value>
+                                                                    <MultiBinding StringFormat="{}Opdaterer ({0}%)">
+                                                                        <Binding Path="CurrentTable.BrowseReadProgress" />
+                                                                    </MultiBinding>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                    </Button>
+                                </StackPanel>
+                                <ListView ItemsSource="{Binding CurrentTable.BrowseRows}">
                                     <ListView.View>
-                                        <GridView>
-                                            <GridViewColumn Header="Line" Width="80" DisplayMemberBinding="{Binding Line}"></GridViewColumn>
-                                            <GridViewColumn Header="Position" Width="80" DisplayMemberBinding="{Binding Position}"></GridViewColumn>
-                                            <GridViewColumn Header="Er null" Width="50" DisplayMemberBinding="{Binding IsNull}"></GridViewColumn>
-                                            <GridViewColumn Header="Længde" Width="50" DisplayMemberBinding="{Binding Data.Length}"></GridViewColumn>
-                                            <GridViewColumn Header="Data" Width="700">
-                                                <GridViewColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <TextBox x:Name="DataTextBox" BorderThickness="0" Text="{Binding Data}">
-                                                            <TextBox.Style>
-                                                                <Style>
-                                                                    <Setter Property="TextBox.Background" Value="{StaticResource {x:Static SystemColors.WindowBrushKey}}"></Setter>
-                                                                    <Setter Property="TextBox.Foreground" Value="Black"></Setter>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=IsSelected}" Value="True">
-                                                                            <Setter Property="TextBox.Background" Value="{StaticResource {x:Static SystemColors.HighlightBrushKey}}"></Setter>
-                                                                            <Setter Property="TextBox.Foreground" Value="{StaticResource {x:Static SystemColors.HighlightTextBrushKey}}"></Setter>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBox.Style>
-                                                        </TextBox>
-                                                    </DataTemplate>
-                                                </GridViewColumn.CellTemplate>
-                                            </GridViewColumn>
+                                        <GridView util:AttachedProperties.TableColumnsSource="{Binding CurrentTable.Table}">
                                         </GridView>
                                     </ListView.View>
                                 </ListView>
-                            </DataTemplate>
-                        </TabControl.ContentTemplate>
+                            </DockPanel>
+                        </TabItem>
+                        <TabItem Header="Fejlvisning">
+                            <TabControl SelectedItem="{Binding Path=SelectedItem.SelectedTest, ElementName=ColumnAnalysesListView}" ItemsSource="{Binding Path=SelectedItem.Tests, ElementName=ColumnAnalysesListView}">
+                                <TabControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type ana:Test}">
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0} ({1})">
+                                                    <Binding Path="Name" />
+                                                    <Binding Path="ErrorCount" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </TabControl.ItemTemplate>
+                                <TabControl.ContentTemplate>
+                                    <DataTemplate>
+                                        <ListView ItemsSource="{Binding ErrorPosts}">
+                                            <ListView.View>
+                                                <GridView>
+                                                    <GridViewColumn Header="Line" Width="80" DisplayMemberBinding="{Binding Line}"></GridViewColumn>
+                                                    <GridViewColumn Header="Position" Width="80" DisplayMemberBinding="{Binding Position}"></GridViewColumn>
+                                                    <GridViewColumn Header="Er null" Width="50" DisplayMemberBinding="{Binding IsNull}"></GridViewColumn>
+                                                    <GridViewColumn Header="Længde" Width="50" DisplayMemberBinding="{Binding Data.Length}"></GridViewColumn>
+                                                    <GridViewColumn Header="Data" Width="700">
+                                                        <GridViewColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <TextBox x:Name="DataTextBox" BorderThickness="0" Text="{Binding Data}">
+                                                                    <TextBox.Style>
+                                                                        <Style>
+                                                                            <Setter Property="TextBox.Background" Value="{StaticResource {x:Static SystemColors.WindowBrushKey}}"></Setter>
+                                                                            <Setter Property="TextBox.Foreground" Value="Black"></Setter>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=IsSelected}" Value="True">
+                                                                                    <Setter Property="TextBox.Background" Value="{StaticResource {x:Static SystemColors.HighlightBrushKey}}"></Setter>
+                                                                                    <Setter Property="TextBox.Foreground" Value="{StaticResource {x:Static SystemColors.HighlightTextBrushKey}}"></Setter>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBox.Style>
+                                                                </TextBox>
+                                                            </DataTemplate>
+                                                        </GridViewColumn.CellTemplate>
+                                                    </GridViewColumn>
+                                                </GridView>
+                                            </ListView.View>
+                                        </ListView>
+                                    </DataTemplate>
+                                </TabControl.ContentTemplate>
+                            </TabControl>
+                        </TabItem>
                     </TabControl>
                 </Grid>
             </TabItem>

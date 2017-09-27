@@ -27,7 +27,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <UpdateUrl>\\192.168.0.162\ajax\KSA PROGRAMMER\Installationsfiler\HardHorn\</UpdateUrl>
-    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationRevision>4</ApplicationRevision>
     <ApplicationVersion>1.3.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -137,9 +137,11 @@
     <Compile Include="Controls\BarChart.cs" />
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Converters.cs" />
+    <Compile Include="Utilities\AttachedProperties.cs" />
     <Compile Include="Utilities\GridViewSort.cs" />
     <Compile Include="Utilities\RelayCommand.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\TableViewModel.cs" />
     <Compile Include="Views\RegexTestView.xaml.cs">
       <DependentUpon>RegexTestView.xaml</DependentUpon>
     </Compile>

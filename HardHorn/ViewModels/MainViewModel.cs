@@ -11,6 +11,8 @@ using System.Collections.ObjectModel;
 using HardHorn.Logging;
 using System.Dynamic;
 using System.Text.RegularExpressions;
+using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace HardHorn.ViewModels
 {
@@ -22,37 +24,6 @@ namespace HardHorn.ViewModels
         COLUMN_REPORT,
         TABLE_REPORT,
         TABLE_NOT_FOUND
-    }
-
-    class TableViewModel : PropertyChangedBase
-    {
-        public Table Table { get; set; }
-
-        ColumnAnalysis _selectedColumnAnalysis;
-        public ColumnAnalysis SelectedColumnAnalysis { get { return _selectedColumnAnalysis; } set { _selectedColumnAnalysis = value;  NotifyOfPropertyChange("SelectedColumnAnalysis"); } }
-
-        public bool Errors
-        {
-            get { return _errors; }
-            set { _errors = value; NotifyOfPropertyChange("Errors"); }
-        }
-
-        public bool Done
-        {
-            get { return _done; }
-            set { _done = value; NotifyOfPropertyChange("Done"); }
-        }
-
-        public bool Busy
-        {
-            get { return _busy; }
-
-            set { _busy = value; NotifyOfPropertyChange("Busy"); }
-        }
-
-        bool _busy = false;
-        bool _errors = false;
-        private bool _done = false;
     }
 
     class LoadWorkerLogger : ILogger
@@ -83,6 +54,9 @@ namespace HardHorn.ViewModels
         public ObservableCollection<TableComparison> AddedTableComparisons { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
         public TestSelection SelectedTests { get; set; }
+
+        string _windowTitle = "HardHorn";
+        public string WindowTitle { get { return _windowTitle; } set { _windowTitle = value; NotifyOfPropertyChange("WindowTitle"); } }
 
         public int[] BarChartValues { get; set; }
 
@@ -155,7 +129,39 @@ namespace HardHorn.ViewModels
         public TableViewModel CurrentTable
         {
             get { return _currentTable; }
-            set { _currentTable = value;  UpdateInteractiveReportView(); NotifyOfPropertyChange("CurrentTable"); }
+            set { _currentTable = value; UpdateInteractiveReportView(); NotifyOfPropertyChange("CurrentTable"); }
+        }
+
+        object _selectedTableViewModelDataType;
+        public object SelectedTableViewModelDataType
+        {
+            set
+            {
+                _selectedTableViewModelDataType = value;
+
+                var dataType = value as DataType?;
+                if (dataType != null)
+                {
+                    FilteredTableViewModels.Clear();
+                    foreach (var tableViewModel in TableViewModels)
+                    {
+                        if (tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == dataType))
+                            FilteredTableViewModels.Add(tableViewModel);
+                    }
+                }
+                else
+                {
+                    FilteredTableViewModels.Clear();
+                    foreach (var tableViewModel in TableViewModels)
+                        FilteredTableViewModels.Add(tableViewModel);
+                }
+
+            }
+
+            get
+            {
+                return _selectedTableViewModelDataType;
+            }
         }
 
         public string SpecTables
@@ -173,7 +179,7 @@ namespace HardHorn.ViewModels
                     if (name.Trim().Length > 0)
                     {
                         matched = false;
-                        foreach (var table in ListTables)
+                        foreach (var table in TableViewModels)
                         {
                             if (table.Table.Name.ToLower() == name.Trim().ToLower())
                             {
@@ -189,7 +195,7 @@ namespace HardHorn.ViewModels
                     }
                 }
 
-                foreach (var table in ListTables)
+                foreach (var table in TableViewModels)
                 {
                     matched = false;
                     foreach (var name in value.Split('\n'))
@@ -222,7 +228,8 @@ namespace HardHorn.ViewModels
         public ObservableCollection<ColumnAnalysis> CurrentColumnAnalyses { get; set; }
 
         Dictionary<string, TableViewModel> ListTableLookup = new Dictionary<string, TableViewModel>();
-        public ObservableCollection<TableViewModel> ListTables { get; set; }
+        public ObservableCollection<TableViewModel> TableViewModels { get; set; }
+        public ObservableCollection<TableViewModel> FilteredTableViewModels { get; set; }
 
         BackgroundWorker _loadWorker = new BackgroundWorker();
         BackgroundWorker _testWorker = new BackgroundWorker();
@@ -258,12 +265,11 @@ namespace HardHorn.ViewModels
 
         #endregion
 
-
-
         #region Constructors
         public MainViewModel()
         {
-            ListTables = new ObservableCollection<TableViewModel>();
+            TableViewModels = new ObservableCollection<TableViewModel>();
+            FilteredTableViewModels = new ObservableCollection<TableViewModel>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             TableComparisons = new ObservableCollection<TableComparison>();
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
@@ -308,6 +314,14 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Methods
+        public void UpdateCurrentTableBrowseRows()
+        {
+            if (CurrentTable == null)
+                return;
+
+            CurrentTable.UpdateBrowseRows();
+        }
+
         public void UpdateInteractiveReportView()
         {
             var table = CurrentTable == null ? null : CurrentTable.Table;
@@ -429,9 +443,11 @@ namespace HardHorn.ViewModels
 
         private void _loadWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            ListTables.Clear();
+            TableViewModels.Clear();
             ListTableLookup.Clear();
             Regexes.Clear();
+
+            WindowTitle = string.Format("{0} - HardHorn", ArchiveVersion.Id);
 
             if (e.Error != null)
             {
@@ -441,13 +457,14 @@ namespace HardHorn.ViewModels
 
             foreach (var table in ArchiveVersion.Tables)
             {
-                var listTable = new TableViewModel() { Table = table, Errors = table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED) };
-                ListTableLookup.Add(table.Name, listTable);
-                ListTables.Add(listTable);
+                var tableViewModel = new TableViewModel(table) { Errors = table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED) };
+                ListTableLookup.Add(table.Name, tableViewModel);
+                TableViewModels.Add(tableViewModel);
             }
+            SelectedTableViewModelDataType = SelectedTableViewModelDataType;
             TestLoaded = true;
 
-            _stats = new DataStatistics(ListTables.Select(lt => lt.Table).ToArray());
+            _stats = new DataStatistics(TableViewModels.Select(lt => lt.Table).ToArray());
             foreach (dynamic stat in _stats.DataTypeStatistics.Values)
             {
                 stat.BarCharts = new ObservableCollection<ExpandoObject>();
@@ -545,9 +562,9 @@ namespace HardHorn.ViewModels
                 case TestWorkerUpdate.UPDATE_TABLE_STATUS:
                     table = state.Data as Table;
                     if (table == null) return;
-                    var listTable = ListTableLookup[table.Name];
+                    var tableViewModel = ListTableLookup[table.Name];
                     if (_analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
-                        listTable.Errors = true;
+                        tableViewModel.Errors = true;
                     break;
                 case TestWorkerUpdate.TABLE_REPORT:
                     var tableReport = state.Data as Dictionary<Column, ColumnAnalysis>;
@@ -618,9 +635,9 @@ namespace HardHorn.ViewModels
         void _testWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             TestRunning = false;
-            foreach (var listTable in ListTables)
+            foreach (var tableViewModel in TableViewModels)
             {
-                listTable.Busy = false;
+                tableViewModel.Busy = false;
             }
         }
 
@@ -760,7 +777,7 @@ namespace HardHorn.ViewModels
 
                     if (loaded != null)
                     {
-                        ListTables = loaded.ListTables;
+                        TableViewModels = loaded.TableViewModels;
                         ListTableLookup = loaded.ListTableLookup;
                         SelectedTests = loaded.SelectedTests;
                         AddedTableComparisons = loaded.AddedTableComparisons;
@@ -854,10 +871,10 @@ namespace HardHorn.ViewModels
                 _testWorker.CancelAsync();
             } else
             {
-                foreach (var listTable in ListTables)
+                foreach (var tableViewModel in TableViewModels)
                 {
-                    listTable.Busy = false;
-                    listTable.Done = false;
+                    tableViewModel.Busy = false;
+                    tableViewModel.Done = false;
                 }
 
                 foreach (var table in _analyzer.TestHierachy.Values)
@@ -928,9 +945,9 @@ namespace HardHorn.ViewModels
                             }
                         }
 
-                foreach (var listTable in ListTables)
+                foreach (var tableViewModel in TableViewModels)
                 {
-                    listTable.Errors = listTable.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
+                    tableViewModel.Errors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
                 }
                 _testWorker.RunWorkerAsync();
                 TestRunning = true;
