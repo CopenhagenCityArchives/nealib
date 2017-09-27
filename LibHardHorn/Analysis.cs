@@ -187,7 +187,7 @@ namespace HardHorn.Analysis
 
         public class Overflow : Test
         {
-            public override string Name { get { return "Overflow"; } }
+            public override string Name { get { return "Overskridelse"; } }
 
             public override Result GetResult(Post post, Column column)
             {
@@ -252,7 +252,7 @@ namespace HardHorn.Analysis
 
         public class Underflow : Test
         {
-            public override string Name { get { return "Underflow"; } }
+            public override string Name { get { return "Underudfyldelse"; } }
 
             public override Result GetResult(Post post, Column column)
             {
@@ -270,7 +270,7 @@ namespace HardHorn.Analysis
 
         public class Blank : Test
         {
-            public override string Name { get { return "Blank"; } }
+            public override string Name { get { return "Blanktegn"; } }
 
             bool IsWhitespace(char c)
             {
