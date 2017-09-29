@@ -25,10 +25,10 @@ namespace HardHorn.ViewModels
     {
         public Table Table { get; set; }
 
-        int _browseOffset;
-        public int BrowseOffset { get { return _browseOffset; } set { _browseOffset = value; NotifyOfPropertyChange("BrowseOffset"); } }
-        int _browseCount;
-        public int BrowseCount { get { return _browseCount; } set { _browseCount = value; NotifyOfPropertyChange("BrowseCount"); } }
+        uint _browseOffset;
+        public uint BrowseOffset { get { return _browseOffset; } set { _browseOffset = value; NotifyOfPropertyChange("BrowseOffset"); } }
+        uint _browseCount;
+        public uint BrowseCount { get { return _browseCount; } set { _browseCount = value; NotifyOfPropertyChange("BrowseCount"); } }
 
         public ObservableCollection<BrowseRow> BrowseRows { get; set; }
         BackgroundWorker browseRowsWorker;
@@ -99,8 +99,8 @@ namespace HardHorn.ViewModels
                 return;
 
             // Local copies
-            int browseOffset = BrowseOffset;
-            int browseCount = BrowseCount;
+            uint browseOffset = BrowseOffset;
+            uint browseCount = BrowseCount;
             var browseRows = new List<BrowseRow>();
 
             int currentOffset = 0;
@@ -110,21 +110,21 @@ namespace HardHorn.ViewModels
             {
                 if (browseOffset > 0)
                 {
-                    int chunkSize = 50000;
-                    int chunks = browseOffset / chunkSize;
-                    int chunkExtra = browseOffset % chunkSize;
+                    uint chunkSize = 50000;
+                    uint chunks = browseOffset / chunkSize;
+                    uint chunkExtra = browseOffset % chunkSize;
 
                     for (int c = 0; c < chunks; c++)
                     {
-                        rowsRead = reader.Read(out posts, chunkSize);
+                        rowsRead = reader.Read(out posts, (int)chunkSize);
                         currentOffset += rowsRead;
-                        worker.ReportProgress((currentOffset * 100) / browseOffset);
+                        worker.ReportProgress((int)((currentOffset * 100) / browseOffset));
                     }
-                    rowsRead = reader.Read(out posts, chunkExtra);
+                    rowsRead = reader.Read(out posts, (int)chunkExtra);
                     currentOffset += rowsRead;
-                    worker.ReportProgress((currentOffset * 100) / browseOffset);
+                    worker.ReportProgress((int)((currentOffset * 100) / browseOffset));
                 }
-                rowsRead = reader.Read(out posts, browseCount);
+                rowsRead = reader.Read(out posts, (int)browseCount);
                 currentOffset += rowsRead;
             }
 

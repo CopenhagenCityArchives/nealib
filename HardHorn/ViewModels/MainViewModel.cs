@@ -691,7 +691,7 @@ namespace HardHorn.ViewModels
             if (CurrentTable == null)
                 return;
 
-            CurrentTable.BrowseOffset += CurrentTable.BrowseCount;
+            CurrentTable.BrowseOffset = CurrentTable.BrowseOffset + CurrentTable.BrowseCount > CurrentTable.Table.Rows ? CurrentTable.BrowseOffset : CurrentTable.BrowseOffset + CurrentTable.BrowseCount;
             CurrentTable.UpdateBrowseRows();
         }
 
@@ -700,7 +700,7 @@ namespace HardHorn.ViewModels
             if (CurrentTable == null)
                 return;
 
-            CurrentTable.BrowseOffset = Math.Max(0, CurrentTable.BrowseOffset - CurrentTable.BrowseCount);
+            CurrentTable.BrowseOffset = CurrentTable.BrowseCount > CurrentTable.BrowseOffset ? 0 : CurrentTable.BrowseOffset - CurrentTable.BrowseCount;
             CurrentTable.UpdateBrowseRows();
         }
 
