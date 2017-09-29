@@ -26,7 +26,7 @@ namespace HardHorn.ViewModels
         public Table Table { get; set; }
 
         uint _browseOffset;
-        public uint BrowseOffset { get { return _browseOffset; } set { _browseOffset = value; NotifyOfPropertyChange("BrowseOffset"); } }
+        public uint BrowseOffset { get { return _browseOffset; } set { if (value > Table.Rows) return; _browseOffset = value; NotifyOfPropertyChange("BrowseOffset"); } }
         uint _browseCount;
         public uint BrowseCount { get { return _browseCount; } set { _browseCount = value; NotifyOfPropertyChange("BrowseCount"); } }
 
