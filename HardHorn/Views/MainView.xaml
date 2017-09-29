@@ -160,7 +160,7 @@
             <TabItem Header="Interaktiv visning">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition MinWidth="250" Width="Auto" />
+                        <ColumnDefinition Width="300" />
                         <ColumnDefinition Width="5" />
                         <ColumnDefinition MinWidth="250" Width="*" />
                     </Grid.ColumnDefinitions>
@@ -296,7 +296,7 @@
                                     <TextBox Margin="5 0 0 0" Text="{Binding CurrentTable.BrowseCount}" Width="35" IsEnabled="{Binding CurrentTable.BrowseReady}"></TextBox>
                                     <TextBlock Margin="5 0 0 0" VerticalAlignment="Center">rækker fra række</TextBlock>
                                     <TextBox Margin="5 0 0 0" Text="{Binding CurrentTable.BrowseOffset}" Width="70" IsEnabled="{Binding CurrentTable.BrowseReady}"></TextBox>
-                                    <Button Margin="5 0 0 0" cal:Message.Attach="UpdateCurrentTableBrowseRows" IsEnabled="{Binding CurrentTable.BrowseReady}">
+                                    <Button Margin="5 0 0 0" Width="100" cal:Message.Attach="BrowseUpdate" IsEnabled="{Binding CurrentTable.BrowseReady}">
                                         <TextBlock>
                                             <TextBlock.Style>
                                                 <Style>
@@ -315,7 +315,28 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-
+                                    </Button>
+                                    <Button Margin="5 0 0 0" cal:Message.Attach="BrowsePrevious">
+                                        <Button.Content>
+                                            <TextBlock>
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}Forrige {0}">
+                                                        <Binding Path="CurrentTable.BrowseCount"></Binding>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Margin="5 0 0 0" cal:Message.Attach="BrowseNext">
+                                        <Button.Content>
+                                            <TextBlock>
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}Næste {0}">
+                                                        <Binding Path="CurrentTable.BrowseCount"></Binding>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </Button.Content>
                                     </Button>
                                 </StackPanel>
                                 <ListView ItemsSource="{Binding CurrentTable.BrowseRows}">

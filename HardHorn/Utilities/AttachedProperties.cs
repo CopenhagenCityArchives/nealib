@@ -45,8 +45,24 @@ namespace HardHorn.Utilities
             foreach (var column in table.Columns)
             {
                 var browseColumn = new GridViewColumn();
-                browseColumn.DisplayMemberBinding = new Binding(string.Format("Posts[{0}].Data", column.ColumnIdNumber - 1));
                 browseColumn.Header = column.Name;
+                browseColumn.CellTemplate = new DataTemplate(typeof(Post));
+                var nullTrigger = new DataTrigger() { Binding = new Binding(string.Format("Posts[{0}].IsNull", column.ColumnIdNumber - 1)), Value = true };
+                nullTrigger.Setters.Add(new Setter(TextBlock.TextProperty, "null", "PostTextBlock"));
+                nullTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.Blue, "PostTextBlock"));
+                nullTrigger.Setters.Add(new Setter(TextBlock.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBlock"));
+                nullTrigger.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.Bold, "PostTextBlock"));
+                nullTrigger.Setters.Add(new Setter(TextBlock.FontSizeProperty, 10.0, "PostTextBlock"));
+                var emptyTrigger = new DataTrigger() { Binding = new Binding(string.Format("Posts[{0}].Data", column.ColumnIdNumber - 1)), Value = "" };
+                emptyTrigger.Setters.Add(new Setter(TextBlock.TextProperty, "tom", "PostTextBlock"));
+                emptyTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.Brown, "PostTextBlock"));
+                emptyTrigger.Setters.Add(new Setter(TextBlock.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBlock"));
+                emptyTrigger.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.Bold, "PostTextBlock"));
+                emptyTrigger.Setters.Add(new Setter(TextBlock.FontSizeProperty, 10.0, "PostTextBlock"));
+                browseColumn.CellTemplate.Triggers.Add(emptyTrigger);
+                browseColumn.CellTemplate.Triggers.Add(nullTrigger);
+                browseColumn.CellTemplate.VisualTree = new FrameworkElementFactory(typeof(TextBlock), "PostTextBlock");
+                browseColumn.CellTemplate.VisualTree.SetBinding(TextBlock.TextProperty, new Binding(string.Format("Posts[{0}].Data", column.ColumnIdNumber - 1)));
                 gridView.Columns.Add(browseColumn);
             }
 

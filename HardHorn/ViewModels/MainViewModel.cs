@@ -314,14 +314,6 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Methods
-        public void UpdateCurrentTableBrowseRows()
-        {
-            if (CurrentTable == null)
-                return;
-
-            CurrentTable.UpdateBrowseRows();
-        }
-
         public void UpdateInteractiveReportView()
         {
             var table = CurrentTable == null ? null : CurrentTable.Table;
@@ -694,6 +686,32 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Actions
+        public void BrowseNext()
+        {
+            if (CurrentTable == null)
+                return;
+
+            CurrentTable.BrowseOffset += CurrentTable.BrowseCount;
+            CurrentTable.UpdateBrowseRows();
+        }
+
+        public void BrowsePrevious()
+        {
+            if (CurrentTable == null)
+                return;
+
+            CurrentTable.BrowseOffset = Math.Max(0, CurrentTable.BrowseOffset - CurrentTable.BrowseCount);
+            CurrentTable.UpdateBrowseRows();
+        }
+
+        public void BrowseUpdate()
+        {
+            if (CurrentTable == null)
+                return;
+
+            CurrentTable.UpdateBrowseRows();
+        }
+
         public void Merge(TableComparison added, TableComparison removed)
         {
             if (added == null || removed == null)

@@ -25,8 +25,10 @@ namespace HardHorn.ViewModels
     {
         public Table Table { get; set; }
 
-        public int BrowseOffset { get; set; }
-        public int BrowseCount { get; set; }
+        int _browseOffset;
+        public int BrowseOffset { get { return _browseOffset; } set { _browseOffset = value; NotifyOfPropertyChange("BrowseOffset"); } }
+        int _browseCount;
+        public int BrowseCount { get { return _browseCount; } set { _browseCount = value; NotifyOfPropertyChange("BrowseCount"); } }
 
         public ObservableCollection<BrowseRow> BrowseRows { get; set; }
         BackgroundWorker browseRowsWorker;
@@ -141,6 +143,9 @@ namespace HardHorn.ViewModels
 
         public void UpdateBrowseRows()
         {
+            if (!BrowseReady)
+                return;
+
             BrowseReady = false;
             BrowseReadProgress = 0;
             browseRowsWorker.RunWorkerAsync();
