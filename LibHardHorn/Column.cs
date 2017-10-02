@@ -247,6 +247,7 @@ namespace HardHorn.Archiving
         public Table Table { get { return _table; } }
 
         static Regex paramRegex = new Regex(@"^ *\((\d+(,\d+)*)\)$");
+        static Regex optionalParamRegex = new Regex(@"^ *\((\d+(,\d+)*)?\)$");
         static Regex commaNumRegex = new Regex(@",?(\d+)");
 
         /// <summary>
@@ -410,58 +411,63 @@ namespace HardHorn.Archiving
             // parse type
             string stype = xtype.Value.ToUpper();
 
-            int[] param;
+            int[] param = null;
+            bool usedDefault;
+            DataType? dataType = null;
             // Text / string / hexadecimal types
-            if ((stype.StartsWith("CHARACTER VARYING") && ParseParam(1, stype.Substring(17), out param)) ||
-                (stype.StartsWith("VARCHAR") && ParseParam(1, stype.Substring(7), out param)))
-                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId, colIdNum);
-            else if ((stype.StartsWith("CHARACTER") && ParseParam(1, stype.Substring(9), out param)) ||
-                     (stype.StartsWith("CHAR") && ParseParam(1, stype.Substring(4), out param)))
-                column = new Column(table, name, DataType.CHARACTER, nullable, param, desc, colId, colIdNum);
-            else if ((stype.StartsWith("NATIONAL CHARACTER VARYING") && ParseParam(1, stype.Substring(26), out param)) ||
-                     (stype.StartsWith("NATIONAL VARCHAR") && ParseParam(1, stype.Substring(16), out param)) ||
-                     (stype.StartsWith("NVARCHAR") && ParseParam(1, stype.Substring(8), out param)))
-                column = new Column(table, name, DataType.NATIONAL_CHARACTER_VARYING, nullable, param, desc, colId, colIdNum);
-            else if ((stype.StartsWith("NATIONAL CHARACTER") && ParseParam(1, stype.Substring(18), out param)) ||
-                     (stype.StartsWith("NATIONAL CHAR") && ParseParam(1, stype.Substring(13), out param)) ||
-                     (stype.StartsWith("NCHAR") && ParseParam(1, stype.Substring(5), out param)))
-                column = new Column(table, name, DataType.NATIONAL_CHARACTER, nullable, param, desc, colId, colIdNum);
+            if ((stype.StartsWith("CHARACTER VARYING") && ParseParam(1, stype.Substring(17), out param, out usedDefault)) ||
+                (stype.StartsWith("VARCHAR") && ParseParam(1, stype.Substring(7), out param, out usedDefault)))
+                dataType = DataType.CHARACTER_VARYING;
+            else if ((stype.StartsWith("CHARACTER") && ParseParam(1, stype.Substring(9), out param, out usedDefault)) ||
+                     (stype.StartsWith("CHAR") && ParseParam(1, stype.Substring(4), out param, out usedDefault)))
+                dataType = DataType.CHARACTER;
+            else if ((stype.StartsWith("NATIONAL CHARACTER VARYING") && ParseParam(1, stype.Substring(26), out param, out usedDefault)) ||
+                     (stype.StartsWith("NATIONAL VARCHAR") && ParseParam(1, stype.Substring(16), out param, out usedDefault)) ||
+                     (stype.StartsWith("NVARCHAR") && ParseParam(1, stype.Substring(8), out param, out usedDefault)))
+                dataType = DataType.NATIONAL_CHARACTER_VARYING;
+            else if ((stype.StartsWith("NATIONAL CHARACTER") && ParseParam(1, stype.Substring(18), out param, out usedDefault)) ||
+                     (stype.StartsWith("NATIONAL CHAR") && ParseParam(1, stype.Substring(13), out param, out usedDefault)) ||
+                     (stype.StartsWith("NCHAR") && ParseParam(1, stype.Substring(5), out param, out usedDefault)))
+                dataType = DataType.NATIONAL_CHARACTER;
             // Integer types
             else if (stype.StartsWith("INTEGER"))
-                column = new Column(table, name, DataType.INTEGER, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.INTEGER;
             else if (stype.StartsWith("SMALL INTEGER"))
-                column = new Column(table, name, DataType.SMALL_INTEGER, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.SMALL_INTEGER;
             // Decimal types
-            else if (stype.StartsWith("NUMERIC") && ParseParam(1, 2, stype.Substring(7), out param))
-                column = new Column(table, name, DataType.NUMERIC, nullable, param, desc, colId, colIdNum);
-            else if (stype.StartsWith("DECIMAL") && ParseParam(1, 2, stype.Substring(7), out param))
-                column = new Column(table, name, DataType.DECIMAL, nullable, param, desc, colId, colIdNum);
-            else if (stype.StartsWith("FLOAT") && ParseParam(1, stype.Substring(5), out param))
-                column = new Column(table, name, DataType.FLOAT, nullable, param, desc, colId, colIdNum);
+            else if (stype.StartsWith("NUMERIC") && ParseParam(1, 2, stype.Substring(7), out param, out usedDefault))
+                dataType = DataType.NUMERIC;
+            else if (stype.StartsWith("DECIMAL") && ParseParam(1, 2, stype.Substring(7), out param, out usedDefault))
+                dataType = DataType.DECIMAL;
+            else if (stype.StartsWith("FLOAT") && ParseParam(1, stype.Substring(5), out param, out usedDefault))
+                dataType = DataType.FLOAT;
             else if (stype.StartsWith("DOUBLE PRECISION"))
-                column = new Column(table, name, DataType.DOUBLE_PRECISION, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.DOUBLE_PRECISION;
             else if (stype.StartsWith("REAL"))
-                column = new Column(table, name, DataType.REAL, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.REAL;
             // Boolean types
             else if (stype.StartsWith("BOOLEAN"))
-                column = new Column(table, name, DataType.BOOLEAN, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.BOOLEAN;
             // Date / time types
             else if (stype.StartsWith("DATE"))
-                column = new Column(table, name, DataType.DATE, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.DATE;
             else if (stype.StartsWith("TIMESTAMP WITH TIME ZONE"))
-                column = new Column(table, name, DataType.TIMESTAMP_WITH_TIME_ZONE, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.TIMESTAMP_WITH_TIME_ZONE;
             else if (stype.StartsWith("TIMESTAMP WITHOUT TIME ZONE"))
-                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.TIMESTAMP;
             else if (stype.StartsWith("TIMESTAMP"))
-                column = new Column(table, name, DataType.TIMESTAMP, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.TIMESTAMP;
             else if (stype.StartsWith("TIME WITHOUT TIME ZONE"))
-                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.TIME;
             else if (stype.StartsWith("TIME WITH TIME ZONE"))
-                column = new Column(table, name, DataType.TIME_WITH_TIME_ZONE, nullable, null, desc, colId, colIdNum);
+                dataType = DataType.TIME_WITH_TIME_ZONE;
             else if (stype.StartsWith("TIME"))
-                column = new Column(table, name, DataType.TIME, nullable, null, desc, colId, colIdNum);
-            else if (stype.StartsWith("INTERVAL") && ParseParam(1, stype.Substring(16), out param))
-                column = new Column(table, name, DataType.CHARACTER_VARYING, nullable, param, desc, colId, colIdNum);
+                dataType = DataType.TIME;
+            else if (stype.StartsWith("INTERVAL") && ParseParam(1, stype.Substring(16), out param, out usedDefault))
+                dataType = DataType.CHARACTER_VARYING;
+
+            if (dataType.HasValue)
+                column = new Column(table, name, dataType.Value, nullable, param, desc, colId, colIdNum);
 
             if (column == null)
                 throw new ArchiveVersionColumnTypeParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", colId, name, stype, xtype);
@@ -476,9 +482,9 @@ namespace HardHorn.Archiving
         /// <param name="s">The parameter string.</param>
         /// <param name="param">A reference to the integer array that should contain the parameter list.</param>
         /// <returns></returns>
-        static bool ParseParam(int length, string s, out int[] param)
+        static bool ParseParam(int length, string s, out int[] param, out bool usedDefault, int[] defaultParam = null)
         {
-            return ParseParam(length, length, s, out param);
+            return ParseParam(length, length, s, out param, out usedDefault, defaultParam);
         }
 
         /// <summary>
@@ -489,12 +495,32 @@ namespace HardHorn.Archiving
         /// <param name="s">The parameter string.</param>
         /// <param name="param">A reference to the integer array that should contain the parameter list.</param>
         /// <returns></returns>
-        static bool ParseParam(int minLength, int maxLength, string s, out int[] param)
+        static bool ParseParam(int minLength, int maxLength, string s, out int[] param, out bool usedDefault, int[] defaultParam = null)
         {
-            var parenMatch = paramRegex.Match(s);
+            Match parenMatch;
+
+            if (defaultParam != null)
+            {
+                parenMatch = optionalParamRegex.Match(s);
+            }
+            else
+            {
+                parenMatch = paramRegex.Match(s);
+            }
 
             if (parenMatch.Success)
             {
+                if (parenMatch.Groups.Count == 0 && defaultParam != null)
+                {
+                    param = new int[defaultParam.Length];
+                    for (int i = 0; i < defaultParam.Length; i++)
+                        param[i] = defaultParam[i];
+                    usedDefault = true;
+                    return true;
+                }
+
+                usedDefault = false;
+
                 var numMatches = commaNumRegex.Matches(parenMatch.Groups[0].Value);
 
                 if (numMatches.Count >= minLength && numMatches.Count <= maxLength)
@@ -506,11 +532,13 @@ namespace HardHorn.Archiving
                         param[i] = int.Parse(numMatches[i].Groups[1].Value);
                     }
 
+                    usedDefault = false;
                     return true;
                 }
             }
 
             param = null;
+            usedDefault = false;
             return false;
         }
     }
