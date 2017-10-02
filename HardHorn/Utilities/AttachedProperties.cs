@@ -49,13 +49,15 @@ namespace HardHorn.Utilities
                 browseColumn.CellTemplate = new DataTemplate(typeof(Post));
                 var nullTrigger = new DataTrigger() { Binding = new Binding(string.Format("Posts[{0}].IsNull", column.ColumnIdNumber - 1)), Value = true };
                 nullTrigger.Setters.Add(new Setter(TextBlock.TextProperty, "null", "PostTextBlock"));
-                nullTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.Blue, "PostTextBlock"));
+                nullTrigger.Setters.Add(new Setter(TextBlock.BackgroundProperty, System.Windows.Media.Brushes.DarkBlue, "PostTextBlock"));
+                nullTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White, "PostTextBlock"));
                 nullTrigger.Setters.Add(new Setter(TextBlock.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBlock"));
                 nullTrigger.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.Bold, "PostTextBlock"));
                 nullTrigger.Setters.Add(new Setter(TextBlock.FontSizeProperty, 10.0, "PostTextBlock"));
                 var emptyTrigger = new DataTrigger() { Binding = new Binding(string.Format("Posts[{0}].Data", column.ColumnIdNumber - 1)), Value = "" };
                 emptyTrigger.Setters.Add(new Setter(TextBlock.TextProperty, "tom", "PostTextBlock"));
-                emptyTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.Brown, "PostTextBlock"));
+                emptyTrigger.Setters.Add(new Setter(TextBlock.BackgroundProperty, System.Windows.Media.Brushes.Brown, "PostTextBlock"));
+                emptyTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White, "PostTextBlock"));
                 emptyTrigger.Setters.Add(new Setter(TextBlock.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBlock"));
                 emptyTrigger.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.Bold, "PostTextBlock"));
                 emptyTrigger.Setters.Add(new Setter(TextBlock.FontSizeProperty, 10.0, "PostTextBlock"));
