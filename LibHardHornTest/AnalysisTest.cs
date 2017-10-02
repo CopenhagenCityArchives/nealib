@@ -144,12 +144,12 @@ namespace LibHardHornTest
             AssertOkay(column, test, "2000-08-10T14:15:20+12:00");
             AssertOkay(column, test, "2000-08-10T14:15:20-12:00");
             AssertOkay(column, test, "2000-08-10T13:37:00+05:30");
-            AssertOkay(column, test, "2000-08-10T00:00:00Z"); // minimum
-            AssertOkay(column, test, "2000-08-10T23:59:59Z"); // maximum
-            AssertOkay(column, test, "2000-08-10T00:00:00+00:00"); // minimum
-            AssertOkay(column, test, "2000-08-10T23:59:59+12:00"); // maximum
-            AssertOkay(column, test, "2000-08-10T23:59:59-00:00"); // minimum
-            AssertOkay(column, test, "2000-08-10T23:59:59-12:00"); // maximum
+            AssertOkay(column, test, "2000-08-10T00:00:00Z"); // minimum tz
+            AssertOkay(column, test, "2000-08-10T23:59:59Z"); // maximum tz
+            AssertOkay(column, test, "2000-08-10T00:00:00+00:00"); // minimum time with positive minimum tz
+            AssertOkay(column, test, "2000-08-10T23:59:59+12:00"); // maximum time with positive maximum tz
+            AssertOkay(column, test, "2000-08-10T23:59:59-00:00"); // minimum time with negative minimum tz
+            AssertOkay(column, test, "2000-08-10T23:59:59-12:00"); // maximum time with negative maximum tz
 
             AssertError(column, test, "2000-08-10T14:15:20+5:00"); // 1 digit time zone hour
             AssertError(column, test, "2000-08-10T14:15:20+005:00"); // 3 digit time zone hour
@@ -172,6 +172,26 @@ namespace LibHardHornTest
             AssertError(column, test, "2000-08-10T10:10:123+01:00"); // 3-digit second
             AssertError(column, test, "abc"); // non-format string
             AssertError(column, test, ""); // empty string
+
+            AssertOkay(column, test, "0001-01-01T14:15:20Z");
+            AssertOkay(column, test, "2016-05-23T14:15:20Z");
+            AssertOkay(column, test, "2016-05-23T14:15:20Z");
+            AssertOkay(column, test, "2016-05-23T14:15:20Z");
+            AssertOkay(column, test, "1994-12-31T14:15:20Z");
+            AssertOkay(column, test, "2016-12-01T14:15:20Z");
+            AssertOkay(column, test, "2017-01-31T14:15:20Z");
+            AssertOkay(column, test, "1991-05-16T14:15:20Z");
+            AssertOkay(column, test, "9999-12-31T14:15:20Z");
+
+            AssertError(column, test, "99-1-31T14:15:20Z"); // two-digit year
+            AssertError(column, test, "2017-12-1T14:15:20Z"); // one-digit-month
+            AssertError(column, test, "2017-1-31T14:15:20Z"); // one-digit day
+            AssertError(column, test, "abc"); // letters
+            AssertError(column, test, "2016-15-23T14:15:20Z"); // Month out of range
+            AssertError(column, test, "2016-06-80T14:15:20Z"); // Day out of range
+            AssertError(column, test, "1905-10T14:15:20Z"); // Day missing
+            AssertError(column, test, ""); // Empty string
+            AssertError(column, test, "   "); // Blank string
         }
     }
 }
