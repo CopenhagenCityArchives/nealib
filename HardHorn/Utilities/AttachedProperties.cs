@@ -48,23 +48,35 @@ namespace HardHorn.Utilities
                 browseColumn.Header = column.Name;
                 browseColumn.CellTemplate = new DataTemplate(typeof(Post));
                 var nullTrigger = new DataTrigger() { Binding = new Binding(string.Format("Posts[{0}].IsNull", column.ColumnIdNumber - 1)), Value = true };
-                nullTrigger.Setters.Add(new Setter(TextBlock.TextProperty, "null", "PostTextBlock"));
-                nullTrigger.Setters.Add(new Setter(TextBlock.BackgroundProperty, System.Windows.Media.Brushes.DarkBlue, "PostTextBlock"));
-                nullTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White, "PostTextBlock"));
-                nullTrigger.Setters.Add(new Setter(TextBlock.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBlock"));
-                nullTrigger.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.Bold, "PostTextBlock"));
-                nullTrigger.Setters.Add(new Setter(TextBlock.FontSizeProperty, 10.0, "PostTextBlock"));
+                nullTrigger.Setters.Add(new Setter(TextBox.TextProperty, "null", "PostTextBox"));
+                nullTrigger.Setters.Add(new Setter(TextBox.BackgroundProperty, System.Windows.Media.Brushes.DarkBlue, "PostTextBox"));
+                nullTrigger.Setters.Add(new Setter(TextBox.ForegroundProperty, System.Windows.Media.Brushes.White, "PostTextBox"));
+                nullTrigger.Setters.Add(new Setter(TextBox.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBox"));
+                nullTrigger.Setters.Add(new Setter(TextBox.FontWeightProperty, FontWeights.Bold, "PostTextBox"));
+                nullTrigger.Setters.Add(new Setter(TextBox.FontSizeProperty, 10.0, "PostTextBox"));
                 var emptyTrigger = new DataTrigger() { Binding = new Binding(string.Format("Posts[{0}].Data", column.ColumnIdNumber - 1)), Value = "" };
-                emptyTrigger.Setters.Add(new Setter(TextBlock.TextProperty, "tom", "PostTextBlock"));
-                emptyTrigger.Setters.Add(new Setter(TextBlock.BackgroundProperty, System.Windows.Media.Brushes.Brown, "PostTextBlock"));
-                emptyTrigger.Setters.Add(new Setter(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White, "PostTextBlock"));
-                emptyTrigger.Setters.Add(new Setter(TextBlock.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBlock"));
-                emptyTrigger.Setters.Add(new Setter(TextBlock.FontWeightProperty, FontWeights.Bold, "PostTextBlock"));
-                emptyTrigger.Setters.Add(new Setter(TextBlock.FontSizeProperty, 10.0, "PostTextBlock"));
+                emptyTrigger.Setters.Add(new Setter(TextBox.TextProperty, "tom", "PostTextBox"));
+                emptyTrigger.Setters.Add(new Setter(TextBox.BackgroundProperty, System.Windows.Media.Brushes.Brown, "PostTextBox"));
+                emptyTrigger.Setters.Add(new Setter(TextBox.ForegroundProperty, System.Windows.Media.Brushes.White, "PostTextBox"));
+                emptyTrigger.Setters.Add(new Setter(TextBox.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), "PostTextBox"));
+                emptyTrigger.Setters.Add(new Setter(TextBox.FontWeightProperty, FontWeights.Bold, "PostTextBox"));
+                emptyTrigger.Setters.Add(new Setter(TextBox.FontSizeProperty, 10.0, "PostTextBox"));
+                var selectedTrigger = new DataTrigger() {
+                    Binding = new Binding("IsSelected"),
+                    Value = true
+                };
+                selectedTrigger.Setters.Add(new Setter(TextBox.ForegroundProperty, SystemColors.HighlightTextBrush, "PostTextBox"));
+                browseColumn.CellTemplate.Triggers.Add(selectedTrigger);
                 browseColumn.CellTemplate.Triggers.Add(emptyTrigger);
                 browseColumn.CellTemplate.Triggers.Add(nullTrigger);
-                browseColumn.CellTemplate.VisualTree = new FrameworkElementFactory(typeof(TextBlock), "PostTextBlock");
-                browseColumn.CellTemplate.VisualTree.SetBinding(TextBlock.TextProperty, new Binding(string.Format("Posts[{0}].Data", column.ColumnIdNumber - 1)));
+                browseColumn.CellTemplate.VisualTree = new FrameworkElementFactory(typeof(Border), null);
+                var textBox = new FrameworkElementFactory(typeof(TextBox), "PostTextBox");
+                textBox.SetBinding(TextBox.TextProperty, new Binding(string.Format("Posts[{0}].Data", column.ColumnIdNumber - 1)));
+                textBox.SetValue(TextBox.MaxLinesProperty, 1);
+                textBox.SetValue(TextBox.BorderThicknessProperty, new Thickness(0.0));
+                textBox.SetValue(TextBox.IsReadOnlyProperty, true);
+                textBox.SetValue(TextBox.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
+                browseColumn.CellTemplate.VisualTree.AppendChild(textBox);
                 gridView.Columns.Add(browseColumn);
             }
 
