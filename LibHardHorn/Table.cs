@@ -53,7 +53,7 @@ namespace HardHorn.Archiving
         /// <param name="xtable">The XML element to parse.</param>
         /// <param name="log">The logger.</param>
         /// <returns></returns>
-        public static Table Parse(ArchiveVersion archiveVersion, XElement xtable, ILogger log)
+        public static Table Parse(ArchiveVersion archiveVersion, XElement xtable, ILogger log, Action<Exception> callback = null)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
@@ -77,11 +77,15 @@ namespace HardHorn.Archiving
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af kolonnen '{0}' i tabellen '{1}': Typen '{2}' er ikke valid.", ex.Name, table.Name, ex.Type), LogLevel.ERROR);
                     (table.Columns as List<Column>).Add(new Column(table, ex.Name, DataType.UNDEFINED, false, null, "", ex.Id, int.Parse(ex.Id.Substring(1))));
+                    if (callback != null)
+                        callback(ex);
                 }
                 catch (ArchiveVersionColumnParsingException ex)
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", table.Name, ex.Message), LogLevel.ERROR);
                     (table.Columns as List<Column>).Add(new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", DataType.UNDEFINED, false, null, "", "", 0));
+                    if (callback != null)
+                        callback(ex);
                 }
             }
 

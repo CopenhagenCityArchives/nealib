@@ -318,7 +318,19 @@ namespace HardHorn.Analysis
         }
     }
 
-    public class ColumnAnalysis : INotifyPropertyChanged
+    public abstract class AnalysisErrorOccuredBase
+    {
+        public event AnalysisErrorOccuredEventHandler AnalysisErrorOccured;
+        public delegate void AnalysisErrorOccuredEventHandler(object sender, AnalysisErrorOccuredArgs e);
+        protected virtual void NotifyOfAnalysisErrorOccured(Test test)
+        {
+            if (AnalysisErrorOccured != null)
+                AnalysisErrorOccured(this, new AnalysisErrorOccuredArgs(test));
+        }
+    }
+
+
+    public class ColumnAnalysis : AnalysisErrorOccuredBase, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
@@ -352,6 +364,7 @@ namespace HardHorn.Analysis
                 {
                     ErrorCount++;
                     PropertyChanged(this, new PropertyChangedEventArgs("ErrorCount"));
+                    NotifyOfAnalysisErrorOccured(test);
                 }
             }
         }
@@ -392,7 +405,7 @@ namespace HardHorn.Analysis
                     break;
                 case DataType.DECIMAL:
                     var components = data.Split('.');
-                    if (components.Length > 0 && components[0][0] == '-')
+                    if (components.Length > 0 && components[0].Length > 0 && components[0][0] == '-')
                     {
                         components[0] = components[0].Substring(1);
                     }
@@ -478,6 +491,16 @@ namespace HardHorn.Analysis
             ErrorCount = 0;
             Tests.Clear();
         }
+    }
+
+    public class AnalysisErrorOccuredArgs : EventArgs
+    {
+        public AnalysisErrorOccuredArgs(Test test) {
+            Test = test;
+        }
+
+        public Test Test { get; set; }
+        public Test.Result Result { get; set; }
     }
 
     public class Analyzer

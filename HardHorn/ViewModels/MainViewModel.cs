@@ -13,6 +13,9 @@ using System.Dynamic;
 using System.Text.RegularExpressions;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace HardHorn.ViewModels
 {
@@ -26,23 +29,18 @@ namespace HardHorn.ViewModels
         TABLE_NOT_FOUND
     }
 
-    class LoadWorkerLogger : ILogger
+    class ProgressLogger : ILogger
     {
-        private BackgroundWorker _worker;
+        private IProgress<Tuple<string, LogLevel>> _progress;
 
         public void Log(string message, LogLevel level)
         {
-            dynamic state = new ExpandoObject();
-
-            state.Message = message;
-            state.LogLevel = level;
-
-            _worker.ReportProgress(0, state);
+            _progress.Report(new Tuple<string, LogLevel>(message, level));
         }
 
-        public LoadWorkerLogger(BackgroundWorker worker)
+        public ProgressLogger(ILogger logger)
         {
-            _worker = worker;
+            _progress = new Progress<Tuple<string, LogLevel>>(logItem => logger.Log(logItem.Item1, logItem.Item2));
         }
     }
 
@@ -230,10 +228,10 @@ namespace HardHorn.ViewModels
         Dictionary<string, TableViewModel> ListTableLookup = new Dictionary<string, TableViewModel>();
         public ObservableCollection<TableViewModel> TableViewModels { get; set; }
         public ObservableCollection<TableViewModel> FilteredTableViewModels { get; set; }
+        public ObservableCollection<ErrorViewModel> ErrorViewModels { get; set; }
+        Dictionary<string, ErrorViewModel> ErrorViewModelIndex { get; set; }
 
-        BackgroundWorker _loadWorker = new BackgroundWorker();
-        BackgroundWorker _testWorker = new BackgroundWorker();
-        BackgroundWorker _compareWorker = new BackgroundWorker();
+        CancellationTokenSource _testCts;
 
         Analyzer _analyzer;
         public Analyzer Analyzer { get { return _analyzer; } }
@@ -269,6 +267,8 @@ namespace HardHorn.ViewModels
         public MainViewModel()
         {
             TableViewModels = new ObservableCollection<TableViewModel>();
+            ErrorViewModels = new ObservableCollection<ErrorViewModel>();
+            ErrorViewModelIndex = new Dictionary<string, ErrorViewModel>();
             FilteredTableViewModels = new ObservableCollection<TableViewModel>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             TableComparisons = new ObservableCollection<TableComparison>();
@@ -293,23 +293,6 @@ namespace HardHorn.ViewModels
             }
 
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
-
-            // Setup test worker
-            _testWorker.DoWork += _testWorker_DoWork;
-            _testWorker.RunWorkerCompleted += _testWorker_RunWorkerCompleted;
-            _testWorker.ProgressChanged += _testWorker_ProgressChanged;
-            _testWorker.WorkerReportsProgress = true;
-            _testWorker.WorkerSupportsCancellation = true;
-
-            _loadWorker.DoWork += _loadWorker_DoWork;
-            _loadWorker.RunWorkerCompleted += _loadWorker_RunWorkerCompleted;
-            _loadWorker.ProgressChanged += _loadWorker_ProgressChanged;
-            _loadWorker.WorkerReportsProgress = true;
-
-            _compareWorker.DoWork += _compareWorker_DoWork;
-            _compareWorker.RunWorkerCompleted += _compareWorker_RunWorkerCompleted;
-            _compareWorker.ProgressChanged += _loadWorker_ProgressChanged;
-            _compareWorker.WorkerReportsProgress = true;
         }
         #endregion
 
@@ -402,290 +385,98 @@ namespace HardHorn.ViewModels
 
         #endregion
 
-        #region Background workers
-        private void _compareWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error != null)
-            {
-                Log(string.Format("Sammenligningen med '{0}' resulterede i en undtagelse af typen {1}, med beskeden '{2}'.", CompareLocation, e.Error.GetType().ToString(), e.Error.Message), LogLevel.ERROR);
-                return;
-            }
-
-            TableComparisons.Clear();
-            AddedTableComparisons.Clear();
-            RemovedTableComparisons.Clear();
-
-            foreach (var tc in e.Result as IEnumerable<TableComparison>)
-            {
-                TableComparisons.Add(tc);
-
-                if (tc.Removed)
-                    RemovedTableComparisons.Add(tc);
-
-                if (tc.Added)
-                    AddedTableComparisons.Add(tc);
-            }
-        }
-
-        private void _compareWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            e.Result = ArchiveVersion.CompareWithTables(ArchiveVersion.LoadTableIndex(ArchiveVersion, e.Argument as string, new LoadWorkerLogger(sender as BackgroundWorker)).ToList());
-        }
-
-
-        private void _loadWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            TableViewModels.Clear();
-            ListTableLookup.Clear();
-            Regexes.Clear();
-
-            WindowTitle = string.Format("{0} - HardHorn", ArchiveVersion.Id);
-
-            if (e.Error != null)
-            {
-                Log("En undtagelse forekom under indlæsningen af arkiveringsversionen, med følgende besked: " + e.Error.Message, LogLevel.ERROR);
-                return;
-            }
-
-            foreach (var table in ArchiveVersion.Tables)
-            {
-                var tableViewModel = new TableViewModel(table) { Errors = table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED) };
-                ListTableLookup.Add(table.Name, tableViewModel);
-                TableViewModels.Add(tableViewModel);
-            }
-            SelectedTableViewModelDataType = SelectedTableViewModelDataType;
-            TestLoaded = true;
-
-            _stats = new DataStatistics(TableViewModels.Select(lt => lt.Table).ToArray());
-            foreach (dynamic stat in _stats.DataTypeStatistics.Values)
-            {
-                stat.BarCharts = new ObservableCollection<ExpandoObject>();
-                foreach (var paramValues in stat.ParamValues)
-                {
-                    dynamic b = new ExpandoObject();
-                    b.Values = paramValues;
-                    b.BucketCount = 10;
-                    stat.BarCharts.Add(b);
-                }
-            }
-            NotifyOfPropertyChange("DataTypeStatistics");
-            Log("Statistik", LogLevel.SECTION);
-            foreach (var dataType in _stats.DataTypeStatistics.Keys)
-            {
-                Log(string.Format("Datatype {0}:", dataType.ToString()));
-                Log(string.Format("\tAntal kolonner: {0}", _stats.DataTypeStatistics[dataType].Count));
-                if (_stats.DataTypeStatistics[dataType].MinParams != null)
-                {
-                    Log(string.Format("\tMinimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MinParams)));
-                }
-                if (_stats.DataTypeStatistics[dataType].MaxParams != null)
-                {
-                    Log(string.Format("\tMaksimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MaxParams)));
-                }
-            }
-            Log("Indlæsning fuldført.", LogLevel.SECTION);
-
-            // Add to recent locations
-            if (Properties.Settings.Default.RecentLocations == null)
-            {
-                Properties.Settings.Default.RecentLocations = new ObservableCollection<string>();
-            }
-            var location = TestLocation;
-            var index = -1;
-            for (int i = 0; i < Properties.Settings.Default.RecentLocations.Count; i++)
-            {
-                var loc = Properties.Settings.Default.RecentLocations[i];
-                if (loc.ToLower() == TestLocation.ToLower())
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index != -1)
-            {
-                Properties.Settings.Default.RecentLocations.RemoveAt(index);
-            }
-            if (Properties.Settings.Default.RecentLocations.Count < 5)
-            {
-                Properties.Settings.Default.RecentLocations.Add(null);
-            }
-            TestLocation = location;
-
-            for (int i = Properties.Settings.Default.RecentLocations.Count - 1; i > 0; i--)
-            {
-                Properties.Settings.Default.RecentLocations[i] = Properties.Settings.Default.RecentLocations[i - 1];
-            }
-            Properties.Settings.Default.RecentLocations[0] = TestLocation;
-
-            Properties.Settings.Default.Save();
-            NotifyOfPropertyChange("RecentLocations");
-
-            SpecTables = "";
-        }
-
-        private void _loadWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            dynamic state = e.UserState;
-            Log(state.Message, state.LogLevel);
-        }
-
-        private void _loadWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var loadLogger = new LoadWorkerLogger(sender as BackgroundWorker);
-            _archiveVersion = ArchiveVersion.Load(e.Argument as string, loadLogger);
-            _analyzer = new Analyzer(_archiveVersion, loadLogger);
-        }
-
-        void _testWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            TestProgress = e.ProgressPercentage;
-
-            dynamic state = e.UserState;
-            TestWorkerUpdate type = state.Type;
-            Table table;
-
-            switch (type)
-            {
-                case TestWorkerUpdate.NEW_TABLE:
-                    table = state.Data as Table;
-                    if (table == null) return;
-                    Log(string.Format("Tester tabellen '{0}' ({1})", table.Name, table.Folder), LogLevel.SECTION);
-                    break;
-                case TestWorkerUpdate.UPDATE_TABLE_STATUS:
-                    table = state.Data as Table;
-                    if (table == null) return;
-                    var tableViewModel = ListTableLookup[table.Name];
-                    if (_analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
-                        tableViewModel.Errors = true;
-                    break;
-                case TestWorkerUpdate.TABLE_REPORT:
-                    var tableReport = state.Data as Dictionary<Column, ColumnAnalysis>;
-                    Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
-                        (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
-                    int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
-                    Log(string.Format("I alt: {0} fejl i {1} kolonner, {2} forslag.", errors.Item1, errors.Item2, suggestions));
-                    if (errors.Item1 > 0)
-                    {
-                        Log("Fejl:");
-                    }
-                    foreach (var columnAnalysis in tableReport.Values)
-                    {
-                        var column = columnAnalysis.Column;
-                        if (columnAnalysis.ErrorCount > 0)
-                        {
-                            Log(string.Format("\t- Felt '{0}' af typen '{1} {2}'", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter));
-                            foreach (var test in columnAnalysis.Tests)
-                            {
-                                if (test.ErrorCount == 0)
-                                    continue;
-
-                                Log(string.Format("\t\t- {0} ({1} forekomster)", test.GetType(), test.ErrorCount));
-                                int i = 0;
-                                foreach (var post in test.ErrorPosts)
-                                {
-                                    if (i >= Math.Min(10, test.ErrorCount))
-                                        break;
-
-                                    string pos = string.Format("({0}, {1})", post.Line, post.Position);
-                                    Log(string.Format("\t\t\t- {1} \"{0}\"", string.Join(Environment.NewLine + "\t\t\t" + string.Concat(Enumerable.Repeat(" ", pos.Length + 4)), (post.Data as string).Split(Environment.NewLine.ToCharArray())), pos));
-
-                                    i++;
-                                }
-                            }
-                        }
-                    }
-                    if (suggestions > 0)
-                    {
-                        Log("Forslag:");
-                    }
-                    foreach (var columnReport in tableReport.Values)
-                    {
-                        var column = columnReport.Column;
-                        var suggestion = columnReport.SuggestedType;
-                        if (suggestion == null)
-                            continue;
-
-                        Log(string.Format("\t- Felt '{0}' kan ændres: {1} {2} => {3} {4}", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter, suggestion.DataType, suggestion.Parameter));
-                    }
-
-                    break;
-                case TestWorkerUpdate.TEST_DONE:
-                    var totalErrors = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
-                    var errorTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
-                    var totalSuggestions = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
-                    var suggestionTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
-
-                    Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
-                    break;
-                case TestWorkerUpdate.TABLE_NOT_FOUND:
-                    table = state.Data;
-                    Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", table.Name, table.Folder), LogLevel.ERROR);
-                    break;
-            }
-        }
-
-        void _testWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            TestRunning = false;
-            foreach (var tableViewModel in TableViewModels)
-            {
-                tableViewModel.Busy = false;
-            }
-        }
-
-        void _testWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var worker = sender as BackgroundWorker;
-
-            // Count total rows
-            TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
-            DoneRows = 0;
-            int chunk = 10000;
-
-            foreach (var table in ArchiveVersion.Tables)
-            {
-                worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.NEW_TABLE, Data = table });
-                ListTableLookup[table.Name].Busy = true;
-                try
-                {
-                    using (var reader = table.GetReader())
-                    {
-                        int readRows = 0;
-                        do
-                        {
-                            if (worker.CancellationPending)
-                                return;
-                            Post[,] rows;
-                            readRows = reader.Read(out rows, chunk);
-                            if (worker.CancellationPending)
-                                return;
-                            _analyzer.AnalyzeRows(table, rows, readRows);
-                            worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.UPDATE_TABLE_STATUS, Data = table });
-                            DoneRows += readRows;
-                        } while (readRows == chunk);
-                    }
-                }
-                catch (FileNotFoundException)
-                {
-                    worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TABLE_NOT_FOUND, Data = table });
-                }
-                
-
-                worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TABLE_REPORT, Data = _analyzer.TestHierachy[table] });
-
-                foreach (var report in _analyzer.TestHierachy[table].Values)
-                {
-                    report.SuggestType();
-                    worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.COLUMN_REPORT, Data = report });
-                }
-                ListTableLookup[table.Name].Busy = false;
-                ListTableLookup[table.Name].Done = true;
-            }
-            worker.ReportProgress(100 * DoneRows / TotalRows, new { Type = TestWorkerUpdate.TEST_DONE, Data = (object)null });
-        }
-        #endregion
-
         #region Actions
+        public void OnArchiveVersionException(Exception ex)
+        {
+            if (ex is ArchiveVersionColumnParsingException)
+            {
+                if (ErrorViewModelIndex.ContainsKey("Kolonneindlæsningsfejl"))
+                {
+                    ErrorViewModelIndex["Kolonneindlæsningsfejl"].Count++;
+                }
+                else
+                {
+                    var error = new ErrorViewModel("Kolonneindlæsningsfejl");
+                    error.Count++;
+                    ErrorViewModelIndex["Kolonneindlæsningsfejl"] = error;
+                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
+                }
+            }
+            else if (ex is ArchiveVersionColumnTypeParsingException)
+            {
+                if (ErrorViewModelIndex.ContainsKey("Kolonnetypefejl"))
+                {
+                    ErrorViewModelIndex["Kolonnetypefejl"].Count++;
+                }
+                else
+                {
+                    var error = new ErrorViewModel("Kolonnetypefejl");
+                    error.Count++;
+                    ErrorViewModelIndex["Kolonnetypefejl"] = error;
+                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
+                }
+            }
+        }
+
+        public void OnTestError(object sender, AnalysisErrorOccuredArgs e)
+        {
+            var columnAnalysis = sender as ColumnAnalysis;
+
+            if (e.Test is Test.Blank)
+            {
+                var blank = e.Test as Test.Blank;
+                if (ErrorViewModelIndex.ContainsKey("Blanktegn"))
+                {
+                    ErrorViewModelIndex["Blanktegn"].Count++;
+                }
+                else
+                {
+                    var error = new ErrorViewModel("Blanktegn");
+                    error.Count++;
+                    ErrorViewModelIndex["Blanktegn"] = error;
+                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
+                }
+            }
+            else if (e.Test is Test.Overflow)
+            {
+                var overflow = e.Test as Test.Overflow;
+
+                var blank = e.Test as Test.Blank;
+                if (ErrorViewModelIndex.ContainsKey("Overskridelse"))
+                {
+                    ErrorViewModelIndex["Overskridelse"].Count++;
+                }
+                else
+                {
+                    var error = new ErrorViewModel("Overskridelse");
+                    error.Count++;
+                    ErrorViewModelIndex["Overskridelse"] = error;
+                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
+                }
+            }
+            else if (e.Test is Test.Pattern)
+            {
+                var pattern = e.Test as Test.Pattern;
+
+            }
+            else if (e.Test is Test.Underflow)
+            {
+                var underflow = e.Test as Test.Underflow;
+
+                if (ErrorViewModelIndex.ContainsKey("Underudfyldelse"))
+                {
+                    ErrorViewModelIndex["Underudfyldelse"].Count++;
+                }
+                else
+                {
+                    var error = new ErrorViewModel("Underudfyldelse");
+                    error.Count++;
+                    ErrorViewModelIndex["Underudfyldelse"] = error;
+                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
+                }
+            }
+        }
+
         public void BrowseNext()
         {
             if (CurrentTable == null)
@@ -863,18 +654,109 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public void LoadTables()
+        public async void LoadTables()
         {
-            if (_loadWorker.IsBusy)
-                return;
-
-            LogItems.Clear();
-
             if (Directory.Exists(TestLocation) && File.Exists(Path.Combine(TestLocation, "Indices", "tableIndex.xml")))
             {
+                TableViewModels.Clear();
+                ListTableLookup.Clear();
+                ErrorViewModels.Clear();
+                ErrorViewModelIndex.Clear();
+                Regexes.Clear();
+
                 TestLoaded = false;
                 Log(string.Format("Indlæser tabeller fra '{0}'", TestLocation), LogLevel.SECTION);
-                _loadWorker.RunWorkerAsync(TestLocation);
+                try
+                {
+                    var logger = new ProgressLogger(this);
+                    await Task.Run(() =>
+                    {
+                        _archiveVersion = ArchiveVersion.Load(TestLocation, logger, OnArchiveVersionException);
+                        _analyzer = new Analyzer(_archiveVersion, logger);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log("En undtagelse forekom under indlæsningen af arkiveringsversionen, med følgende besked: " + ex.Message, LogLevel.ERROR);
+                    return;
+                }
+
+                WindowTitle = string.Format("{0} - HardHorn", ArchiveVersion.Id);
+
+                foreach (var table in ArchiveVersion.Tables)
+                {
+                    var tableViewModel = new TableViewModel(table) { Errors = table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED) };
+                    ListTableLookup.Add(table.Name, tableViewModel);
+                    TableViewModels.Add(tableViewModel);
+                }
+                SelectedTableViewModelDataType = SelectedTableViewModelDataType;
+                TestLoaded = true;
+
+                _stats = new DataStatistics(TableViewModels.Select(lt => lt.Table).ToArray());
+                foreach (dynamic stat in _stats.DataTypeStatistics.Values)
+                {
+                    stat.BarCharts = new ObservableCollection<ExpandoObject>();
+                    foreach (var paramValues in stat.ParamValues)
+                    {
+                        dynamic b = new ExpandoObject();
+                        b.Values = paramValues;
+                        b.BucketCount = 10;
+                        stat.BarCharts.Add(b);
+                    }
+                }
+                NotifyOfPropertyChange("DataTypeStatistics");
+                Log("Statistik", LogLevel.SECTION);
+                foreach (var dataType in _stats.DataTypeStatistics.Keys)
+                {
+                    Log(string.Format("Datatype {0}:", dataType.ToString()));
+                    Log(string.Format("\tAntal kolonner: {0}", _stats.DataTypeStatistics[dataType].Count));
+                    if (_stats.DataTypeStatistics[dataType].MinParams != null)
+                    {
+                        Log(string.Format("\tMinimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MinParams)));
+                    }
+                    if (_stats.DataTypeStatistics[dataType].MaxParams != null)
+                    {
+                        Log(string.Format("\tMaksimumsparametre: {0}", string.Join(",", _stats.DataTypeStatistics[dataType].MaxParams)));
+                    }
+                }
+                Log("Indlæsning fuldført.", LogLevel.SECTION);
+
+                // Add to recent locations
+                if (Properties.Settings.Default.RecentLocations == null)
+                {
+                    Properties.Settings.Default.RecentLocations = new ObservableCollection<string>();
+                }
+                var location = TestLocation;
+                var index = -1;
+                for (int i = 0; i < Properties.Settings.Default.RecentLocations.Count; i++)
+                {
+                    var loc = Properties.Settings.Default.RecentLocations[i];
+                    if (loc.ToLower() == TestLocation.ToLower())
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                if (index != -1)
+                {
+                    Properties.Settings.Default.RecentLocations.RemoveAt(index);
+                }
+                if (Properties.Settings.Default.RecentLocations.Count < 5)
+                {
+                    Properties.Settings.Default.RecentLocations.Add(null);
+                }
+                TestLocation = location;
+
+                for (int i = Properties.Settings.Default.RecentLocations.Count - 1; i > 0; i--)
+                {
+                    Properties.Settings.Default.RecentLocations[i] = Properties.Settings.Default.RecentLocations[i - 1];
+                }
+                Properties.Settings.Default.RecentLocations[0] = TestLocation;
+
+                Properties.Settings.Default.Save();
+                NotifyOfPropertyChange("RecentLocations");
+
+                SpecTables = "";
             }
             else
             {
@@ -882,22 +764,31 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public void ToggleTest()
+        public async void ToggleTest()
         {
             if (TestRunning)
             {
-                _testWorker.CancelAsync();
-            } else
+                _testCts.Cancel();
+            }
+            else
             {
+                _testCts = new CancellationTokenSource();
+                var token = _testCts.Token;
+
                 foreach (var tableViewModel in TableViewModels)
                 {
                     tableViewModel.Busy = false;
                     tableViewModel.Done = false;
                 }
 
+                ErrorViewModels.Clear();
+
                 foreach (var table in _analyzer.TestHierachy.Values)
                     foreach (var columnAnalysis in table.Values)
+                    {
                         columnAnalysis.Clear();
+                        columnAnalysis.AnalysisErrorOccured += OnTestError;
+                    }
 
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
                 var regexList = new List<RegexTestViewModel>();
@@ -967,8 +858,151 @@ namespace HardHorn.ViewModels
                 {
                     tableViewModel.Errors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
                 }
-                _testWorker.RunWorkerAsync();
-                TestRunning = true;
+
+                IProgress<Table> updateTableProgress = new Progress<Table>(table =>
+                {
+                    if (table == null) return;
+                        var tableViewModel = ListTableLookup[table.Name];
+                        if (_analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
+                            tableViewModel.Errors = true;
+                });
+
+                IProgress<Table> showReportProgress = new Progress<Table>(table =>
+                {
+
+                    var tableReport = _analyzer.TestHierachy[table];
+                    Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
+                        (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
+                    int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
+                    Log(string.Format("I alt: {0} fejl i {1} kolonner, {2} forslag.", errors.Item1, errors.Item2, suggestions));
+                    if (errors.Item1 > 0)
+                    {
+                        Log("Fejl:");
+                    }
+                    foreach (var columnAnalysis in tableReport.Values)
+                    {
+                        var column = columnAnalysis.Column;
+                        if (columnAnalysis.ErrorCount > 0)
+                        {
+                            Log(string.Format("\t- Felt '{0}' af typen '{1} {2}'", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter));
+                            foreach (var test in columnAnalysis.Tests)
+                            {
+                                if (test.ErrorCount == 0)
+                                    continue;
+
+                                Log(string.Format("\t\t- {0} ({1} forekomster)", test.GetType(), test.ErrorCount));
+                                int i = 0;
+                                foreach (var post in test.ErrorPosts)
+                                {
+                                    if (i >= Math.Min(10, test.ErrorCount))
+                                        break;
+
+                                    string pos = string.Format("({0}, {1})", post.Line, post.Position);
+                                    Log(string.Format("\t\t\t- {1} \"{0}\"", string.Join(Environment.NewLine + "\t\t\t" + string.Concat(Enumerable.Repeat(" ", pos.Length + 4)), (post.Data as string).Split(Environment.NewLine.ToCharArray())), pos));
+
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+                    if (suggestions > 0)
+                    {
+                        Log("Forslag:");
+                    }
+                    foreach (var columnReport in tableReport.Values)
+                    {
+                        var column = columnReport.Column;
+                        var suggestion = columnReport.SuggestedType;
+                        if (suggestion == null)
+                            continue;
+
+                        Log(string.Format("\t- Felt '{0}' kan ændres: {1} {2} => {3} {4}", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter, suggestion.DataType, suggestion.Parameter));
+                    }
+                });
+
+                var logger = new ProgressLogger(this);
+
+                // Run test worker
+                try
+                {
+                    TestRunning = true;
+
+                    await Task.Run(() =>
+                    {
+                        // Count total rows
+                        TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
+                        DoneRows = 0;
+                        int chunk = 10000;
+
+                        foreach (var table in ArchiveVersion.Tables)
+                        {
+                            logger.Log(string.Format("Tester tabellen '{0}' ({1})", table.Name, table.Folder), LogLevel.SECTION);
+
+                            ListTableLookup[table.Name].Busy = true;
+                            try
+                            {
+                                using (var reader = table.GetReader())
+                                {
+                                    int readRows = 0;
+                                    do
+                                    {
+                                        if (token.IsCancellationRequested)
+                                            return;
+
+                                        Post[,] rows;
+                                        readRows = reader.Read(out rows, chunk);
+
+                                        if (token.IsCancellationRequested)
+                                            return;
+
+                                        _analyzer.AnalyzeRows(table, rows, readRows);
+
+                                        updateTableProgress.Report(table);
+
+                                        DoneRows += readRows;
+
+                                        TestProgress = (DoneRows * 100) / TotalRows;
+                                    } while (readRows == chunk);
+
+                                    // TODO: Check if number of rows in table adds up
+                                }
+                            }
+                            catch (FileNotFoundException)
+                            {
+                                logger.Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", table.Name, table.Folder), LogLevel.ERROR);
+                            }
+
+                            foreach (var report in _analyzer.TestHierachy[table].Values)
+                            {
+                                report.SuggestType();
+                            }
+
+                            showReportProgress.Report(table);
+
+                            ListTableLookup[table.Name].Busy = false;
+                            ListTableLookup[table.Name].Done = true;
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log(string.Format("En fejl af typen '{0}' opstod med beskeden: '{1}'. Testen afbrydes.", ex.GetType(), ex.Message), LogLevel.ERROR);
+                }
+                finally
+                {
+                    var totalErrors = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
+                    var errorTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
+                    var totalSuggestions = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
+                    var suggestionTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
+
+                    Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
+
+                    TestRunning = false;
+                    foreach (var tableViewModel in TableViewModels)
+                    {
+                        tableViewModel.Busy = false;
+                    }
+                }
             }
         }
 
@@ -1000,13 +1034,40 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public void Compare(string location)
+        public async void Compare(string location)
         {
             if (File.Exists(location))
             {
                 Log(string.Format("Sammenligner '{0}' med {1}.", location, ArchiveVersion.Id), LogLevel.SECTION);
                 TableComparisons.Clear();
-                _compareWorker.RunWorkerAsync(location);
+
+                try
+                {
+                    var logger = new ProgressLogger(this);
+                    IEnumerable<TableComparison> comparisons = await Task.Run(() =>
+                    {
+                        return ArchiveVersion.CompareWithTables(ArchiveVersion.LoadTableIndex(ArchiveVersion, location, logger));
+                    });
+
+                    TableComparisons.Clear();
+                    AddedTableComparisons.Clear();
+                    RemovedTableComparisons.Clear();
+
+                    foreach (var tc in comparisons)
+                    {
+                        TableComparisons.Add(tc);
+
+                        if (tc.Removed)
+                            RemovedTableComparisons.Add(tc);
+
+                        if (tc.Added)
+                            AddedTableComparisons.Add(tc);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log(string.Format("Sammenligningen med '{0}' resulterede i en undtagelse af typen {1}, med beskeden '{2}'.", CompareLocation, ex.GetType().ToString(), ex.Message), LogLevel.ERROR);
+                }
             }
             else
             {

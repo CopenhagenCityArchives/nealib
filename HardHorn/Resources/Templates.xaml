@@ -1,19 +1,22 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:HardHorn"
-                    xmlns:vm="clr-namespace:HardHorn.ViewModels"
+                    xmlns:local="clr-namespace:HardHorn;assembly=HardHorn"
+                    xmlns:vm="clr-namespace:HardHorn.ViewModels;assembly=HardHorn"
+                    xmlns:ctl="clr-namespace:HardHorn.Controls;assembly=HardHorn"
                     xmlns:log="clr-namespace:HardHorn.Logging;assembly=LibHardHorn"
-                    xmlns:cal="http://www.caliburnproject.org"
                     xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
-                    xmlns:ctl="clr-namespace:HardHorn.Controls">
+                    xmlns:cal="http://www.caliburnproject.org">
     <local:HasErrorsColorConverter x:Key="HasErrorsColorConverter" />
     <local:ErrorCountColorConverter x:Key="ErrorCountColorConverter" />
     <local:DataTypeToStringConverter x:Key="DataTypeToStringConverter" />
     <local:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
     <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
-    <DataTemplate x:Key="PostTemplate">
-        <TextBlock Foreground="Red" Text="{Binding Data}"></TextBlock>
+    <DataTemplate x:Key="ErrorViewTemplate">
+        <StackPanel>
+            <TextBlock Text="{Binding Name}"></TextBlock>
+            <TextBlock Text="{Binding Count}"></TextBlock>
+        </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="ComparedTableItemTemplate">

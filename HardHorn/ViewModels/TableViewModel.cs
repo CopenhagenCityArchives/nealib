@@ -11,8 +11,15 @@ using System.Threading.Tasks;
 
 namespace HardHorn.ViewModels
 {
-    class BrowseRow
+    class BrowseRow : PropertyChangedBase
     {
+        bool _isSelected;
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set { _isSelected = value; NotifyOfPropertyChange("IsSelected"); }
+        }
+
         public List<Post> Posts { get; private set; }
 
         public BrowseRow(Post[] posts)
