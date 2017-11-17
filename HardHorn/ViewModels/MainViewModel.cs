@@ -19,16 +19,6 @@ using System.Threading;
 
 namespace HardHorn.ViewModels
 {
-    public enum TestWorkerUpdate
-    {
-        NEW_TABLE,
-        UPDATE_TABLE_STATUS,
-        TEST_DONE,
-        COLUMN_REPORT,
-        TABLE_REPORT,
-        TABLE_NOT_FOUND
-    }
-
     class ProgressLogger : ILogger
     {
         private IProgress<Tuple<string, LogLevel>> _progress;
@@ -170,46 +160,22 @@ namespace HardHorn.ViewModels
                 SpecTablesMissing = "";
                 SpecTablesUndefined = "";
 
-                bool matched;
+                if (ArchiveVersion == null)
+                    return;
 
-                foreach (var name in value.Split('\n'))
+                foreach (var spec in ArchiveVersion.CheckTableSpec(value.Split(Environment.NewLine.ToCharArray()).Select(s => s.Trim())))
                 {
-                    if (name.Trim().Length > 0)
+                    switch (spec.Item1)
                     {
-                        matched = false;
-                        foreach (var table in TableViewModels)
-                        {
-                            if (table.Table.Name.ToLower() == name.Trim().ToLower())
-                            {
-                                SpecTablesMatching += name.Trim() + "\n";
-                                matched = true;
-                            }
-                        }
-
-                        if (!matched)
-                        {
-                            SpecTablesMissing += name.Trim() + "\n";
-                        }
-                    }
-                }
-
-                foreach (var table in TableViewModels)
-                {
-                    matched = false;
-                    foreach (var name in value.Split('\n'))
-                    {
-                        if (name.Trim().Length > 0)
-                        {
-                            if (table.Table.Name.ToLower() == name.Trim().ToLower())
-                            {
-                                matched = true;
-                            }
-                        }
-                    }
-
-                    if (!matched)
-                    {
-                        SpecTablesUndefined += table.Table.Name + "\n";
+                        case ArchiveVersion.TableSpecStatus.SPEC_MATCHING:
+                            SpecTablesMatching += spec.Item2 + Environment.NewLine;
+                            break;
+                        case ArchiveVersion.TableSpecStatus.SPEC_MISSING:
+                            SpecTablesMissing += spec.Item2 + Environment.NewLine;
+                            break;
+                        case ArchiveVersion.TableSpecStatus.SPEC_UNDEFINED:
+                            SpecTablesUndefined += spec.Item2 + Environment.NewLine;
+                            break;
                     }
                 }
 
@@ -228,8 +194,9 @@ namespace HardHorn.ViewModels
         Dictionary<string, TableViewModel> ListTableLookup = new Dictionary<string, TableViewModel>();
         public ObservableCollection<TableViewModel> TableViewModels { get; set; }
         public ObservableCollection<TableViewModel> FilteredTableViewModels { get; set; }
-        public ObservableCollection<ErrorViewModel> ErrorViewModels { get; set; }
-        Dictionary<string, ErrorViewModel> ErrorViewModelIndex { get; set; }
+        public ObservableCollection<ErrorViewModelBase> ErrorViewModels { get; set; }
+        Dictionary<AnalysisTestType, ErrorViewModelBase> TestErrorViewModelIndex { get; set; }
+        Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
 
         CancellationTokenSource _testCts;
 
@@ -267,8 +234,9 @@ namespace HardHorn.ViewModels
         public MainViewModel()
         {
             TableViewModels = new ObservableCollection<TableViewModel>();
-            ErrorViewModels = new ObservableCollection<ErrorViewModel>();
-            ErrorViewModelIndex = new Dictionary<string, ErrorViewModel>();
+            ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
+            TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
+            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             FilteredTableViewModels = new ObservableCollection<TableViewModel>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             TableComparisons = new ObservableCollection<TableComparison>();
@@ -284,12 +252,9 @@ namespace HardHorn.ViewModels
             }
             else
             {
-                SelectedTests = GetDefaultSelectedTests();
-                if (SelectedTests == null)
-                {
-                    SelectedTests = TestSelection.GetFullSelection();
-                    SetDefaultSelectedTests();
-                }
+                //SelectedTests = GetDefaultSelectedTests();
+                SelectedTests = TestSelection.GetFullSelection();
+                SetDefaultSelectedTests();
             }
 
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
@@ -388,93 +353,53 @@ namespace HardHorn.ViewModels
         #region Actions
         public void OnArchiveVersionException(Exception ex)
         {
-            if (ex is ArchiveVersionColumnParsingException)
+            ErrorViewModelBase errorViewModel;
+
+            if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
             {
-                if (ErrorViewModelIndex.ContainsKey("Kolonneindlæsningsfejl"))
+                if (ex is ArchiveVersionColumnParsingException)
                 {
-                    ErrorViewModelIndex["Kolonneindlæsningsfejl"].Count++;
+                    errorViewModel = new ColumnParsingErrorViewModel();
+                }
+                else if (ex is ArchiveVersionColumnTypeParsingException)
+                {
+                    errorViewModel = new ColumnTypeParsingErrorViewModel();
                 }
                 else
                 {
-                    var error = new ErrorViewModel("Kolonneindlæsningsfejl");
-                    error.Count++;
-                    ErrorViewModelIndex["Kolonneindlæsningsfejl"] = error;
-                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
+                    return;
                 }
+                
+                LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
+                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
+                
             }
-            else if (ex is ArchiveVersionColumnTypeParsingException)
+            else
             {
-                if (ErrorViewModelIndex.ContainsKey("Kolonnetypefejl"))
-                {
-                    ErrorViewModelIndex["Kolonnetypefejl"].Count++;
-                }
-                else
-                {
-                    var error = new ErrorViewModel("Kolonnetypefejl");
-                    error.Count++;
-                    ErrorViewModelIndex["Kolonnetypefejl"] = error;
-                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
-                }
+                errorViewModel = LoadingErrorViewModelIndex[ex.GetType()];
             }
+
+            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
         }
 
         public void OnTestError(object sender, AnalysisErrorOccuredArgs e)
         {
             var columnAnalysis = sender as ColumnAnalysis;
 
-            if (e.Test is Test.Blank)
-            {
-                var blank = e.Test as Test.Blank;
-                if (ErrorViewModelIndex.ContainsKey("Blanktegn"))
-                {
-                    ErrorViewModelIndex["Blanktegn"].Count++;
-                }
-                else
-                {
-                    var error = new ErrorViewModel("Blanktegn");
-                    error.Count++;
-                    ErrorViewModelIndex["Blanktegn"] = error;
-                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
-                }
-            }
-            else if (e.Test is Test.Overflow)
-            {
-                var overflow = e.Test as Test.Overflow;
+            ErrorViewModelBase errorViewModel;
 
-                var blank = e.Test as Test.Blank;
-                if (ErrorViewModelIndex.ContainsKey("Overskridelse"))
-                {
-                    ErrorViewModelIndex["Overskridelse"].Count++;
-                }
-                else
-                {
-                    var error = new ErrorViewModel("Overskridelse");
-                    error.Count++;
-                    ErrorViewModelIndex["Overskridelse"] = error;
-                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
-                }
-            }
-            else if (e.Test is Test.Pattern)
+            if (!TestErrorViewModelIndex.ContainsKey(e.Test.Type))
             {
-                var pattern = e.Test as Test.Pattern;
-
+                errorViewModel = new TestErrorViewModel(e.Test.Type);
+                TestErrorViewModelIndex[e.Test.Type] = errorViewModel;
+                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
             }
-            else if (e.Test is Test.Underflow)
+            else
             {
-                var underflow = e.Test as Test.Underflow;
-
-                if (ErrorViewModelIndex.ContainsKey("Underudfyldelse"))
-                {
-                    ErrorViewModelIndex["Underudfyldelse"].Count++;
-                }
-                else
-                {
-                    var error = new ErrorViewModel("Underudfyldelse");
-                    error.Count++;
-                    ErrorViewModelIndex["Underudfyldelse"] = error;
-                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(error));
-                }
+                errorViewModel = TestErrorViewModelIndex[e.Test.Type];
             }
+
+            errorViewModel.Add(e);
         }
 
         public void BrowseNext()
@@ -661,7 +586,7 @@ namespace HardHorn.ViewModels
                 TableViewModels.Clear();
                 ListTableLookup.Clear();
                 ErrorViewModels.Clear();
-                ErrorViewModelIndex.Clear();
+                TestErrorViewModelIndex.Clear();
                 Regexes.Clear();
 
                 TestLoaded = false;
@@ -781,8 +706,6 @@ namespace HardHorn.ViewModels
                     tableViewModel.Done = false;
                 }
 
-                ErrorViewModels.Clear();
-
                 foreach (var table in _analyzer.TestHierachy.Values)
                     foreach (var columnAnalysis in table.Values)
                     {
@@ -815,16 +738,16 @@ namespace HardHorn.ViewModels
                                     Test test;
                                     switch (testTypeSelection.TestType)
                                     {
-                                        case TestSelectionType.BLANK:
+                                        case AnalysisTestType.BLANK:
                                             test = new Test.Blank();
                                             break;
-                                        case TestSelectionType.OVERFLOW:
+                                        case AnalysisTestType.OVERFLOW:
                                             test = new Test.Overflow();
                                             break;
-                                        case TestSelectionType.UNDERFLOW:
+                                        case AnalysisTestType.UNDERFLOW:
                                             test = new Test.Underflow();
                                             break;
-                                        case TestSelectionType.FORMAT:
+                                        case AnalysisTestType.FORMAT:
                                             switch (dataTypeSelection.DataType)
                                             {
                                                 case DataType.TIMESTAMP:

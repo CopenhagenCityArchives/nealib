@@ -83,17 +83,17 @@ namespace HardHorn
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var error = value as ViewModels.TestSelectionType?;
+            var error = value as AnalysisTestType?;
 
             switch (error)
             {
-                case ViewModels.TestSelectionType.UNDERFLOW:
+                case AnalysisTestType.UNDERFLOW:
                     return "Underudfyldelse";
-                case ViewModels.TestSelectionType.OVERFLOW:
+                case AnalysisTestType.OVERFLOW:
                     return "Overskridelse";
-                case ViewModels.TestSelectionType.BLANK:
+                case AnalysisTestType.BLANK:
                     return "Foran- eller efterstillede blanktegn";
-                case ViewModels.TestSelectionType.FORMAT:
+                case AnalysisTestType.FORMAT:
                     return "Formateringsfejl";
                 default:
                     return string.Empty;
@@ -105,7 +105,7 @@ namespace HardHorn
             throw new NotImplementedException();
         }
 
-        public static string ConvertErrorType(AnalysisErrorType type)
+        public static string ConvertErrorType(AnalysisTestType type)
         {
             return (new AnalysisErrorTypeToStringConverter()).Convert(type, typeof(string), null, CultureInfo.CurrentCulture) as string;
         }

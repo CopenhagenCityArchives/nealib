@@ -44,7 +44,7 @@ namespace HardHorn.ViewModels
     [Serializable()]
     public class TestTypeSelection : INotifyPropertyChanged, IEnumerable<DataTypeSelection>
     {
-        public TestSelectionType TestType { get; set; }
+        public Analysis.AnalysisTestType TestType { get; set; }
         List<DataTypeSelection> _dataTypeSelections;
 
         [field:NonSerialized]
@@ -125,7 +125,7 @@ namespace HardHorn.ViewModels
             _dataTypeSelections = new List<DataTypeSelection>();
         }
 
-        public TestTypeSelection(TestSelectionType testType)
+        public TestTypeSelection(Analysis.AnalysisTestType testType)
         {
             TestType = testType;
             _dataTypeSelections = new List<DataTypeSelection>();
@@ -226,7 +226,7 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public TestSelectionCategory(string name, DataType[] dataTypes, TestSelectionType[] testTypes)
+        public TestSelectionCategory(string name, DataType[] dataTypes, Analysis.AnalysisTestType[] testTypes)
         {
             Name = name;
             _testTypeSelections = new List<TestTypeSelection>();
@@ -243,12 +243,6 @@ namespace HardHorn.ViewModels
                 Add(testTypeSelection);
             }
         }
-    }
-
-    [Serializable()]
-    public enum TestSelectionType
-    {
-        UNDERFLOW, OVERFLOW, FORMAT, BLANK
     }
 
     [Serializable()]
@@ -285,13 +279,13 @@ namespace HardHorn.ViewModels
             var testSelection = new TestSelection();
             testSelection.Add(new TestSelectionCategory("Strengtyper",
                 new DataType[] { DataType.CHARACTER, DataType.CHARACTER_VARYING, DataType.NATIONAL_CHARACTER, DataType.NATIONAL_CHARACTER_VARYING },
-                new TestSelectionType[] { TestSelectionType.OVERFLOW, TestSelectionType.UNDERFLOW, TestSelectionType.BLANK }));
+                new Analysis.AnalysisTestType[] { Analysis.AnalysisTestType.OVERFLOW, Analysis.AnalysisTestType.UNDERFLOW, Analysis.AnalysisTestType.BLANK }));
             testSelection.Add(new TestSelectionCategory("Tidstyper",
                 new DataType[] { DataType.TIME, DataType.TIME_WITH_TIME_ZONE, DataType.TIMESTAMP, DataType.TIMESTAMP_WITH_TIME_ZONE, DataType.DATE, DataType.INTERVAL },
-                new TestSelectionType[] { TestSelectionType.OVERFLOW, TestSelectionType.FORMAT }));
+                new Analysis.AnalysisTestType[] { Analysis.AnalysisTestType.OVERFLOW, Analysis.AnalysisTestType.FORMAT }));
             testSelection.Add(new TestSelectionCategory("Decimaltalstyper",
                 new DataType[] { DataType.DECIMAL, DataType.DOUBLE_PRECISION, DataType.FLOAT, DataType.REAL },
-                new TestSelectionType[] { TestSelectionType.OVERFLOW }));
+                new Analysis.AnalysisTestType[] { Analysis.AnalysisTestType.OVERFLOW }));
             return testSelection;
         }
 

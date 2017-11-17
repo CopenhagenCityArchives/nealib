@@ -13,7 +13,7 @@ using System.Collections.ObjectModel;
 
 namespace HardHorn.Analysis
 {
-    public enum AnalysisErrorType
+    public enum AnalysisTestType
     {
         OVERFLOW,
         UNDERFLOW,
@@ -43,7 +43,7 @@ namespace HardHorn.Analysis
         }
 
         public int ErrorCount { get; private set; }
-        public abstract string Name { get; }
+        public abstract AnalysisTestType Type { get; }
 
         List<Post> _posts = new List<Post>();
         public IEnumerable<Post> ErrorPosts { get { return _posts; } }
@@ -88,7 +88,7 @@ namespace HardHorn.Analysis
                 }
 
                 return Result.OKAY;
-            }, "DATE format");
+            }, AnalysisTestType.FORMAT);
         }
 
         public static Test TimeFormatTest()
@@ -104,7 +104,7 @@ namespace HardHorn.Analysis
                 }
 
                 return Result.OKAY;
-            }, "TIME format");
+            }, AnalysisTestType.FORMAT);
         }
 
         public static Test TimeWithTimeZoneTest()
@@ -131,7 +131,7 @@ namespace HardHorn.Analysis
                 }
 
                 return Result.OKAY;
-            }, "TIME format");
+            }, AnalysisTestType.FORMAT);
         }
 
         public static Test TimestampWithTimeZoneFormatTest()
@@ -161,7 +161,7 @@ namespace HardHorn.Analysis
                 }
 
                 return Result.OKAY;
-            }, "TIMESTAMP WITH TIME ZONE format");
+            }, AnalysisTestType.FORMAT);
         }
 
         public static Test TimestampFormatTest()
@@ -181,13 +181,13 @@ namespace HardHorn.Analysis
                 }
 
                 return Result.OKAY;
-            }, "TIMESTAMP format");
+            }, AnalysisTestType.FORMAT);
         }
         #endregion
 
         public class Overflow : Test
         {
-            public override string Name { get { return "Overskridelse"; } }
+            public override AnalysisTestType Type { get { return AnalysisTestType.OVERFLOW; } }
 
             public override Result GetResult(Post post, Column column)
             {
@@ -252,7 +252,7 @@ namespace HardHorn.Analysis
 
         public class Underflow : Test
         {
-            public override string Name { get { return "Underudfyldelse"; } }
+            public override AnalysisTestType Type { get { return AnalysisTestType.UNDERFLOW; } }
 
             public override Result GetResult(Post post, Column column)
             {
@@ -270,7 +270,7 @@ namespace HardHorn.Analysis
 
         public class Blank : Test
         {
-            public override string Name { get { return "Blanktegn"; } }
+            public override AnalysisTestType Type { get { return AnalysisTestType.BLANK; } }
 
             bool IsWhitespace(char c)
             {
@@ -285,17 +285,17 @@ namespace HardHorn.Analysis
 
         public class Pattern : Test
         {
-            string _name;
-            public override string Name { get { return _name; } }
+            AnalysisTestType _type;
+            public override AnalysisTestType Type { get { return _type; } }
 
             public Regex Regex { get; private set; }
             public Func<MatchCollection, Result> HandleMatches { get; private set; }
 
-            public Pattern(Regex regex, Func<MatchCollection, Result> handleMatches = null, string name = null)
+            public Pattern(Regex regex, Func<MatchCollection, Result> handleMatches = null, AnalysisTestType type = AnalysisTestType.REGEX)
             {
                 Regex = regex;
                 HandleMatches = handleMatches;
-                _name = name ?? regex.ToString();
+                _type = type;
             }
 
             public override Result GetResult(Post post, Column column)
@@ -322,10 +322,10 @@ namespace HardHorn.Analysis
     {
         public event AnalysisErrorOccuredEventHandler AnalysisErrorOccured;
         public delegate void AnalysisErrorOccuredEventHandler(object sender, AnalysisErrorOccuredArgs e);
-        protected virtual void NotifyOfAnalysisErrorOccured(Test test)
+        protected virtual void NotifyOfAnalysisErrorOccured(Test test, IEnumerable<Post> posts, Column column)
         {
             if (AnalysisErrorOccured != null)
-                AnalysisErrorOccured(this, new AnalysisErrorOccuredArgs(test));
+                AnalysisErrorOccured(this, new AnalysisErrorOccuredArgs(test, posts, column));
         }
     }
 
@@ -333,9 +333,16 @@ namespace HardHorn.Analysis
     public class ColumnAnalysis : AnalysisErrorOccuredBase, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
+        void NotifyOfPropertyChanged(string propertyName)
+        {
+            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         Test _selectedTest;
         public Test SelectedTest { get { return _selectedTest; } set { _selectedTest = Tests.IndexOf(value) == -1 ? _selectedTest : value; PropertyChanged(this, new PropertyChangedEventArgs("SelectedTest")); } }
+
+        List<Post> _errorPostCache = new List<Post>();
+        DateTime _lastErrorsEventTime = DateTime.Now;
 
         public int ErrorCount { get; private set; }
         public List<Test> Tests { get; private set; }
@@ -363,8 +370,16 @@ namespace HardHorn.Analysis
                 if (result == Test.Result.ERROR)
                 {
                     ErrorCount++;
-                    PropertyChanged(this, new PropertyChangedEventArgs("ErrorCount"));
-                    NotifyOfAnalysisErrorOccured(test);
+                    
+                    _errorPostCache.Add(post);
+                    TimeSpan diff = DateTime.Now - _lastErrorsEventTime;
+                    if (_errorPostCache.Count == 10000 || diff.Seconds > 2)
+                    {
+                        NotifyOfAnalysisErrorOccured(test, new List<Post>(_errorPostCache), Column);
+                        PropertyChanged(this, new PropertyChangedEventArgs("ErrorCount"));
+                        _lastErrorsEventTime = DateTime.Now;
+                        _errorPostCache.Clear();
+                    }
                 }
             }
         }
@@ -483,7 +498,7 @@ namespace HardHorn.Analysis
                     break;
             }
 
-            PropertyChanged(this, new PropertyChangedEventArgs("SuggestedType"));
+            NotifyOfPropertyChanged("SuggestedType");
         }
 
         public void Clear()
@@ -495,12 +510,16 @@ namespace HardHorn.Analysis
 
     public class AnalysisErrorOccuredArgs : EventArgs
     {
-        public AnalysisErrorOccuredArgs(Test test) {
+        public AnalysisErrorOccuredArgs(Test test, IEnumerable<Post> posts, Column column) {
+            Column = column;
+            Posts = posts;
             Test = test;
         }
 
         public Test Test { get; set; }
         public Test.Result Result { get; set; }
+        public Column Column { get; set; }
+        public IEnumerable<Post> Posts { get; set; }
     }
 
     public class Analyzer

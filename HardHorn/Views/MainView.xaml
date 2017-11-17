@@ -439,7 +439,7 @@
                                         <TextBlock>
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}{0} ({1})">
-                                                    <Binding Path="Name" />
+                                                    <Binding Path="Type" />
                                                     <Binding Path="ErrorCount" />
                                                 </MultiBinding>
                                             </TextBlock.Text>
@@ -494,7 +494,17 @@
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 
-                    <ListView ItemsSource="{Binding ErrorViewModels}" ItemTemplate="{StaticResource ErrorViewTemplate}"></ListView>
+                    <ListView x:Name="ErrorViewModelList" ItemsSource="{Binding ErrorViewModels}" ItemTemplate="{StaticResource ErrorViewTemplate}"></ListView>
+                    <ListView Grid.Column="1" ItemsSource="{Binding Path=SelectedItem.Subjects, ElementName=ErrorViewModelList}">
+                        <ListView.Resources>
+                            <DataTemplate DataType="{x:Type av:ArchiveVersionColumnParsingException}">
+                                <TextBlock Text="{Binding Message}"></TextBlock>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type av:ArchiveVersionColumnTypeParsingException}">
+                                <TextBlock Text="{Binding Message}"></TextBlock>
+                            </DataTemplate>
+                        </ListView.Resources>
+                    </ListView>
                 </Grid>
             </TabItem>
             

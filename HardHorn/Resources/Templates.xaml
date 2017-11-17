@@ -14,7 +14,7 @@
 
     <DataTemplate x:Key="ErrorViewTemplate">
         <StackPanel>
-            <TextBlock Text="{Binding Name}"></TextBlock>
+            <TextBlock Text="{Binding Header}"></TextBlock>
             <TextBlock Text="{Binding Count}"></TextBlock>
         </StackPanel>
     </DataTemplate>

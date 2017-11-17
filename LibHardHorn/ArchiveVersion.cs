@@ -269,5 +269,59 @@ namespace HardHorn.Archiving
                 }
             }
         }
+
+
+        public enum TableSpecStatus
+        {
+            SPEC_MATCHING,
+            SPEC_MISSING,
+            SPEC_UNDEFINED
+        }
+
+        public IEnumerable<Tuple<TableSpecStatus, string>> CheckTableSpec(IEnumerable<string> specTableNames)
+        {
+            bool matched;
+
+            foreach (var name in specTableNames)
+            {
+                if (name.Trim().Length > 0)
+                {
+                    matched = false;
+                    foreach (var table in Tables)
+                    {
+                        if (table.Name.ToLower() == name.Trim().ToLower())
+                        {
+                            yield return new Tuple<TableSpecStatus, string>(TableSpecStatus.SPEC_MATCHING, table.Name);
+                            matched = true;
+                        }
+                    }
+
+                    if (!matched)
+                    {
+                        yield return new Tuple<TableSpecStatus, string>(TableSpecStatus.SPEC_MISSING, name);
+                    }
+                }
+            }
+
+            foreach (var table in Tables)
+            {
+                matched = false;
+                foreach (var name in specTableNames)
+                {
+                    if (name.Trim().Length > 0)
+                    {
+                        if (table.Name.ToLower() == name.Trim().ToLower())
+                        {
+                            matched = true;
+                        }
+                    }
+                }
+
+                if (!matched)
+                {
+                    yield return new Tuple<TableSpecStatus, string>(TableSpecStatus.SPEC_UNDEFINED, table.Name);
+                }
+            }
+        }
     }
 }

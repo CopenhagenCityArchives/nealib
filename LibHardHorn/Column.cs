@@ -11,9 +11,12 @@ namespace HardHorn.Archiving
     {
         public XElement Element { get; set; }
 
-        public ArchiveVersionColumnParsingException(string message, XElement element) : base(message)
+        public Table Table { get; set; }
+
+        public ArchiveVersionColumnParsingException(string message, XElement element, Table table) : base(message)
         {
             Element = element;
+            Table = table;
         }
     }
 
@@ -23,7 +26,7 @@ namespace HardHorn.Archiving
         public string Type { get; set; }
         public string Id { get; set; }
 
-        public ArchiveVersionColumnTypeParsingException(string message, string id, string name, string type, XElement element) : base(message, element)
+        public ArchiveVersionColumnTypeParsingException(string message, string id, string name, string type, XElement element, Table table) : base(message, element, table)
         {
             Name = name;
             Type = type;
@@ -352,7 +355,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column name.", xcolumn);
+                throw new ArchiveVersionColumnParsingException("Could not read column name.", xcolumn, table);
             }
             try
             {
@@ -360,7 +363,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column datatype.", xcolumn);
+                throw new ArchiveVersionColumnParsingException("Could not read column datatype.", xcolumn, table);
             }
             try
             {
@@ -368,7 +371,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column nullable value.", xcolumn);
+                throw new ArchiveVersionColumnParsingException("Could not read column nullable value.", xcolumn, table);
             }
             try
             {
@@ -376,7 +379,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column description.", xcolumn);
+                throw new ArchiveVersionColumnParsingException("Could not read column description.", xcolumn, table);
             }
             try
             {
@@ -384,14 +387,14 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column ID.", xcolumn);
+                throw new ArchiveVersionColumnParsingException("Could not read column ID.", xcolumn, table);
             }
 
             string name;
             if (xname.Value.Length > 0)
                 name = xname.Value;
             else
-                throw new ArchiveVersionColumnParsingException("Column name has length 0.", xcolumn);
+                throw new ArchiveVersionColumnParsingException("Column name has length 0.", xcolumn, table);
 
             bool nullable;
             // parse nullable
@@ -401,7 +404,7 @@ namespace HardHorn.Archiving
                 nullable = false;
             else
             {
-                throw new ArchiveVersionColumnParsingException("Column has invalid nullable value.", xnullable);
+                throw new ArchiveVersionColumnParsingException("Column has invalid nullable value.", xnullable, table);
             }
 
             string desc = xdesc.Value;
@@ -435,9 +438,9 @@ namespace HardHorn.Archiving
             else if (stype.StartsWith("SMALL INTEGER"))
                 dataType = DataType.SMALL_INTEGER;
             // Decimal types
-            else if (stype.StartsWith("NUMERIC") && ParseParam(1, 2, stype.Substring(7), out param, out usedDefault))
+            else if (stype.StartsWith("NUMERIC") && ParseParam(2, stype.Substring(7), out param, out usedDefault))
                 dataType = DataType.NUMERIC;
-            else if (stype.StartsWith("DECIMAL") && ParseParam(1, 2, stype.Substring(7), out param, out usedDefault))
+            else if (stype.StartsWith("DECIMAL") && ParseParam(2, stype.Substring(7), out param, out usedDefault))
                 dataType = DataType.DECIMAL;
             else if (stype.StartsWith("FLOAT") && ParseParam(1, stype.Substring(5), out param, out usedDefault))
                 dataType = DataType.FLOAT;
@@ -470,7 +473,7 @@ namespace HardHorn.Archiving
                 column = new Column(table, name, dataType.Value, nullable, param, desc, colId, colIdNum);
 
             if (column == null)
-                throw new ArchiveVersionColumnTypeParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", colId, name, stype, xtype);
+                throw new ArchiveVersionColumnTypeParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", colId, name, stype, xtype, table);
             else
                 return column;
         }
