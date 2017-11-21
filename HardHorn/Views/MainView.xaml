@@ -494,14 +494,49 @@
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 
-                    <ListView x:Name="ErrorViewModelList" ItemsSource="{Binding ErrorViewModels}" ItemTemplate="{StaticResource ErrorViewTemplate}"></ListView>
+                    <ListView x:Name="ErrorViewModelList" ItemsSource="{Binding ErrorViewModels}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Fejltype" DisplayMemberBinding="{Binding Header}"></GridViewColumn>
+                                <GridViewColumn Header="Antal" DisplayMemberBinding="{Binding Count}"></GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
                     <ListView Grid.Column="1" ItemsSource="{Binding Path=SelectedItem.Subjects, ElementName=ErrorViewModelList}">
                         <ListView.Resources>
                             <DataTemplate DataType="{x:Type av:ArchiveVersionColumnParsingException}">
-                                <TextBlock Text="{Binding Message}"></TextBlock>
+                                <StackPanel Margin="5">
+                                    <TextBlock Text="{Binding Table.Name}"></TextBlock>
+                                    <TextBlock Text="{Binding Element}"></TextBlock>
+                                </StackPanel>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type av:ArchiveVersionColumnTypeParsingException}">
-                                <TextBlock Text="{Binding Message}"></TextBlock>
+                                <StackPanel Margin="5">
+                                    <TextBlock>
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
+                                                <Binding Path="Table.Name"></Binding>
+                                                <Binding Path="Name"></Binding>
+                                                <Binding Path="Id"></Binding>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Type}"></TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type vm:ColumnCount}">
+                                <StackPanel Margin="5">
+                                    <TextBlock>
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
+                                                <Binding Path="Column.Table.Name"></Binding>
+                                                <Binding Path="Column.Name"></Binding>
+                                                <Binding Path="Column.ColumnId"></Binding>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Count}"></TextBlock>
+                                </StackPanel>
                             </DataTemplate>
                         </ListView.Resources>
                     </ListView>

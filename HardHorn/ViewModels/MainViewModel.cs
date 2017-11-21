@@ -399,7 +399,7 @@ namespace HardHorn.ViewModels
                 errorViewModel = TestErrorViewModelIndex[e.Test.Type];
             }
 
-            errorViewModel.Add(e);
+            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(e));
         }
 
         public void BrowseNext()
@@ -585,8 +585,10 @@ namespace HardHorn.ViewModels
             {
                 TableViewModels.Clear();
                 ListTableLookup.Clear();
+
                 ErrorViewModels.Clear();
                 TestErrorViewModelIndex.Clear();
+                LoadingErrorViewModelIndex.Clear();
                 Regexes.Clear();
 
                 TestLoaded = false;

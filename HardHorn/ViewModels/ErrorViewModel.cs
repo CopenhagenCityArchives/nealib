@@ -26,8 +26,17 @@ namespace HardHorn.ViewModels
         }
     }
 
+    public class ColumnCount : PropertyChangedBase
+    {
+        public Column Column { get; set; }
+        private int _count = 0;
+        public int Count { get { return _count; } set { _count = value; NotifyOfPropertyChange("Count"); } }
+    }
+
     class TestErrorViewModel : ErrorViewModelBase
     {
+        Dictionary<Column, ColumnCount> _subjectIndex = new Dictionary<Column, ColumnCount>();
+
         public override string Header
         {
             get
@@ -45,7 +54,17 @@ namespace HardHorn.ViewModels
                 throw new InvalidOperationException("Added invalid object to TestErrorViewModel.");
             }
 
-            Count++;
+            if (_subjectIndex.ContainsKey(ea.Column))
+            {
+                _subjectIndex[ea.Column].Count += ea.Posts.Count();
+            }
+            else
+            {
+                _subjectIndex[ea.Column] = new ColumnCount() { Count = ea.Posts.Count(), Column = ea.Column };
+                Subjects.Add(_subjectIndex[ea.Column]);
+            }
+
+            Count += ea.Posts.Count();
         }
 
         public AnalysisTestType TestType { get; set; }
