@@ -234,6 +234,9 @@ namespace HardHorn.Archiving
         ParameterizedDataType _dataType;
         public ParameterizedDataType ParameterizedDataType { get { return _dataType; } }
 
+        public string _dataTypeOriginal;
+        public string DataTypeOriginal { get { return _dataTypeOriginal; } }
+
         string _desc;
         public string Description { get { return _desc; } }
 
@@ -364,6 +367,14 @@ namespace HardHorn.Archiving
             catch (InvalidOperationException)
             {
                 throw new ArchiveVersionColumnParsingException("Could not read column datatype.", xcolumn, table);
+            }
+            try
+            {
+                xtype = xcolumn.Element(xmlns + "typeOriginal");
+            }
+            catch (InvalidOperationException)
+            {
+                throw new ArchiveVersionColumnParsingException("Could not read column original datatype", xcolumn, table);
             }
             try
             {

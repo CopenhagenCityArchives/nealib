@@ -10,12 +10,81 @@ using System.Xml;
 
 namespace HardHorn.Archiving
 {
+    public class PrimaryKey
+    {
+        public string Name { get; private set; }
+        public IEnumerable<string> Columns { get; private set; }
+
+        public PrimaryKey(string name, IEnumerable<string> columns)
+        {
+            Name = name;
+            Columns = columns;
+        }
+
+        public static PrimaryKey Parse(XElement element)
+        {
+            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+            var name = element.Element(xmlns + "name").Value;
+            var columns = element.Elements(xmlns + "column").Select(e => e.Value);
+
+            return new PrimaryKey(name, columns);
+        }
+    }
+
+    public class ForeignKey
+    {
+        public class Reference
+        {
+            public string Column { get; private set; }
+            public string Referenced { get; private set; }
+
+            public Reference(string column, string referenced)
+            {
+                Column = column;
+                Referenced = referenced;
+            }
+
+            public static Reference Parse(XElement element)
+            {
+                XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+                var column = element.Element(xmlns + "column").Value;
+                var referenced = element.Element(xmlns + "referenced").Value;
+
+                return new Reference(column, referenced);
+            }
+        }
+
+        public string Name { get; private set; }
+        public string ReferencedTable { get; private set; }
+        public List<Reference> References { get; private set; }
+
+        public ForeignKey(string name, string referencedTable, IEnumerable<Reference> references)
+        {
+            Name = name;
+            ReferencedTable = referencedTable;
+            References = new List<Reference>(references);
+        }
+
+        public static ForeignKey Parse(XElement element)
+        {
+            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+            var name = element.Element(xmlns + "name").Value;
+            var referencedTable = element.Element(xmlns + "referencedTable").Value;
+            var references = element.Elements(xmlns + "reference").Select(Reference.Parse);
+
+            return new ForeignKey(name, referencedTable, references);
+        }
+    }
+
     /// <summary>
     /// A table in an archive version.
     /// </summary>
     public class Table
     {
-        public ArchiveVersion ArchiveVersion { get; private set; }
+        public ArchiveVersion ArchiveVersion { get; set; }
 
         public List<Column> Columns { get; private set; }
 
@@ -27,6 +96,9 @@ namespace HardHorn.Archiving
 
         public string Description { get; private set; }
 
+        public PrimaryKey PrimaryKey { get; private set; }
+        public List<ForeignKey> ForeignKeys {get;private set;}
+
         /// <summary>
         /// Construct a table.
         /// </summary>
@@ -35,14 +107,15 @@ namespace HardHorn.Archiving
         /// <param name="rows">The number of rows in the table.</param>
         /// <param name="description">A description of the table.</param>
         /// <param name="columns">The columns of the table.</param>
-        public Table(ArchiveVersion archiveVersion, string name, string folder, int rows, string description, List<Column> columns)
+        public Table(string name, string folder, int rows, string description, List<Column> columns, PrimaryKey primaryKey, IEnumerable<ForeignKey> foreignKeys)
         {
-            ArchiveVersion = archiveVersion;
             Name = name;
             Folder = folder;
             Columns = columns;
             Rows = rows;
             Description = description;
+            PrimaryKey = primaryKey;
+            ForeignKeys = new List<ForeignKey>(foreignKeys);
         }
 
         /// <summary>
@@ -53,7 +126,7 @@ namespace HardHorn.Archiving
         /// <param name="xtable">The XML element to parse.</param>
         /// <param name="log">The logger.</param>
         /// <returns></returns>
-        public static Table Parse(ArchiveVersion archiveVersion, XElement xtable, ILogger log, Action<Exception> callback = null)
+        public static Table Parse(XElement xtable, ILogger log, Action<Exception> callback = null)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
@@ -61,8 +134,15 @@ namespace HardHorn.Archiving
             string folder = xtable.Element(xmlns + "folder").Value;
             int rows = int.Parse(xtable.Element(xmlns + "rows").Value);
             string desc = xtable.Element(xmlns + "description").Value;
+            var pkey = PrimaryKey.Parse(xtable.Element(xmlns + "primaryKey"));
+            var xfkeys = xtable.Element(xmlns + "foreignKeys");
+            var fkeys = Enumerable.Empty<ForeignKey>();
+            if (xfkeys != null)
+            {
+                fkeys = xfkeys.Elements().Select(xfkey => ForeignKey.Parse(xfkey));
+            }
 
-            var table = new Table(archiveVersion, name, folder, rows, desc, new List<Column>());
+            var table = new Table(name, folder, rows, desc, new List<Column>(), pkey, fkeys);
 
             int dummyCount = 1;
             var xcolumns = xtable.Element(xmlns + "columns");
