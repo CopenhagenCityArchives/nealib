@@ -318,19 +318,19 @@ namespace HardHorn.Analysis
         }
     }
 
-    public abstract class AnalysisErrorOccuredBase
+    public abstract class AnalysisErrorsOccuredBase
     {
-        public event AnalysisErrorOccuredEventHandler AnalysisErrorOccured;
-        public delegate void AnalysisErrorOccuredEventHandler(object sender, AnalysisErrorOccuredArgs e);
+        public event AnalysisErrorOccuredEventHandler AnalysisErrorsOccured;
+        public delegate void AnalysisErrorOccuredEventHandler(object sender, AnalysisErrorsOccuredArgs e);
         protected virtual void NotifyOfAnalysisErrorOccured(Test test, IEnumerable<Post> posts, Column column)
         {
-            if (AnalysisErrorOccured != null)
-                AnalysisErrorOccured(this, new AnalysisErrorOccuredArgs(test, posts, column));
+            if (AnalysisErrorsOccured != null)
+                AnalysisErrorsOccured(this, new AnalysisErrorsOccuredArgs(test, posts, column));
         }
     }
 
 
-    public class ColumnAnalysis : AnalysisErrorOccuredBase, INotifyPropertyChanged
+    public class ColumnAnalysis : AnalysisErrorsOccuredBase, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
         void NotifyOfPropertyChanged(string propertyName)
@@ -341,7 +341,7 @@ namespace HardHorn.Analysis
         Test _selectedTest;
         public Test SelectedTest { get { return _selectedTest; } set { _selectedTest = Tests.IndexOf(value) == -1 ? _selectedTest : value; PropertyChanged(this, new PropertyChangedEventArgs("SelectedTest")); } }
 
-        List<Post> _errorPostCache = new List<Post>();
+        Dictionary<Test, List<Post>> _errorPostCaches = new Dictionary<Test, List<Post>>();
         DateTime _lastErrorsEventTime = DateTime.Now;
 
         public int ErrorCount { get; private set; }
@@ -371,14 +371,18 @@ namespace HardHorn.Analysis
                 {
                     ErrorCount++;
                     
-                    _errorPostCache.Add(post);
-                    TimeSpan diff = DateTime.Now - _lastErrorsEventTime;
-                    if (_errorPostCache.Count == 10000 || diff.Seconds > 2)
+                    if (!_errorPostCaches.ContainsKey(test))
                     {
-                        NotifyOfAnalysisErrorOccured(test, new List<Post>(_errorPostCache), Column);
+                        _errorPostCaches.Add(test, new List<Post>());
+                    }
+                    _errorPostCaches[test].Add(post);
+                    TimeSpan diff = DateTime.Now - _lastErrorsEventTime;
+                    if (_errorPostCaches[test].Count == 10000 || diff.Seconds > 2)
+                    {
+                        NotifyOfAnalysisErrorOccured(test, new List<Post>(_errorPostCaches[test]), Column);
                         PropertyChanged(this, new PropertyChangedEventArgs("ErrorCount"));
                         _lastErrorsEventTime = DateTime.Now;
-                        _errorPostCache.Clear();
+                        _errorPostCaches[test].Clear();
                     }
                 }
             }
@@ -506,11 +510,23 @@ namespace HardHorn.Analysis
             ErrorCount = 0;
             Tests.Clear();
         }
+
+        internal void Flush()
+        {
+            foreach (var testCache in _errorPostCaches)
+            {
+                if (testCache.Value.Count > 0)
+                {
+                    NotifyOfAnalysisErrorOccured(testCache.Key, new List<Post>(testCache.Value), Column);
+                }
+            }
+            NotifyOfPropertyChanged("ErrorCount");
+        }
     }
 
-    public class AnalysisErrorOccuredArgs : EventArgs
+    public class AnalysisErrorsOccuredArgs : EventArgs
     {
-        public AnalysisErrorOccuredArgs(Test test, IEnumerable<Post> posts, Column column) {
+        public AnalysisErrorsOccuredArgs(Test test, IEnumerable<Post> posts, Column column) {
             Column = column;
             Posts = posts;
             Test = test;
@@ -581,6 +597,11 @@ namespace HardHorn.Analysis
                 if (i == 0)
                     foreach (var analysis in TestHierachy[table].Values)
                         analysis.FirstRowAnalyzed = true;
+            }
+
+            foreach (var columnAnalysis in TestHierachy[table].Values)
+            {
+                columnAnalysis.Flush();
             }
         }
 

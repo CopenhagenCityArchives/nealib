@@ -26,7 +26,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Column 0 -->
+        <!-- Left menu -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="5">
             <Grid>
                 <Grid.RowDefinitions>
@@ -156,7 +156,8 @@
             </Grid>
         </ScrollViewer>
 
-        <TabControl Margin="5" Grid.Column="1">
+        <!-- Main content -->
+        <TabControl Margin="5" Grid.Column="1" SelectedIndex="{Binding TabSelectedIndex}">
             <TabItem Header="Arkiveringsversion">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -171,27 +172,27 @@
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Column="2">
                         <StackPanel Orientation="Horizontal">
-                            <Button Margin="0 5 0 5" cal:Message.Attach="OpenCurrentTable()">
+                            <Button Margin="0 5 0 5" cal:Message.Attach="OpenSelectedTableViewModel()">
                                 <Button.Content>
                                     <TextBlock>
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="{}Åbn {0}.xml">
-                                                <Binding Path="CurrentTable.Table.Folder" />
+                                                <Binding Path="SelectedTableViewModel.Table.Folder" />
                                             </MultiBinding>
                                         </TextBlock.Text>
                                     </TextBlock>
                                 </Button.Content>
                             </Button>
-                            <TextBlock Margin="5 0 0 0"  FontWeight="Black" Text="{Binding CurrentTable.Table.Name}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5 0 0 0"  FontWeight="Black" Text="{Binding SelectedTableViewModel.Table.Name}" VerticalAlignment="Center" />
                             <TextBlock Margin="5 0 0 0" VerticalAlignment="Center">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}({0} rækker)">
-                                        <Binding Path="CurrentTable.Table.Rows" />
+                                        <Binding Path="SelectedTableViewModel.Table.Rows" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                         </StackPanel>
-                        <TextBox Height="35" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding CurrentTable.Table.Description, Mode=OneWay}" />
+                        <TextBox Height="35" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding SelectedTableViewModel.Table.Description, Mode=OneWay}" />
                         <WrapPanel Grid.Row="2" Grid.Column="2" Margin="5" Grid.ColumnSpan="2">
                             <CheckBox IsChecked="{Binding ShowErrorReports}" Margin="0 0 10 0">Vis fejl</CheckBox>
                             <CheckBox IsChecked="{Binding ShowSuggestionReports}" Margin="0 0 10 0">Vis forslag</CheckBox>
@@ -201,7 +202,7 @@
                             <Style>
                                 <Setter Property="StackPanel.Visibility" Value="Visible"></Setter>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                         <Setter Property="StackPanel.Visibility" Value="Collapsed"></Setter>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -225,11 +226,11 @@
                                 </CompositeCollection>
                             </ComboBox.ItemsSource>
                         </ComboBox>
-                        <ListBox ItemsSource="{Binding FilteredTableViewModels}" SelectedItem="{Binding CurrentTable, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
+                        <ListBox ItemsSource="{Binding FilteredTableViewModels}" SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
                     </DockPanel>
                     
                     <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
-                    <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding CurrentTable.SelectedColumnAnalysis}" ItemsSource="{Binding CurrentColumnAnalyses, Mode=OneWay}" util:GridViewSort.AutoSort="True">
+                    <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnAnalysis}" ItemsSource="{Binding CurrentColumnAnalyses, Mode=OneWay}" util:GridViewSort.AutoSort="True">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Id" Width="50" DisplayMemberBinding="{Binding Column.ColumnId}" util:GridViewSort.PropertyName="Column.ColumnIdNumber"></GridViewColumn>
@@ -293,14 +294,14 @@
                             <DockPanel>
                                 <StackPanel Margin="5" Orientation="Horizontal" DockPanel.Dock="Top">
                                     <TextBlock VerticalAlignment="Center">Viser</TextBlock>
-                                    <TextBox Margin="5 0 0 0" Text="{Binding CurrentTable.BrowseCount}" Width="35">
+                                    <TextBox Margin="5 0 0 0" Text="{Binding SelectedTableViewModel.BrowseCount}" Width="35">
                                         <TextBox.Style>
                                             <Style>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                                         <Setter Property="TextBox.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding CurrentTable.BrowseReady}" Value="False">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel.BrowseReady}" Value="False">
                                                         <Setter Property="TextBox.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -308,14 +309,14 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <TextBlock Margin="5 0 0 0" VerticalAlignment="Center">rækker fra række</TextBlock>
-                                    <TextBox Margin="5 0 0 0" Text="{Binding CurrentTable.BrowseOffset}" Width="70">
+                                    <TextBox Margin="5 0 0 0" Text="{Binding SelectedTableViewModel.BrowseOffset}" Width="70">
                                         <TextBox.Style>
                                             <Style>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                                         <Setter Property="TextBox.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding CurrentTable.BrowseReady}" Value="False">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel.BrowseReady}" Value="False">
                                                         <Setter Property="TextBox.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -329,11 +330,11 @@
                                                     <Style>
                                                         <Setter Property="TextBlock.Text" Value="Opdater"></Setter>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding CurrentTable.BrowseReady}" Value="false">
+                                                            <DataTrigger Binding="{Binding SelectedTableViewModel.BrowseReady}" Value="false">
                                                                 <Setter Property="TextBlock.Text">
                                                                     <Setter.Value>
                                                                         <MultiBinding StringFormat="{}Opdaterer ({0}%)">
-                                                                            <Binding Path="CurrentTable.BrowseReadProgress" />
+                                                                            <Binding Path="SelectedTableViewModel.BrowseReadProgress" />
                                                                         </MultiBinding>
                                                                     </Setter.Value>
                                                                 </Setter>
@@ -346,10 +347,10 @@
                                         <Button.Style>
                                             <Style>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                                         <Setter Property="Button.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding CurrentTable.BrowseReady}" Value="False">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel.BrowseReady}" Value="False">
                                                         <Setter Property="Button.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -364,12 +365,12 @@
                                                         <Setter Property="TextBlock.Text">
                                                             <Setter.Value>
                                                                 <MultiBinding StringFormat="{}Forrige {0}">
-                                                                    <Binding Path="CurrentTable.BrowseCount"></Binding>
+                                                                    <Binding Path="SelectedTableViewModel.BrowseCount"></Binding>
                                                                 </MultiBinding>
                                                             </Setter.Value>
                                                         </Setter>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                                            <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                                                 <Setter Property="TextBlock.Text" Value="Forrige"></Setter>
                                                             </DataTrigger>
                                                         </Style.Triggers>
@@ -380,7 +381,7 @@
                                         <Button.Style>
                                             <Style>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                                         <Setter Property="Button.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -395,12 +396,12 @@
                                                         <Setter Property="TextBlock.Text">
                                                             <Setter.Value>
                                                                 <MultiBinding StringFormat="{}Næste {0}">
-                                                                    <Binding Path="CurrentTable.BrowseCount"></Binding>
+                                                                    <Binding Path="SelectedTableViewModel.BrowseCount"></Binding>
                                                                 </MultiBinding>
                                                             </Setter.Value>
                                                         </Setter>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                                            <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                                                 <Setter Property="TextBlock.Text" Value="Næste"></Setter>
                                                             </DataTrigger>
                                                         </Style.Triggers>
@@ -411,7 +412,7 @@
                                         <Button.Style>
                                             <Style>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding CurrentTable}" Value="{x:Null}">
+                                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
                                                         <Setter Property="Button.IsEnabled" Value="False"></Setter>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -419,9 +420,9 @@
                                         </Button.Style>
                                     </Button>
                                 </StackPanel>
-                                <ListView SelectionMode="Single" ItemsSource="{Binding CurrentTable.BrowseRows}">
+                                <ListView SelectionMode="Single" ItemsSource="{Binding SelectedTableViewModel.BrowseRows}">
                                     <ListView.View>
-                                        <GridView util:AttachedProperties.TableColumnsSource="{Binding CurrentTable.Table}">
+                                        <GridView util:AttachedProperties.TableColumnsSource="{Binding SelectedTableViewModel.Table}">
                                         </GridView>
                                     </ListView.View>
                                     <ListView.Resources>
@@ -490,7 +491,7 @@
             <TabItem Header="Fejlvisning">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition Width="2*"></ColumnDefinition>
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 
@@ -506,35 +507,43 @@
                         <ListView.Resources>
                             <DataTemplate DataType="{x:Type av:ArchiveVersionColumnParsingException}">
                                 <StackPanel Margin="5">
-                                    <TextBlock Text="{Binding Table.Name}"></TextBlock>
+                                    <TextBlock>
+                                        <Hyperlink>
+                                            <TextBlock cal:Message.Attach="GoToTable(Table)" Text="{Binding Table.Name}" />
+                                        </Hyperlink>
+                                    </TextBlock>
                                     <TextBlock Text="{Binding Element}"></TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type av:ArchiveVersionColumnTypeParsingException}">
                                 <StackPanel Margin="5">
-                                    <TextBlock>
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
-                                                <Binding Path="Table.Name"></Binding>
-                                                <Binding Path="Name"></Binding>
-                                                <Binding Path="Id"></Binding>
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <Button Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToUndefinedColumn($dataContext)]">
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
+                                                    <Binding Path="Table.Name"></Binding>
+                                                    <Binding Path="Name"></Binding>
+                                                    <Binding Path="Id"></Binding>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </Button>
                                     <TextBlock Text="{Binding Type}"></TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                             <DataTemplate DataType="{x:Type vm:ColumnCount}">
                                 <StackPanel Margin="5">
-                                    <TextBlock>
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
-                                                <Binding Path="Column.Table.Name"></Binding>
-                                                <Binding Path="Column.Name"></Binding>
-                                                <Binding Path="Column.ColumnId"></Binding>
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <Button Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToColumn($dataContext)]">
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
+                                                    <Binding Path="Column.Table.Name"></Binding>
+                                                    <Binding Path="Column.Name"></Binding>
+                                                    <Binding Path="Column.ColumnId"></Binding>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </Button>
                                     <TextBlock Text="{Binding Count}"></TextBlock>
                                 </StackPanel>
                             </DataTemplate>

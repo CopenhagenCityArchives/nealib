@@ -113,11 +113,11 @@ namespace HardHorn.ViewModels
             set { _testLocation = value; NotifyOfPropertyChange("TestLocation"); }
         }
 
-        TableViewModel _currentTable = null;
-        public TableViewModel CurrentTable
+        TableViewModel _SelectedTableViewModel = null;
+        public TableViewModel SelectedTableViewModel
         {
-            get { return _currentTable; }
-            set { _currentTable = value; UpdateInteractiveReportView(); NotifyOfPropertyChange("CurrentTable"); }
+            get { return _SelectedTableViewModel; }
+            set { _SelectedTableViewModel = value; UpdateInteractiveReportView(); NotifyOfPropertyChange("SelectedTableViewModel"); }
         }
 
         object _selectedTableViewModelDataType;
@@ -200,6 +200,19 @@ namespace HardHorn.ViewModels
 
         CancellationTokenSource _testCts;
 
+        int _tabSelectedIndex = 0;
+        public int TabSelectedIndex { get { return _tabSelectedIndex; } set { _tabSelectedIndex = value; NotifyOfPropertyChange("TabSelectedIndex"); } }
+
+        enum TabNameEnum
+        {
+            TAB_ARCHIVEVERSION = 0,
+            TAB_ERRORS = 1,
+            TAB_STATISTICS = 2,
+            TAB_SPECTABLE = 3,
+            TAB_COMPARE = 4,
+            TAB_STATUSLOG = 5
+        }
+
         Analyzer _analyzer;
         public Analyzer Analyzer { get { return _analyzer; } }
         DataStatistics _stats;
@@ -264,7 +277,7 @@ namespace HardHorn.ViewModels
         #region Methods
         public void UpdateInteractiveReportView()
         {
-            var table = CurrentTable == null ? null : CurrentTable.Table;
+            var table = SelectedTableViewModel == null ? null : SelectedTableViewModel.Table;
 
             CurrentColumnAnalyses.Clear();
             if (table != null && _analyzer != null && _analyzer.TestHierachy.ContainsKey(table))
@@ -277,9 +290,9 @@ namespace HardHorn.ViewModels
                         (report.ErrorCount == 0 && report.SuggestedType == null && ShowEmptyReports))
                         CurrentColumnAnalyses.Add(report);
                 }
-                if (CurrentTable != null && CurrentColumnAnalyses.Count > 0)
+                if (SelectedTableViewModel != null && CurrentColumnAnalyses.Count > 0)
                 {
-                    CurrentTable.SelectedColumnAnalysis = CurrentColumnAnalyses[0];
+                    SelectedTableViewModel.SelectedColumnAnalysis = CurrentColumnAnalyses[0];
                 }
             }
         }
@@ -339,12 +352,12 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public void OpenCurrentTable()
+        public void OpenSelectedTableViewModel()
         {
-            if (CurrentTable == null)
+            if (SelectedTableViewModel == null)
                 return;
 
-            var path = Path.Combine(TestLocation, "tables", CurrentTable.Table.Folder, CurrentTable.Table.Folder + ".xml");
+            var path = Path.Combine(TestLocation, "tables", SelectedTableViewModel.Table.Folder, SelectedTableViewModel.Table.Folder + ".xml");
             System.Diagnostics.Process.Start(path);
         }
 
@@ -382,7 +395,7 @@ namespace HardHorn.ViewModels
             Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
         }
 
-        public void OnTestError(object sender, AnalysisErrorOccuredArgs e)
+        public void OnTestError(object sender, AnalysisErrorsOccuredArgs e)
         {
             var columnAnalysis = sender as ColumnAnalysis;
 
@@ -404,28 +417,28 @@ namespace HardHorn.ViewModels
 
         public void BrowseNext()
         {
-            if (CurrentTable == null)
+            if (SelectedTableViewModel == null)
                 return;
 
-            CurrentTable.BrowseOffset = CurrentTable.BrowseOffset + CurrentTable.BrowseCount > CurrentTable.Table.Rows ? CurrentTable.BrowseOffset : CurrentTable.BrowseOffset + CurrentTable.BrowseCount;
-            CurrentTable.UpdateBrowseRows();
+            SelectedTableViewModel.BrowseOffset = SelectedTableViewModel.BrowseOffset + SelectedTableViewModel.BrowseCount > SelectedTableViewModel.Table.Rows ? SelectedTableViewModel.BrowseOffset : SelectedTableViewModel.BrowseOffset + SelectedTableViewModel.BrowseCount;
+            SelectedTableViewModel.UpdateBrowseRows();
         }
 
         public void BrowsePrevious()
         {
-            if (CurrentTable == null)
+            if (SelectedTableViewModel == null)
                 return;
 
-            CurrentTable.BrowseOffset = CurrentTable.BrowseCount > CurrentTable.BrowseOffset ? 0 : CurrentTable.BrowseOffset - CurrentTable.BrowseCount;
-            CurrentTable.UpdateBrowseRows();
+            SelectedTableViewModel.BrowseOffset = SelectedTableViewModel.BrowseCount > SelectedTableViewModel.BrowseOffset ? 0 : SelectedTableViewModel.BrowseOffset - SelectedTableViewModel.BrowseCount;
+            SelectedTableViewModel.UpdateBrowseRows();
         }
 
         public void BrowseUpdate()
         {
-            if (CurrentTable == null)
+            if (SelectedTableViewModel == null)
                 return;
 
-            CurrentTable.UpdateBrowseRows();
+            SelectedTableViewModel.UpdateBrowseRows();
         }
 
         public void Merge(TableComparison added, TableComparison removed)
@@ -489,6 +502,33 @@ namespace HardHorn.ViewModels
             }
         }
 
+        public void GoToTable(Table table)
+        {
+
+        }
+
+        public void GoToUndefinedColumn(ArchiveVersionColumnTypeParsingException ex)
+        {
+            var vm = ListTableLookup[ex.Table.Name];
+            if (vm == null)
+                return;
+
+            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
+            SelectedTableViewModel = vm;
+            vm.SelectedColumnAnalysis = CurrentColumnAnalyses.First(ca => ca.Column.ColumnId == ex.Id);
+        }
+
+        public void GoToColumn(ColumnCount c)
+        {
+            var vm = ListTableLookup[c.Column.Table.Name];
+            if (vm == null)
+                return;
+
+            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
+            SelectedTableViewModel = vm;
+            vm.SelectedColumnAnalysis = CurrentColumnAnalyses.First(ca => ca.Column == c.Column);
+        }
+
         public void LoadState()
         {
             using (var dialog = new System.Windows.Forms.OpenFileDialog())
@@ -531,7 +571,7 @@ namespace HardHorn.ViewModels
                         BarChartValues = loaded.BarChartValues;
                         CompareLocation = loaded.CompareLocation;
                         CurrentColumnAnalyses = loaded.CurrentColumnAnalyses;
-                        CurrentTable = loaded.CurrentTable;
+                        SelectedTableViewModel = loaded.SelectedTableViewModel;
                         _stats = new DataStatistics(loaded.ArchiveVersion.Tables.ToArray());
                         DoneRows = loaded.DoneRows;
                         _analyzer = loaded.Analyzer;
@@ -712,7 +752,7 @@ namespace HardHorn.ViewModels
                     foreach (var columnAnalysis in table.Values)
                     {
                         columnAnalysis.Clear();
-                        columnAnalysis.AnalysisErrorOccured += OnTestError;
+                        columnAnalysis.AnalysisErrorsOccured += OnTestError;
                     }
 
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);

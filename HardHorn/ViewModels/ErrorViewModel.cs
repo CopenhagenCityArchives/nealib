@@ -47,7 +47,7 @@ namespace HardHorn.ViewModels
 
         public override void Add(object info)
         {
-            var ea = info as AnalysisErrorOccuredArgs;
+            var ea = info as AnalysisErrorsOccuredArgs;
             
             if (ea == null)
             {

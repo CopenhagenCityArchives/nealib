@@ -12,6 +12,21 @@
     <local:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
     <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
+    <Style x:Key="HyperlinkButtonStyle" TargetType="Button">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <TextBlock>
+                        <Hyperlink>
+                            <ContentControl Content="{TemplateBinding Content}"></ContentControl>
+                        </Hyperlink>
+                    </TextBlock>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
     <DataTemplate x:Key="ErrorViewTemplate">
         <StackPanel>
             <TextBlock Text="{Binding Header}"></TextBlock>
