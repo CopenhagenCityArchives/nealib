@@ -30,6 +30,15 @@ namespace HardHorn.Archiving
 
             return new PrimaryKey(name, columns);
         }
+
+        public XElement ToXml()
+        {
+            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+            return new XElement(xmlns + "primaryKey",
+                new XElement(xmlns + "name", Name),
+                Columns.Select(c => new XElement(xmlns + "column", c)));
+        }
     }
 
     public class ForeignKey
@@ -54,6 +63,15 @@ namespace HardHorn.Archiving
 
                 return new Reference(column, referenced);
             }
+
+            public XElement ToXml()
+            {
+                XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+                return new XElement(xmlns + "reference",
+                    new XElement(xmlns + "column", Column),
+                    new XElement(xmlns + "referenced", Referenced));
+            }
         }
 
         public string Name { get; private set; }
@@ -76,6 +94,16 @@ namespace HardHorn.Archiving
             var references = element.Elements(xmlns + "reference").Select(Reference.Parse);
 
             return new ForeignKey(name, referencedTable, references);
+        }
+
+        public XElement ToXml()
+        {
+            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+            return new XElement(xmlns + "foreignKey",
+                new XElement(xmlns + "name", Name),
+                new XElement(xmlns + "referencedTable", ReferencedTable),
+                References.Select(r => r.ToXml()));
         }
     }
 
@@ -156,14 +184,14 @@ namespace HardHorn.Archiving
                 catch (ArchiveVersionColumnTypeParsingException ex)
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af kolonnen '{0}' i tabellen '{1}': Typen '{2}' er ikke valid.", ex.Name, table.Name, ex.Type), LogLevel.ERROR);
-                    (table.Columns as List<Column>).Add(new Column(table, ex.Name, DataType.UNDEFINED, false, null, "", ex.Id, int.Parse(ex.Id.Substring(1))));
+                    (table.Columns as List<Column>).Add(new Column(table, ex.Name, DataType.UNDEFINED, null, false, null, "", ex.Id, int.Parse(ex.Id.Substring(1))));
                     if (callback != null)
                         callback(ex);
                 }
                 catch (ArchiveVersionColumnParsingException ex)
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", table.Name, ex.Message), LogLevel.ERROR);
-                    (table.Columns as List<Column>).Add(new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", DataType.UNDEFINED, false, null, "", "", 0));
+                    (table.Columns as List<Column>).Add(new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", DataType.UNDEFINED, null, false, null, "", "", 0));
                     if (callback != null)
                         callback(ex);
                 }
@@ -249,6 +277,20 @@ namespace HardHorn.Archiving
             }
 
             return tableComparison;
+        }
+
+        internal XElement ToXml()
+        {
+            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+            return new XElement(xmlns + "table",
+                new XElement(xmlns + "name", Name),
+                new XElement(xmlns + "folder", Folder),
+                new XElement(xmlns + "description", Description),
+                new XElement(xmlns + "columns", Columns.Select(c => c.ToXml())),
+                PrimaryKey.ToXml(),
+                new XElement(xmlns + "foreignKeys", ForeignKeys.Select(fKey => fKey.ToXml())),
+                new XElement(xmlns + "rows", Rows));
         }
     }
 

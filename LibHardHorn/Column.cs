@@ -97,6 +97,20 @@ namespace HardHorn.Archiving
                 return 1;
             }
         }
+
+        public override string ToString()
+        {
+            var repr = "";
+
+            repr += DataType.ToString();
+
+            if (Parameter != null && Parameter.Length > 0)
+            {
+                repr += Parameter.ToString();
+            }
+
+            return repr;
+        }
     }
 
     /// <summary>
@@ -266,7 +280,7 @@ namespace HardHorn.Archiving
         /// <param name="param">The parameters of the column datatype.</param>
         /// <param name="desc">The description of the column.</param>
         /// <param name="colId">The id of the column.</param>
-        public Column(Table table, string name, DataType type, bool nullable, int[] param, string desc, string colId, int colIdNum)
+        public Column(Table table, string name, DataType type, string dataTypeOrig, bool nullable, int[] param, string desc, string colId, int colIdNum)
         {
             _table = table;
             _name = name;
@@ -275,6 +289,7 @@ namespace HardHorn.Archiving
             _desc = desc;
             _colId = colId;
             _colIdNum = colIdNum;
+            _dataTypeOriginal = dataTypeOrig;
         }
 
         public ColumnComparison CompareTo(Column oldColumn)
@@ -338,6 +353,19 @@ namespace HardHorn.Archiving
             return comparison;
         }
 
+        public XElement ToXml()
+        {
+            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+
+            return new XElement(xmlns + "column",
+                new XElement(xmlns + "name", Name),
+                new XElement(xmlns + "columnID", ColumnId),
+                new XElement(xmlns + "type", ParameterizedDataType.ToString()),
+                new XElement(xmlns + "typeOriginal", DataTypeOriginal),
+                new XElement(xmlns + "nullable", Nullable),
+                new XElement(xmlns + "description", Description));
+        }
+
         /// <summary>
         /// Parse a column object.
         /// </summary>
@@ -351,7 +379,7 @@ namespace HardHorn.Archiving
 
             string xml = xcolumn.ToString();
             Column column = null;
-            XElement xname, xtype, xnullable, xdesc, xcolid;
+            XElement xname, xtype, xtypeorig, xnullable, xdesc, xcolid;
             try
             {
                 xname = xcolumn.Element(xmlns + "name");
@@ -370,7 +398,7 @@ namespace HardHorn.Archiving
             }
             try
             {
-                xtype = xcolumn.Element(xmlns + "typeOriginal");
+                xtypeorig = xcolumn.Element(xmlns + "typeOriginal");
             }
             catch (InvalidOperationException)
             {
@@ -424,6 +452,8 @@ namespace HardHorn.Archiving
 
             // parse type
             string stype = xtype.Value.ToUpper();
+
+            string typeOrig = xtypeorig.Value;
 
             int[] param = null;
             bool usedDefault;
@@ -481,7 +511,7 @@ namespace HardHorn.Archiving
                 dataType = DataType.CHARACTER_VARYING;
 
             if (dataType.HasValue)
-                column = new Column(table, name, dataType.Value, nullable, param, desc, colId, colIdNum);
+                column = new Column(table, name, dataType.Value, typeOrig, nullable, param, desc, colId, colIdNum);
 
             if (column == null)
                 throw new ArchiveVersionColumnTypeParsingException("Could not parse column data type and parameters for type: \"" + stype + "\"", colId, name, stype, xtype, table);

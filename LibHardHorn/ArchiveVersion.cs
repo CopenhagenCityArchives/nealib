@@ -13,78 +13,6 @@ using System.Xml.Linq;
 
 namespace HardHorn.Archiving
 {
-    public class TableIndex
-    {
-        public string Version { get; private set; }
-        public string DBName { get; private set; }
-        public string DatabaseProduct { get; private set; }
-
-        public List<Table> Tables { get; private set; }
-        public List<View> Views { get; private set; }
-
-        public TableIndex(string version, string dbName, string databaseProduct, IEnumerable<Table> tables, IEnumerable<View> views)
-        {
-            Version = version;
-            DBName = dbName;
-            DatabaseProduct = databaseProduct;
-
-            Tables = new List<Table>(tables);
-            Views = new List<View>(views);
-        }
-
-        public static TableIndex Parse(XElement element, ILogger logger, Action<Exception> callback = null)
-        {
-            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
-
-            var version = element.Element(xmlns + "version").Value;
-            var dbName = element.Element(xmlns + "dbName").Value;
-            var databaseProduct = element.Element(xmlns + "databaseProduct").Value;
-
-            var tables = element.Element(xmlns + "tables").Elements().Select(xtable => Table.Parse(xtable, logger, callback));
-
-            var xviews = element.Element(xmlns + "views");
-            var views = Enumerable.Empty<View>();
-            if (xviews != null)
-            {
-                views = xviews.Elements().Select(xview => View.Parse(xview));
-            }
-
-            return new TableIndex(version, dbName, databaseProduct, tables, views);
-        }
-
-        public static TableIndex ParseFile(string path, ILogger logger, Action<Exception> callback = null)
-        {
-            var tableIndexDocument = XDocument.Load(path);
-
-            return TableIndex.Parse(tableIndexDocument.Root, logger, callback);
-        }
-    }
-
-    public class View
-    {
-        public string Name { get; private set; }
-        public string QueryOriginal { get; private set; }
-        public string Description { get; private set; }
-
-        public View(string name, string queryOriginal, string description)
-        {
-            Name = name;
-            QueryOriginal = queryOriginal;
-            Description = description;
-        }
-
-        public static View Parse(XElement element)
-        {
-            XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
-
-            var name = element.Element(xmlns + "name").Value;
-            var queryOriginal = element.Element(xmlns + "name").Value;
-            var description = element.Element(xmlns + "name").Value;
-
-            return new View(name, queryOriginal, description);
-        }
-    }
-
     /// <summary>
     /// An error from verifying the archive version.
     /// </summary>
@@ -260,7 +188,7 @@ namespace HardHorn.Archiving
         public static ArchiveVersion Load(string path, ILogger log, Action<Exception> callback = null)
         {
             var archiveVersion = new ArchiveVersion(System.IO.Path.GetFileName(path), path, null);
-            archiveVersion.Tables = LoadTableIndex(archiveVersion, System.IO.Path.Combine(path, "Indices", "tableIndex.xml"), log, callback).ToList();
+            archiveVersion.Tables = LoadTables(archiveVersion, System.IO.Path.Combine(path, "Indices", "tableIndex.xml"), log, callback).ToList();
             return archiveVersion;
         }
 
@@ -271,19 +199,18 @@ namespace HardHorn.Archiving
         /// <param name="path">The path to the table index file.</param>
         /// <param name="log">The logger.</param>
         /// <returns>An enumerable of the tables.</returns>
-        public static IEnumerable<Table> LoadTableIndex(ArchiveVersion archiveVersion, string path, ILogger log, Action<Exception> callback = null)
+        public static IEnumerable<Table> LoadTables(ArchiveVersion archiveVersion, string path, ILogger log, Action<Exception> callback = null)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
-            var tableIndexDocument = XDocument.Load(path);
-            var xtables = tableIndexDocument.Descendants(xmlns + "tables").First();
+            var tableIndex = TableIndex.ParseFile(path, log, callback);
 
-            foreach (var xtable in xtables.Elements(xmlns + "table"))
+            foreach (var table in tableIndex.Tables)
             {
-                Table table = Table.Parse(xtable, log, callback);
                 table.ArchiveVersion = archiveVersion;
-                yield return table;
             }
+
+            return tableIndex.Tables;
         }
 
         public static IEnumerable<View> GetViews(string path)
