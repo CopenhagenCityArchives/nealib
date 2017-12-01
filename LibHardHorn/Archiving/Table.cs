@@ -85,14 +85,14 @@ namespace HardHorn.Archiving
                 catch (ArchiveVersionColumnTypeParsingException ex)
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af kolonnen '{0}' i tabellen '{1}': Typen '{2}' er ikke valid.", ex.Name, table.Name, ex.Type), LogLevel.ERROR);
-                    (table.Columns as List<Column>).Add(new Column(table, ex.Name, ParameterizedDataType.GetUndefined(), null, false, "", ex.Id, int.Parse(ex.Id.Substring(1))));
+                    (table.Columns as List<Column>).Add(new Column(table, ex.Name, ParameterizedDataType.GetUndefined(), null, false, "", ex.Id, int.Parse(ex.Id.Substring(1)), null));
                     if (callback != null)
                         callback(ex);
                 }
                 catch (ArchiveVersionColumnParsingException ex)
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", table.Name, ex.Message), LogLevel.ERROR);
-                    (table.Columns as List<Column>).Add(new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", ParameterizedDataType.GetUndefined(), null, false, "", "", 0));
+                    (table.Columns as List<Column>).Add(new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", ParameterizedDataType.GetUndefined(), null, false, "", "", 0, null));
                     if (callback != null)
                         callback(ex);
                 }
@@ -190,7 +190,7 @@ namespace HardHorn.Archiving
                 new XElement(xmlns + "description", Description),
                 new XElement(xmlns + "columns", Columns.Select(c => c.ToXml())),
                 PrimaryKey.ToXml(),
-                new XElement(xmlns + "foreignKeys", ForeignKeys.Select(fKey => fKey.ToXml())),
+                ForeignKeys.Count > 0 ? new XElement(xmlns + "foreignKeys", ForeignKeys.Select(fKey => fKey.ToXml())) : null,
                 new XElement(xmlns + "rows", Rows));
         }
     }

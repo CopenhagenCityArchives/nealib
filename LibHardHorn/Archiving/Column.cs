@@ -19,6 +19,7 @@ namespace HardHorn.Archiving
         public int ColumnIdNumber { get; private set; }
         public bool Nullable { get; private set; }
         public Table Table { get; private set; }
+        public string DefaultValue { get; private set; }
 
         /// <summary>
         /// Construct a column.
@@ -30,7 +31,7 @@ namespace HardHorn.Archiving
         /// <param name="param">The parameters of the column datatype.</param>
         /// <param name="desc">The description of the column.</param>
         /// <param name="colId">The id of the column.</param>
-        public Column(Table table, string name, ParameterizedDataType type, string dataTypeOrig, bool nullable, string desc, string colId, int colIdNum)
+        public Column(Table table, string name, ParameterizedDataType type, string dataTypeOrig, bool nullable, string desc, string colId, int colIdNum, string defaultValue)
         {
             Table = table;
             Name = name;
@@ -40,6 +41,7 @@ namespace HardHorn.Archiving
             ColumnId = colId;
             ColumnIdNumber = colIdNum;
             DataTypeOriginal = dataTypeOrig;
+            DefaultValue = defaultValue;
         }
 
         public ColumnComparison CompareTo(Column oldColumn)
@@ -112,6 +114,7 @@ namespace HardHorn.Archiving
                 new XElement(xmlns + "columnID", ColumnId),
                 new XElement(xmlns + "type", ParameterizedDataType.ToString()),
                 new XElement(xmlns + "typeOriginal", DataTypeOriginal),
+                string.IsNullOrEmpty(DefaultValue) ? null : new XElement(xmlns + "defaultValue", DefaultValue),
                 new XElement(xmlns + "nullable", Nullable),
                 new XElement(xmlns + "description", Description));
         }
@@ -177,6 +180,12 @@ namespace HardHorn.Archiving
             {
                 throw new ArchiveVersionColumnParsingException("Could not read column ID.", xcolumn, table);
             }
+            string defaultValue = null;
+            try
+            {
+                defaultValue = xcolumn.Element(xmlns + "defaultValue").Value;
+            }
+            catch (Exception) { }
 
             string name;
             if (xname.Value.Length > 0)
@@ -204,7 +213,7 @@ namespace HardHorn.Archiving
 
             string typeOrig = xtypeorig.Value;
 
-            return new Column(table, name, parameterizedDataType, typeOrig, nullable, desc, colId, colIdNum);
+            return new Column(table, name, parameterizedDataType, typeOrig, nullable, desc, colId, colIdNum, defaultValue);
         }
     }
 }

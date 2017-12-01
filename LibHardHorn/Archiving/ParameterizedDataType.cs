@@ -12,11 +12,13 @@ namespace HardHorn.Archiving
         static Regex regex = new Regex(@"^(?<datatype>[a-zA-Z]+( *[a-zA-Z]+)*) *(\((?<params>\d+(,\d+)*)\))?$");
         public DataType DataType { get; private set; }
         public Parameter Parameter { get; private set; }
+        public string Parsed { get; private set; }
 
-        public ParameterizedDataType(DataType dataType, Parameter parameter)
+        public ParameterizedDataType(DataType dataType, Parameter parameter, string parsed = null)
         {
             DataType = dataType;
             Parameter = parameter;
+            Parsed = parsed;
         }
 
         public static ParameterizedDataType GetUndefined()
@@ -52,7 +54,7 @@ namespace HardHorn.Archiving
 
                     parameter = new Parameter(parameters.ToArray());
                 }
-                return new ParameterizedDataType(dataType, parameter);
+                return new ParameterizedDataType(dataType, parameter, element.Value);
             }
             else
             {
@@ -87,6 +89,11 @@ namespace HardHorn.Archiving
 
         public override string ToString()
         {
+            if (!string.IsNullOrEmpty(Parsed))
+            {
+                return Parsed;
+            }
+
             var repr = "";
 
             repr += DataType.ToString();
