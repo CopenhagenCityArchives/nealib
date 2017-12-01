@@ -96,7 +96,7 @@ namespace HardHorn.Archiving
 
             var repr = "";
 
-            repr += DataType.ToString();
+            repr += DataTypeUtility.ToString(DataType);
 
             if (Parameter != null && Parameter.Length > 0)
             {

@@ -12,7 +12,7 @@ namespace HardHorn.Archiving
     public class Column
     {
         public string Name { get; private set; }
-        public ParameterizedDataType ParameterizedDataType { get; private set; }
+        public ParameterizedDataType ParameterizedDataType { get; set; }
         public string DataTypeOriginal { get; private set; }
         public string Description { get; private set; }
         public string ColumnId { get; private set; }
@@ -20,6 +20,7 @@ namespace HardHorn.Archiving
         public bool Nullable { get; private set; }
         public Table Table { get; private set; }
         public string DefaultValue { get; private set; }
+        public string FunctionalDescription { get; private set; }
 
         /// <summary>
         /// Construct a column.
@@ -31,7 +32,7 @@ namespace HardHorn.Archiving
         /// <param name="param">The parameters of the column datatype.</param>
         /// <param name="desc">The description of the column.</param>
         /// <param name="colId">The id of the column.</param>
-        public Column(Table table, string name, ParameterizedDataType type, string dataTypeOrig, bool nullable, string desc, string colId, int colIdNum, string defaultValue)
+        public Column(Table table, string name, ParameterizedDataType type, string dataTypeOrig, bool nullable, string desc, string colId, int colIdNum, string defaultValue, string functionalDescription)
         {
             Table = table;
             Name = name;
@@ -42,6 +43,7 @@ namespace HardHorn.Archiving
             ColumnIdNumber = colIdNum;
             DataTypeOriginal = dataTypeOrig;
             DefaultValue = defaultValue;
+            FunctionalDescription = functionalDescription;
         }
 
         public ColumnComparison CompareTo(Column oldColumn)
@@ -108,15 +110,17 @@ namespace HardHorn.Archiving
         public XElement ToXml()
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
+            var a = "a" ?? "b";
 
             return new XElement(xmlns + "column",
                 new XElement(xmlns + "name", Name),
                 new XElement(xmlns + "columnID", ColumnId),
                 new XElement(xmlns + "type", ParameterizedDataType.ToString()),
                 new XElement(xmlns + "typeOriginal", DataTypeOriginal),
-                string.IsNullOrEmpty(DefaultValue) ? null : new XElement(xmlns + "defaultValue", DefaultValue),
+                DefaultValue == null ? null : new XElement(xmlns + "defaultValue", DefaultValue),
                 new XElement(xmlns + "nullable", Nullable),
-                new XElement(xmlns + "description", Description));
+                new XElement(xmlns + "description", Description),
+                FunctionalDescription == null ? null : new XElement(xmlns + "functionalDescription", FunctionalDescription));
         }
 
         /// <summary>
@@ -187,6 +191,13 @@ namespace HardHorn.Archiving
             }
             catch (Exception) { }
 
+            string functionalDescription = null;
+            try
+            {
+                functionalDescription = xcolumn.Element(xmlns + "functionalDescription").Value;
+            }
+            catch (Exception) { }
+
             string name;
             if (xname.Value.Length > 0)
                 name = xname.Value;
@@ -213,7 +224,7 @@ namespace HardHorn.Archiving
 
             string typeOrig = xtypeorig.Value;
 
-            return new Column(table, name, parameterizedDataType, typeOrig, nullable, desc, colId, colIdNum, defaultValue);
+            return new Column(table, name, parameterizedDataType, typeOrig, nullable, desc, colId, colIdNum, defaultValue, functionalDescription);
         }
     }
 }

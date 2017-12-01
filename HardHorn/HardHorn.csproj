@@ -136,7 +136,7 @@
     </ApplicationDefinition>
     <Compile Include="Controls\BarChart.cs" />
     <Compile Include="Bootstrapper.cs" />
-    <Compile Include="Converters.cs" />
+    <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\AttachedProperties.cs" />
     <Compile Include="Utilities\GridViewSort.cs" />
     <Compile Include="Utilities\RelayCommand.cs" />

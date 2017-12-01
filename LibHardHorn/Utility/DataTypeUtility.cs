@@ -10,6 +10,11 @@ namespace HardHorn.Utility
 {
     public static class DataTypeUtility
     {
+        public static string ToString(DataType dataType)
+        {
+            return dataType.ToString().Replace('_', ' ');
+        }
+
         public static DataType Parse(string dataType)
         {
             var upperDataType = dataType.ToUpper();

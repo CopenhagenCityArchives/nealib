@@ -10,7 +10,7 @@ using System.Windows.Media;
 using System.Windows;
 using HardHorn.Analysis;
 
-namespace HardHorn
+namespace HardHorn.Utilities
 {
     public class HasErrorsColorConverter : IValueConverter
     {

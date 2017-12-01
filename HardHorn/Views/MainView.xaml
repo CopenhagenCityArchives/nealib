@@ -135,6 +135,8 @@
                             <RowDefinition Height="Auto"  />
                             <RowDefinition Height="*"  />
                             <RowDefinition Height="*"  />
+                            <RowDefinition Height="*"  />
+                            <RowDefinition Height="*"  />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -152,6 +154,13 @@
                         <ListBox Margin="0 5 0 5" x:Name="RegexListBox" Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding Regexes}" ItemTemplate="{StaticResource RegexItemTemplate}" Height="150" IsEnabled="{Binding TestLoaded}"></ListBox>
                         <Button Grid.Row="5" Grid.ColumnSpan="2" cal:Message.Attach="RemoveRegex(RegexListBox.SelectedItem)" IsEnabled="{Binding TestLoaded}">Fjern valgte</Button>
                     </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="3" Header="Forslag og ændringer">
+                    <StackPanel Margin="5">
+                        <Button Margin="0 5 0 0" Grid.Row="6" Grid.ColumnSpan="2" cal:Message.Attach="ApplyAllSuggestions()">Anvend alle forslag</Button>
+                        <Button Margin="0 5 0 0" Grid.Row="7" Grid.ColumnSpan="2" cal:Message.Attach="SaveTableIndex()">Gem tableIndex</Button>
+                    </StackPanel>
                 </GroupBox>
             </Grid>
         </ScrollViewer>
@@ -228,9 +237,23 @@
                         </ComboBox>
                         <ListBox ItemsSource="{Binding FilteredTableViewModels}" SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
                     </DockPanel>
-                    
+
                     <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
                     <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnAnalysis}" ItemsSource="{Binding CurrentColumnAnalyses, Mode=OneWay}" util:GridViewSort.AutoSort="True">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListViewItem}">
+                                <Setter Property="Tag" Value="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}"/>
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu>
+                                            <MenuItem cal:Message.Attach="ApplySuggestion()">
+                                                <MenuItem.Header>Anvend datatypeforslag</MenuItem.Header>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListView.ItemContainerStyle>
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Id" Width="50" DisplayMemberBinding="{Binding Column.ColumnId}" util:GridViewSort.PropertyName="Column.ColumnIdNumber"></GridViewColumn>
@@ -259,8 +282,8 @@
                                             <TextBlock>
                                                 <TextBlock.Text>
                                                     <MultiBinding StringFormat="{}{0} {1}">
-                                                        <Binding Path="Column.ParameterizedDataType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
-                                                        <Binding Path="Column.ParameterizedDataType.Parameter" />
+                                                        <Binding Path="Column.ParameterizedDataType.DataType" BindsDirectlyToSource="True" Converter="{StaticResource DataTypeToStringConverter}"/>
+                                                        <Binding Path="Column.ParameterizedDataType.Parameter" BindsDirectlyToSource="True" />
                                                     </MultiBinding>
                                                 </TextBlock.Text>
                                                 <TextBlock.Style>
@@ -487,7 +510,6 @@
                 </Grid>
             </TabItem>
 
-
             <TabItem Header="Fejlvisning">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -551,7 +573,7 @@
                     </ListView>
                 </Grid>
             </TabItem>
-            
+
             <TabItem Header="Statistik">
                 <ScrollViewer>
                     <ItemsControl ItemsSource="{Binding DataTypeStatistics}" ItemTemplate="{StaticResource StatisticsItemTemplate}">

@@ -620,6 +620,27 @@ namespace HardHorn.ViewModels
             }
         }
 
+        public void ApplyAllSuggestions()
+        {
+            foreach (var columnAnalysis in _analyzer.TestHierachy.Values.SelectMany(d => d.Values))
+            {
+                columnAnalysis.ApplySuggestion();
+            }
+        }
+
+        public void SaveTableIndex()
+        {
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    ArchiveVersion.TableIndex.ToXml().Save(dialog.FileName);
+                }
+            }
+
+        }
+
         public async void LoadTables()
         {
             if (Directory.Exists(TestLocation) && File.Exists(Path.Combine(TestLocation, "Indices", "tableIndex.xml")))
@@ -1012,7 +1033,8 @@ namespace HardHorn.ViewModels
                     var logger = new ProgressLogger(this);
                     IEnumerable<TableComparison> comparisons = await Task.Run(() =>
                     {
-                        return ArchiveVersion.CompareWithTables(ArchiveVersion.LoadTables(ArchiveVersion, location, logger));
+                        var tableIndex = TableIndex.ParseFile(location, logger);
+                        return ArchiveVersion.CompareWithTables(tableIndex.Tables);
                     });
 
                     TableComparisons.Clear();

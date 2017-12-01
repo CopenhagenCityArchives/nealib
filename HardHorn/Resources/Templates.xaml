@@ -3,14 +3,15 @@
                     xmlns:local="clr-namespace:HardHorn;assembly=HardHorn"
                     xmlns:vm="clr-namespace:HardHorn.ViewModels;assembly=HardHorn"
                     xmlns:ctl="clr-namespace:HardHorn.Controls;assembly=HardHorn"
+                    xmlns:util="clr-namespace:HardHorn.Utilities;assembly=HardHorn"
                     xmlns:log="clr-namespace:HardHorn.Logging;assembly=LibHardHorn"
                     xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
                     xmlns:cal="http://www.caliburnproject.org">
-    <local:HasErrorsColorConverter x:Key="HasErrorsColorConverter" />
-    <local:ErrorCountColorConverter x:Key="ErrorCountColorConverter" />
-    <local:DataTypeToStringConverter x:Key="DataTypeToStringConverter" />
-    <local:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
-    <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    <util:HasErrorsColorConverter x:Key="HasErrorsColorConverter" />
+    <util:ErrorCountColorConverter x:Key="ErrorCountColorConverter" />
+    <util:DataTypeToStringConverter x:Key="DataTypeToStringConverter" />
+    <util:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
+    <util:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
     <Style x:Key="HyperlinkButtonStyle" TargetType="Button">
         <Setter Property="Focusable" Value="False" />

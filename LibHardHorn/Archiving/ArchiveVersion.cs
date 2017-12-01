@@ -74,6 +74,8 @@ namespace HardHorn.Archiving
         /// </summary>
         public string Path { get { return _path; } }
 
+        public TableIndex TableIndex { get; private set; }
+
         /// <summary>
         /// Constructs an archive version.
         /// </summary>
@@ -189,7 +191,7 @@ namespace HardHorn.Archiving
         public static ArchiveVersion Load(string path, ILogger log, Action<Exception> callback = null)
         {
             var archiveVersion = new ArchiveVersion(System.IO.Path.GetFileName(path), path, null);
-            archiveVersion.Tables = LoadTables(archiveVersion, System.IO.Path.Combine(path, "Indices", "tableIndex.xml"), log, callback).ToList();
+            archiveVersion.LoadTableIndex(log, callback);
             return archiveVersion;
         }
 
@@ -200,18 +202,20 @@ namespace HardHorn.Archiving
         /// <param name="path">The path to the table index file.</param>
         /// <param name="log">The logger.</param>
         /// <returns>An enumerable of the tables.</returns>
-        public static IEnumerable<Table> LoadTables(ArchiveVersion archiveVersion, string path, ILogger log, Action<Exception> callback = null)
+        public void LoadTableIndex(ILogger log, Action<Exception> callback = null)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
-            var tableIndex = TableIndex.ParseFile(path, log, callback);
+            var tableIndex = Archiving.TableIndex.ParseFile(System.IO.Path.Combine(Path, "Indices", "tableIndex.xml"), log, callback);
 
             foreach (var table in tableIndex.Tables)
             {
-                table.ArchiveVersion = archiveVersion;
+                table.ArchiveVersion = this;
             }
 
-            return tableIndex.Tables;
+            Tables = tableIndex.Tables;
+
+            TableIndex = tableIndex;
         }
 
         public static IEnumerable<View> GetViews(string path)

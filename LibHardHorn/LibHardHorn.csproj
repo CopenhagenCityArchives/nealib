@@ -47,6 +47,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analysis\AnalysisErrorsOccuredBase.cs" />
+    <Compile Include="Analysis\AnalysisTestType.cs" />
+    <Compile Include="Analysis\ColumnAnalysis.cs" />
+    <Compile Include="Analysis\Test.cs" />
     <Compile Include="Archiving\ArchiveVersion.cs" />
     <Compile Include="Archiving\DataType.cs" />
     <Compile Include="Archiving\Exceptions.cs" />
@@ -58,7 +62,7 @@
     <Compile Include="Archiving\View.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Archiving\Column.cs" />
-    <Compile Include="Analysis\Analysis.cs" />
+    <Compile Include="Analysis\Analyzer.cs" />
     <Compile Include="Archiving\ParameterizedDataType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Statistics\Statistics.cs" />
