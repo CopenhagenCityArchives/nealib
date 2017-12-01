@@ -10,6 +10,7 @@ using System.IO;
 using System.Dynamic;
 using HardHorn.Logging;
 using System.Xml.Linq;
+using HardHorn.Utility;
 
 namespace HardHorn.Archiving
 {

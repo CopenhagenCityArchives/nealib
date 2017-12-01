@@ -16,6 +16,7 @@ using System.Windows.Data;
 using System.Windows;
 using System.Threading.Tasks;
 using System.Threading;
+using HardHorn.Utility;
 
 namespace HardHorn.ViewModels
 {

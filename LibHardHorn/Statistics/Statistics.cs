@@ -38,8 +38,8 @@ namespace HardHorn.Statistics
                     {
                         dynamic dataTypeStat = new ExpandoObject();
                         dataTypeStat.Count = 1;
-                        dataTypeStat.MaxParams = column.ParameterizedDataType.Parameter == null ? null : new DataTypeParam(new int[column.ParameterizedDataType.Parameter.Length]);
-                        dataTypeStat.MinParams = column.ParameterizedDataType.Parameter == null ? null : new DataTypeParam(new int[column.ParameterizedDataType.Parameter.Length]);
+                        dataTypeStat.MaxParams = column.ParameterizedDataType.Parameter == null ? null : new Parameter(new int[column.ParameterizedDataType.Parameter.Length]);
+                        dataTypeStat.MinParams = column.ParameterizedDataType.Parameter == null ? null : new Parameter(new int[column.ParameterizedDataType.Parameter.Length]);
                         if (column.ParameterizedDataType.Parameter != null && column.ParameterizedDataType.Parameter.Length > 0)
                         {
                             dataTypeStat.ParamValues = new List<int>[column.ParameterizedDataType.Parameter.Length];

@@ -7,7 +7,7 @@
     <ProjectGuid>{E4E71235-951C-4D4E-865D-50BB1A79653A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LibHardHorn</RootNamespace>
+    <RootNamespace>HardHorn</RootNamespace>
     <AssemblyName>LibHardHorn</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -47,14 +47,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArchiveVersion.cs" />
-    <Compile Include="ILogger.cs" />
-    <Compile Include="Column.cs" />
-    <Compile Include="Analysis.cs" />
+    <Compile Include="Archiving\ArchiveVersion.cs" />
+    <Compile Include="Archiving\DataType.cs" />
+    <Compile Include="Archiving\Exceptions.cs" />
+    <Compile Include="Archiving\ForeignKey.cs" />
+    <Compile Include="Archiving\Parameter.cs" />
+    <Compile Include="Archiving\Post.cs" />
+    <Compile Include="Archiving\PrimaryKey.cs" />
+    <Compile Include="Archiving\Row.cs" />
+    <Compile Include="Archiving\View.cs" />
+    <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Archiving\Column.cs" />
+    <Compile Include="Analysis\Analysis.cs" />
+    <Compile Include="Archiving\ParameterizedDataType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Statistics.cs" />
-    <Compile Include="Table.cs" />
-    <Compile Include="TableIndex.cs" />
+    <Compile Include="Statistics\Statistics.cs" />
+    <Compile Include="Archiving\Table.cs" />
+    <Compile Include="Archiving\TableIndex.cs" />
+    <Compile Include="Utility\ColumnComparison.cs" />
+    <Compile Include="Utility\DataTypeUtility.cs" />
+    <Compile Include="Utility\TableComparison.cs" />
+    <Compile Include="Utility\TableReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
