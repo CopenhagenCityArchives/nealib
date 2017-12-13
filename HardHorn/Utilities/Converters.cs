@@ -12,6 +12,25 @@ using HardHorn.Analysis;
 
 namespace HardHorn.Utilities
 {
+    public class ParameterToStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var param = value as Parameter;
+            if (param == null)
+            {
+                return null;
+            }
+
+            return string.Format("({0})", string.Join(", ", param.Select(p => p.Value)));
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class HasErrorsColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

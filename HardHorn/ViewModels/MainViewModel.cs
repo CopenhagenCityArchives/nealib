@@ -365,6 +365,28 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Actions
+        public void AddParameter()
+        {
+            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter == null)
+            {
+                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = new Archiving.Parameter(new int[0]);
+            }
+            SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.AddParameterItem(0);
+        }
+
+        public void RemoveParameter()
+        {
+            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter == null)
+                return;
+            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter.Count == 1)
+            {
+                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = null;
+                return;
+            }
+            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter.Count > 1)
+                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.RemoveParameterItem(0);
+        }
+
         public void OnArchiveVersionException(Exception ex)
         {
             ErrorViewModelBase errorViewModel;

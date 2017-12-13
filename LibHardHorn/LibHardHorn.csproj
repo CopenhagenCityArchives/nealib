@@ -56,6 +56,7 @@
     <Compile Include="Archiving\Exceptions.cs" />
     <Compile Include="Archiving\ForeignKey.cs" />
     <Compile Include="Archiving\Parameter.cs" />
+    <Compile Include="Archiving\ParameterItem.cs" />
     <Compile Include="Archiving\Post.cs" />
     <Compile Include="Archiving\PrimaryKey.cs" />
     <Compile Include="Archiving\Row.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Archiving\TableIndex.cs" />
     <Compile Include="Utility\ColumnComparison.cs" />
     <Compile Include="Utility\DataTypeUtility.cs" />
+    <Compile Include="Utility\NotifyPropertyChangedBase.cs" />
     <Compile Include="Utility\TableComparison.cs" />
     <Compile Include="Utility\TableReader.cs" />
   </ItemGroup>

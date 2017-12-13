@@ -9,7 +9,7 @@ namespace HardHorn.Archiving
     /// <summary>
     /// A column of a table in an archive version.
     /// </summary>
-    public class Column
+    public class Column : NotifyPropertyChangedBase
     {
         public string Name { get; private set; }
         public ParameterizedDataType ParameterizedDataType { get; set; }
@@ -17,7 +17,21 @@ namespace HardHorn.Archiving
         public string Description { get; private set; }
         public string ColumnId { get; private set; }
         public int ColumnIdNumber { get; private set; }
-        public bool Nullable { get; private set; }
+
+        bool _nullable;
+        public bool Nullable
+        {
+            get
+            {
+                return _nullable;
+            }
+            set
+            {
+                _nullable = value;
+                NotifyOfPropertyChanged("Nullable");
+            }
+        }
+
         public Table Table { get; private set; }
         public string DefaultValue { get; private set; }
         public string FunctionalDescription { get; private set; }
@@ -74,14 +88,14 @@ namespace HardHorn.Archiving
             }
             else if (ParameterizedDataType.Parameter == null && oldColumn.ParameterizedDataType.Parameter == null)
             { }
-            else if (ParameterizedDataType.Parameter.Length != oldColumn.ParameterizedDataType.Parameter.Length)
+            else if (ParameterizedDataType.Parameter.Count != oldColumn.ParameterizedDataType.Parameter.Count)
             {
                 comparison.Modified = true;
                 comparison.DataTypeModified = true;
             }
             else
             {
-                for (int i = 0; i < ParameterizedDataType.Parameter.Length; i++)
+                for (int i = 0; i < ParameterizedDataType.Parameter.Count; i++)
                 {
                     if (ParameterizedDataType.Parameter[i] != oldColumn.ParameterizedDataType.Parameter[i])
                     {
@@ -110,13 +124,12 @@ namespace HardHorn.Archiving
         public XElement ToXml()
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
-            var a = "a" ?? "b";
 
             return new XElement(xmlns + "column",
                 new XElement(xmlns + "name", Name),
                 new XElement(xmlns + "columnID", ColumnId),
                 new XElement(xmlns + "type", ParameterizedDataType.ToString()),
-                new XElement(xmlns + "typeOriginal", DataTypeOriginal),
+                DataTypeOriginal == null ? null : new XElement(xmlns + "typeOriginal", DataTypeOriginal),
                 DefaultValue == null ? null : new XElement(xmlns + "defaultValue", DefaultValue),
                 new XElement(xmlns + "nullable", Nullable),
                 new XElement(xmlns + "description", Description),
@@ -219,12 +232,14 @@ namespace HardHorn.Archiving
             string colId = xcolid.Value;
             int colIdNum = int.Parse(colId.Substring(1));
 
+            string typeOrig = xtypeorig == null ? null : xtypeorig.Value;
+            var column = new Column(table, name, new ParameterizedDataType(DataType.UNDEFINED, null), typeOrig, nullable, desc, colId, colIdNum, defaultValue, functionalDescription);
+
             // parse type
-            ParameterizedDataType parameterizedDataType = ParameterizedDataType.Parse(xtype, table, colId, name);
+            ParameterizedDataType parameterizedDataType = ParameterizedDataType.Parse(xtype, table, column);
+            column.ParameterizedDataType = parameterizedDataType;
 
-            string typeOrig = xtypeorig.Value;
-
-            return new Column(table, name, parameterizedDataType, typeOrig, nullable, desc, colId, colIdNum, defaultValue, functionalDescription);
+            return column;
         }
     }
 }

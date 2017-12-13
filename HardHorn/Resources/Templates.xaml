@@ -12,6 +12,7 @@
     <util:DataTypeToStringConverter x:Key="DataTypeToStringConverter" />
     <util:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
     <util:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    <util:ParameterToStringConverter x:Key="ParameterToStringConverter" />
 
     <Style x:Key="HyperlinkButtonStyle" TargetType="Button">
         <Setter Property="Focusable" Value="False" />

@@ -75,7 +75,7 @@ namespace HardHorn.Utility
             throw exp;
         }
 
-        public static bool ValidateParameterLength(DataType type, IEnumerable<int> parameters)
+        public static bool ValidateParameterLength(DataType type, Parameter parameters)
         {
             switch (type)
             {
@@ -83,17 +83,17 @@ namespace HardHorn.Utility
                 case DataType.CHARACTER_VARYING:
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    return parameters.Count() == 1;
+                    return parameters != null && parameters.Count == 1;
                 case DataType.TIMESTAMP:
                 case DataType.TIMESTAMP_WITH_TIME_ZONE:
                 case DataType.TIME:
                 case DataType.TIME_WITH_TIME_ZONE:
-                    return parameters.Count() == 1;
+                    return parameters != null && parameters.Count == 1;
                 case DataType.NUMERIC:
                 case DataType.DECIMAL:
-                    return parameters.Count() == 2;
+                    return parameters != null && parameters.Count == 2;
                 default:
-                    return false;
+                    return parameters == null || parameters.Count == 0;
             }
         }
     }

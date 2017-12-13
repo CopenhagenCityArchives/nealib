@@ -1,13 +1,12 @@
-﻿using HardHorn.Archiving;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using HardHorn.Archiving;
+using HardHorn.Utility;
 
 namespace HardHorn.Analysis
 {
-    public abstract class AnalysisErrorsOccuredBase
+    public abstract class AnalysisErrorsOccuredBase : NotifyPropertyChangedBase
     {
         public event AnalysisErrorOccuredEventHandler AnalysisErrorsOccured;
         public delegate void AnalysisErrorOccuredEventHandler(object sender, AnalysisErrorsOccuredArgs e);

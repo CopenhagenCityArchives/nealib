@@ -28,6 +28,11 @@ namespace HardHorn.Archiving
         public PrimaryKey PrimaryKey { get; private set; }
         public List<ForeignKey> ForeignKeys {get;private set;}
 
+        public override string ToString()
+        {
+            return string.Format("<{0}: {1}>", Folder, Name);
+        }
+
         /// <summary>
         /// Construct a table.
         /// </summary>
@@ -85,7 +90,7 @@ namespace HardHorn.Archiving
                 catch (ArchiveVersionColumnTypeParsingException ex)
                 {
                     log.Log(string.Format("En fejl opstod under afkodningen af kolonnen '{0}' i tabellen '{1}': Typen '{2}' er ikke valid.", ex.Name, table.Name, ex.Type), LogLevel.ERROR);
-                    (table.Columns as List<Column>).Add(new Column(table, ex.Name, ParameterizedDataType.GetUndefined(), null, false, "", ex.Id, int.Parse(ex.Id.Substring(1)), null, null));
+                    (table.Columns as List<Column>).Add(ex.Column);
                     if (callback != null)
                         callback(ex);
                 }

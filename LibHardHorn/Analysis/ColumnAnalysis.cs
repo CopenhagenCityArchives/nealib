@@ -1,23 +1,25 @@
 ﻿using HardHorn.Archiving;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace HardHorn.Analysis
 {
-    public class ColumnAnalysis : AnalysisErrorsOccuredBase, INotifyPropertyChanged
+    public class ColumnAnalysis : AnalysisErrorsOccuredBase
     {
-        public event PropertyChangedEventHandler PropertyChanged = delegate { };
-        void NotifyOfPropertyChanged(string propertyName)
-        {
-            PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
 
         Test _selectedTest;
-        public Test SelectedTest { get { return _selectedTest; } set { _selectedTest = Tests.IndexOf(value) == -1 ? _selectedTest : value; PropertyChanged(this, new PropertyChangedEventArgs("SelectedTest")); } }
+        public Test SelectedTest
+        {
+            get { return _selectedTest; }
+            set
+            {
+                _selectedTest = Tests.IndexOf(value) == -1 ? _selectedTest : value;
+                NotifyOfPropertyChanged("SelectedTest");
+            }
+        }
 
         Dictionary<Test, List<Post>> _errorPostCaches = new Dictionary<Test, List<Post>>();
         DateTime _lastErrorsEventTime = DateTime.Now;
@@ -35,8 +37,8 @@ namespace HardHorn.Analysis
             FirstRowAnalyzed = false;
             Column = column;
             ErrorCount = 0;
-            MinParam = new Parameter(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Length : 1]);
-            MaxParam = new Parameter(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Length : 1]);
+            MinParam = new Parameter(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Count : 1]);
+            MaxParam = new Parameter(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Count : 1]);
             Tests = new List<Test>();
         }
 
@@ -45,10 +47,6 @@ namespace HardHorn.Analysis
             if (SuggestedType != null)
             {
                 Column.ParameterizedDataType = SuggestedType;
-                NotifyOfPropertyChanged("Column.ParameterizedDataType.DataType");
-                NotifyOfPropertyChanged("Column.ParameterizedDataType.Parameter");
-                NotifyOfPropertyChanged("Column.ParameterizedDataType");
-                NotifyOfPropertyChanged("Column");
             }
         }
 
@@ -70,7 +68,7 @@ namespace HardHorn.Analysis
                     if (_errorPostCaches[test].Count == 10000 || diff.Seconds > 2)
                     {
                         NotifyOfAnalysisErrorOccured(test, new List<Post>(_errorPostCaches[test]), Column);
-                        PropertyChanged(this, new PropertyChangedEventArgs("ErrorCount"));
+                        NotifyOfPropertyChanged("ErrorCount");
                         _lastErrorsEventTime = DateTime.Now;
                         _errorPostCaches[test].Clear();
                     }
@@ -90,26 +88,26 @@ namespace HardHorn.Analysis
                 case DataType.CHARACTER:
                     if (FirstRowAnalyzed)
                     {
-                        MinParam[0] = Math.Min(MinParam[0], data.Length);
-                        MaxParam[0] = Math.Max(MaxParam[0], data.Length);
+                        MinParam[0].Value = Math.Min(MinParam[0].Value, data.Length);
+                        MaxParam[0].Value = Math.Max(MaxParam[0].Value, data.Length);
                     }
                     else
                     {
-                        MinParam[0] = data.Length;
-                        MaxParam[0] = data.Length;
+                        MinParam[0].Value = data.Length;
+                        MaxParam[0].Value = data.Length;
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
                 case DataType.CHARACTER_VARYING:
                     if (FirstRowAnalyzed)
                     {
-                        MinParam[0] = Math.Min(MinParam[0], data.Length);
-                        MaxParam[0] = Math.Max(MaxParam[0], data.Length);
+                        MinParam[0].Value = Math.Min(MinParam[0].Value, data.Length);
+                        MaxParam[0].Value = Math.Max(MaxParam[0].Value, data.Length);
                     }
                     else
                     {
-                        MinParam[0] = data.Length;
-                        MaxParam[0] = data.Length;
+                        MinParam[0].Value = data.Length;
+                        MaxParam[0].Value = data.Length;
                     }
                     break;
                 case DataType.DECIMAL:
@@ -118,19 +116,23 @@ namespace HardHorn.Analysis
                     {
                         components[0] = components[0].Substring(1);
                     }
+                    if (components.Length == 1)
+                    {
+                        components = new string[] { components[0], "" };
+                    }
                     if (FirstRowAnalyzed)
                     {
-                        MinParam[0] = Math.Min(MinParam[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        MaxParam[0] = Math.Max(MaxParam[0], components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        MinParam[1] = Math.Min(MinParam[1], components.Length == 1 ? 0 : components[1].Length);
-                        MaxParam[1] = Math.Max(MaxParam[1], components.Length == 1 ? 0 : components[1].Length);
+                        MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                        MaxParam[0].Value = Math.Max(MaxParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                        MinParam[1].Value = Math.Min(MinParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
+                        MaxParam[1].Value = Math.Max(MaxParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
                     }
                     else
                     {
-                        MinParam[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        MaxParam[0] = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        MinParam[1] = components.Length == 1 ? 0 : components[1].Length;
-                        MaxParam[1] = components.Length == 1 ? 0 : components[1].Length;
+                        MinParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                        MaxParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                        MinParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
+                        MaxParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
                     }
                     break;
                 case DataType.TIME:
@@ -145,49 +147,49 @@ namespace HardHorn.Analysis
             switch (Column.ParameterizedDataType.DataType)
             {
                 case DataType.CHARACTER:
-                    if (MinParam[0] == MaxParam[0] && MaxParam[0] > Column.ParameterizedDataType.Parameter[0])
+                    if (MinParam[0] == MaxParam[0] && MaxParam[0].Value > Column.ParameterizedDataType.Parameter[0].Value)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
                     }
                     else if (MinParam[0] != MaxParam[0])
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER:
-                    if (MinParam[0] == MaxParam[0] && MaxParam[0] > Column.ParameterizedDataType.Parameter[0])
+                    if (MinParam[0] == MaxParam[0] && MaxParam[0].Value > Column.ParameterizedDataType.Parameter[0].Value)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
                     }
                     else if (MinParam[0] != MaxParam[0])
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.CHARACTER_VARYING:
                     if (MinParam[0] == MaxParam[0])
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
                     }
                     else if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0])
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
                     if (MinParam[0] == MaxParam[0])
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
                     }
                     else if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0])
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0]));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.DECIMAL:
                     if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0] || MaxParam[1] != Column.ParameterizedDataType.Parameter[1])
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.DECIMAL, new Parameter(new int[] { MaxParam[0], MaxParam[1] }));
+                        SuggestedType = new ParameterizedDataType(DataType.DECIMAL, new Parameter(MaxParam[0].Value, MaxParam[1].Value));
                     }
                     break;
             }

@@ -7,6 +7,7 @@ namespace HardHorn.Archiving
     {
         public XElement Element { get; set; }
 
+        public Column Column { get; set; }
         public Table Table { get; set; }
 
         public ArchiveVersionColumnParsingException(string message, XElement element, Table table) : base(message)
@@ -22,11 +23,12 @@ namespace HardHorn.Archiving
         public string Type { get; set; }
         public string Id { get; set; }
 
-        public ArchiveVersionColumnTypeParsingException(string message, string id, string name, string type, XElement element, Table table) : base(message, element, table)
+        public ArchiveVersionColumnTypeParsingException(string message, string type, XElement element, Column column, Table table) : base(message, element, table)
         {
-            Name = name;
+            Column = column;
+            Name = Column.Name;
             Type = type;
-            Id = id;
+            Id = Column.ColumnId;
         }
     }
 }

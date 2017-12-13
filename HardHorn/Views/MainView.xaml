@@ -282,8 +282,8 @@
                                             <TextBlock>
                                                 <TextBlock.Text>
                                                     <MultiBinding StringFormat="{}{0} {1}">
-                                                        <Binding Path="Column.ParameterizedDataType.DataType" BindsDirectlyToSource="True" Converter="{StaticResource DataTypeToStringConverter}"/>
-                                                        <Binding Path="Column.ParameterizedDataType.Parameter" BindsDirectlyToSource="True" />
+                                                        <Binding Path="Column.ParameterizedDataType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
+                                                        <Binding Path="Column.ParameterizedDataType.ParameterString"/>
                                                     </MultiBinding>
                                                 </TextBlock.Text>
                                                 <TextBlock.Style>
@@ -313,6 +313,54 @@
                         </ListView.View>
                     </ListView>
                     <TabControl Grid.Row="2" Grid.Column="2">
+                        <TabItem Header="Modificér">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Label>Datatype</Label>
+                                <ComboBox
+                                    Grid.Column="1"
+                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.DataType}">
+                                    <ComboBox.Resources>
+                                        <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+                                            <ObjectDataProvider.MethodParameters>
+                                                <x:Type TypeName="av:DataType"></x:Type>
+                                            </ObjectDataProvider.MethodParameters>
+                                        </ObjectDataProvider>
+                                    </ComboBox.Resources>
+                                    <ComboBox.ItemsSource>
+                                        <CompositeCollection>
+                                            <CollectionContainer Collection="{Binding Source={StaticResource DataTypeEnumValues}}"></CollectionContainer>
+                                        </CompositeCollection>
+                                    </ComboBox.ItemsSource>
+                                </ComboBox>
+                                <Label Grid.Row="1">Parameter</Label>
+                                <StackPanel Grid.Row="1" Grid.Column="1"  Orientation="Horizontal">
+                                    <Button cal:Message.Attach="AddParameter">+</Button>
+                                    <Button cal:Message.Attach="RemoveParameter">-</Button>
+                                    <ItemsControl ItemsSource="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBox VerticalAlignment="Center" Text="{Binding Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel></WrapPanel>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <CheckBox Grid.Row="2" Grid.ColumnSpan="2" IsChecked="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.Nullable}">Nullable</CheckBox>
+                            </Grid>
+                        </TabItem>
                         <TabItem Header="Postvisning">
                             <DockPanel>
                                 <StackPanel Margin="5" Orientation="Horizontal" DockPanel.Dock="Top">
