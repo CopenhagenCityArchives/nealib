@@ -46,7 +46,8 @@ namespace HardHorn.Analysis
         {
             if (SuggestedType != null)
             {
-                Column.ParameterizedDataType = SuggestedType;
+                Column.ParameterizedDataType.DataType = SuggestedType.DataType;
+                Column.ParameterizedDataType.Parameter = SuggestedType.Parameter;
             }
         }
 
@@ -147,49 +148,80 @@ namespace HardHorn.Analysis
             switch (Column.ParameterizedDataType.DataType)
             {
                 case DataType.CHARACTER:
-                    if (MinParam[0] == MaxParam[0] && MaxParam[0].Value > Column.ParameterizedDataType.Parameter[0].Value)
+                    if (MinParam[0].Value == MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
                     }
-                    else if (MinParam[0] != MaxParam[0])
+                    else if (MinParam[0].Value != MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER:
-                    if (MinParam[0] == MaxParam[0] && MaxParam[0].Value > Column.ParameterizedDataType.Parameter[0].Value)
+                    if (MinParam[0].Value == MaxParam[0].Value && MaxParam[0].Value > Column.ParameterizedDataType.Parameter[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
                     }
-                    else if (MinParam[0] != MaxParam[0])
+                    else if (MinParam[0].Value != MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.CHARACTER_VARYING:
-                    if (MinParam[0] == MaxParam[0])
+                    if (MinParam[0].Value == MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
                     }
-                    else if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0])
+                    else if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    if (MinParam[0] == MaxParam[0])
+                    if (MinParam[0].Value == MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
                     }
-                    else if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0])
+                    else if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
                     }
                     break;
                 case DataType.DECIMAL:
-                    if (MaxParam[0] != Column.ParameterizedDataType.Parameter[0] || MaxParam[1] != Column.ParameterizedDataType.Parameter[1])
+                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value || MaxParam[1].Value != Column.ParameterizedDataType.Parameter[1].Value)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.DECIMAL, new Parameter(MaxParam[0].Value, MaxParam[1].Value));
+                        if (MaxParam[1].Value == 0)
+                        {
+                            SuggestedType = new ParameterizedDataType(DataType.INTEGER, null);
+                        }
+                        else
+                        {
+                            SuggestedType = new ParameterizedDataType(DataType.DECIMAL, new Parameter(MaxParam[0].Value, MaxParam[1].Value));
+                        }
+                    }
+                    break;
+                case DataType.TIME:
+                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    {
+                        SuggestedType = new ParameterizedDataType(DataType.TIME, new Parameter(MaxParam[0].Value));
+                    }
+                    break;
+                case DataType.TIMESTAMP:
+                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    {
+                        SuggestedType = new ParameterizedDataType(DataType.TIMESTAMP, new Parameter(MaxParam[0].Value));
+                    }
+                    break;
+                case DataType.TIME_WITH_TIME_ZONE:
+                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    {
+                        SuggestedType = new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, new Parameter(MaxParam[0].Value));
+                    }
+                    break;
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    {
+                        SuggestedType = new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, new Parameter(MaxParam[0].Value));
                     }
                     break;
             }

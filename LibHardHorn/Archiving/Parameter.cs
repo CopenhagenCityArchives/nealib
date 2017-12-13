@@ -24,6 +24,17 @@ namespace HardHorn.Archiving
             return "(" + string.Join(", ", this.Select(p => p.Value)) + ")";
         }
 
+        public static Parameter GetDefaultParameter(DataType dataType)
+        {
+            switch (dataType)
+            {
+                case DataType.TIMESTAMP:
+                    return new Parameter(6);
+                default:
+                    return null;
+            }
+        }
+
         public int CompareTo(object obj)
         {
             var other = obj as Parameter;

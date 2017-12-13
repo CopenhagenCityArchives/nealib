@@ -114,6 +114,11 @@ namespace HardHorn.Archiving
                     parameter = new Parameter(parameters.ToArray());
                 }
 
+                if (parameter == null)
+                {
+                    parameter = Parameter.GetDefaultParameter(dataType);
+                }
+
                 if (!DataTypeUtility.ValidateParameterLength(dataType, parameter))
                 {
                     throw new ArchiveVersionColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
