@@ -49,6 +49,9 @@
                                             <DataTrigger Binding="{Binding TestRunning}" Value="True">
                                                 <Setter Property="Button.IsEnabled" Value="False" />
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding LoadingTableIndex}" Value="True">
+                                                <Setter Property="Button.IsEnabled" Value="False" />
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Button.Style>
@@ -72,6 +75,9 @@
                                 <Style>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding TestRunning}" Value="True">
+                                            <Setter Property="Button.IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding LoadingTableIndex}" Value="True">
                                             <Setter Property="Button.IsEnabled" Value="False" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -307,8 +313,8 @@
                                         </MultiBinding>
                                     </GridViewColumn.DisplayMemberBinding>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding MinParam}"  util:GridViewSort.PropertyName="MinParam"></GridViewColumn>
-                                <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding MaxParam}" util:GridViewSort.PropertyName="MaxParam"></GridViewColumn>
+                                <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding MinParam, Converter={StaticResource ParameterToStringConverter}}"  util:GridViewSort.PropertyName="MinParam"></GridViewColumn>
+                                <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding MaxParam,  Converter={StaticResource ParameterToStringConverter}}" util:GridViewSort.PropertyName="MaxParam"></GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>

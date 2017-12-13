@@ -86,6 +86,13 @@ namespace HardHorn.ViewModels
             set { _testRunning = value; NotifyOfPropertyChange("TestRunning"); }
         }
 
+        bool _loadingTableIndex = false;
+        public bool LoadingTableIndex
+        {
+            get { return _loadingTableIndex; }
+            set { _loadingTableIndex = value; NotifyOfPropertyChange("LoadingTableIndex"); }
+        }
+
         private bool _testLoaded = false;
         public bool TestLoaded
         {
@@ -506,25 +513,6 @@ namespace HardHorn.ViewModels
             LogItems.Clear();
         }
 
-        public void SaveState()
-        {
-            using (var dialog = new System.Windows.Forms.SaveFileDialog())
-            {
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                    using (var stream = dialog.OpenFile())
-                    {
-                        try
-                        {
-                            formatter.Serialize(stream, this);
-                        }
-                        catch (Exception) { }
-                    }
-                }
-            }
-        }
-
         public void GoToTable(Table table)
         {
 
@@ -603,6 +591,26 @@ namespace HardHorn.ViewModels
             }
         }
 
+
+        public void SaveState()
+        {
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                    using (var stream = dialog.OpenFile())
+                    {
+                        try
+                        {
+                            formatter.Serialize(stream, this);
+                        }
+                        catch (Exception) { }
+                    }
+                }
+            }
+        }
+
         public void SaveLog()
         {
             using (var dialog = new System.Windows.Forms.SaveFileDialog())
@@ -675,6 +683,7 @@ namespace HardHorn.ViewModels
                 LoadingErrorViewModelIndex.Clear();
                 Regexes.Clear();
 
+                LoadingTableIndex = true;
                 TestLoaded = false;
                 Log(string.Format("Indlæser tabeller fra '{0}'", TestLocation), LogLevel.SECTION);
                 try
@@ -690,6 +699,10 @@ namespace HardHorn.ViewModels
                 {
                     Log("En undtagelse forekom under indlæsningen af arkiveringsversionen, med følgende besked: " + ex.Message, LogLevel.ERROR);
                     return;
+                }
+                finally
+                {
+                    LoadingTableIndex = false;
                 }
 
                 WindowTitle = string.Format("{0} - HardHorn", ArchiveVersion.Id);
