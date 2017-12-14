@@ -20,10 +20,15 @@ namespace HardHorn.Archiving
             }
             set
             {
+                // If it is modified, it will stay modified
+                IsModified = IsModified || _dataType != value;
+
                 _dataType = value;
                 NotifyOfPropertyChanged("DataType");
             }
         }
+
+        public bool IsModified { get; private set; }
 
         Parameter _parameter;
         public Parameter Parameter
@@ -34,6 +39,9 @@ namespace HardHorn.Archiving
             }
             set
             {
+                // If it is modified, it will stay modified
+                IsModified = IsModified || _parameter != value && (_parameter == null || _parameter.CompareTo(value) != 0);
+
                 _parameter = value;
                 if (value != null)
                 {
@@ -80,8 +88,9 @@ namespace HardHorn.Archiving
 
         public ParameterizedDataType(DataType dataType, Parameter parameter, string parsed = null)
         {
-            DataType = dataType;
-            Parameter = parameter;
+            IsModified = false;
+            _dataType = dataType;
+            _parameter = parameter;
             Parsed = parsed;
         }
 
@@ -159,7 +168,7 @@ namespace HardHorn.Archiving
 
         public override string ToString()
         {
-            if (!string.IsNullOrEmpty(Parsed))
+            if (!string.IsNullOrEmpty(Parsed) && !IsModified)
             {
                 return Parsed;
             }
@@ -170,7 +179,7 @@ namespace HardHorn.Archiving
 
             if (Parameter != null && Parameter.Count > 0)
             {
-                repr += Parameter.ToString();
+                repr += " " + Parameter.ToString();
             }
 
             return repr;

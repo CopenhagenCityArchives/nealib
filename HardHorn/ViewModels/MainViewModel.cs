@@ -650,6 +650,14 @@ namespace HardHorn.ViewModels
             }
         }
 
+        public void ApplySuggestion()
+        {
+            if (SelectedTableViewModel != null && _SelectedTableViewModel.SelectedColumnAnalysis != null)
+            {
+                SelectedTableViewModel.SelectedColumnAnalysis.ApplySuggestion();
+            }
+        }
+
         public void ApplyAllSuggestions()
         {
             foreach (var columnAnalysis in _analyzer.TestHierachy.Values.SelectMany(d => d.Values))
@@ -803,6 +811,23 @@ namespace HardHorn.ViewModels
                 {
                     tableViewModel.Busy = false;
                     tableViewModel.Done = false;
+                }
+
+                // Clear test error view models from list and index
+                TestErrorViewModelIndex.Clear();
+                var filteredErrorViewModels = new List<ErrorViewModelBase>();
+                foreach (var errorViewModel in ErrorViewModels)
+                {
+                    if (errorViewModel is ColumnParsingErrorViewModel
+                        || errorViewModel is ColumnTypeParsingErrorViewModel)
+                    {
+                        filteredErrorViewModels.Add(errorViewModel);
+                    }
+                }
+                ErrorViewModels.Clear();
+                foreach (var errorViewModel in filteredErrorViewModels)
+                {
+                    ErrorViewModels.Add(errorViewModel);
                 }
 
                 foreach (var table in _analyzer.TestHierachy.Values)

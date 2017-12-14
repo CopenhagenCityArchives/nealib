@@ -148,7 +148,7 @@ namespace HardHorn.Analysis
             switch (Column.ParameterizedDataType.DataType)
             {
                 case DataType.CHARACTER:
-                    if (MinParam[0].Value == MaxParam[0].Value)
+                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
                     }
@@ -158,7 +158,7 @@ namespace HardHorn.Analysis
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER:
-                    if (MinParam[0].Value == MaxParam[0].Value && MaxParam[0].Value > Column.ParameterizedDataType.Parameter[0].Value)
+                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
                     }
@@ -168,7 +168,7 @@ namespace HardHorn.Analysis
                     }
                     break;
                 case DataType.CHARACTER_VARYING:
-                    if (MinParam[0].Value == MaxParam[0].Value)
+                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
                     }
@@ -178,7 +178,7 @@ namespace HardHorn.Analysis
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    if (MinParam[0].Value == MaxParam[0].Value)
+                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
                     {
                         SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
                     }

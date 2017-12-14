@@ -246,20 +246,6 @@
 
                     <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
                     <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnAnalysis}" ItemsSource="{Binding CurrentColumnAnalyses, Mode=OneWay}" util:GridViewSort.AutoSort="True">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="{x:Type ListViewItem}">
-                                <Setter Property="Tag" Value="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView}}"/>
-                                <Setter Property="ContextMenu">
-                                    <Setter.Value>
-                                        <ContextMenu>
-                                            <MenuItem cal:Message.Attach="ApplySuggestion()">
-                                                <MenuItem.Header>Anvend datatypeforslag</MenuItem.Header>
-                                            </MenuItem>
-                                        </ContextMenu>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListView.ItemContainerStyle>
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Id" Width="50" DisplayMemberBinding="{Binding Column.ColumnId}" util:GridViewSort.PropertyName="Column.ColumnIdNumber"></GridViewColumn>
@@ -323,9 +309,10 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition MinWidth="100" Width="Auto"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -364,7 +351,9 @@
                                         </ItemsControl.ItemsPanel>
                                     </ItemsControl>
                                 </StackPanel>
-                                <CheckBox Grid.Row="2" Grid.ColumnSpan="2" IsChecked="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.Nullable}">Nullable</CheckBox>
+                                <Label Grid.Row="2">Kan være null</Label>
+                                <CheckBox VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.Nullable}"></CheckBox>
+                                <Button Grid.Row="3" cal:Message.Attach="ApplySuggestion">Anvend datatypeforslag</Button>
                             </Grid>
                         </TabItem>
                         <TabItem Header="Postvisning">
