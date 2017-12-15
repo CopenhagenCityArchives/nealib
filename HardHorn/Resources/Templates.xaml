@@ -157,8 +157,8 @@
                 <Label x:Name="MinParamLabel" Grid.Row="1">Minimumsparametre:</Label>
                 <Label x:Name="MaxParamLabel" Grid.Row="2">Maksimumsparametre:</Label>
                 <Label Grid.Column="1" Content="{Binding Value.Count}"/>
-                <Label Grid.Column="1" Grid.Row="1" Content="{Binding Value.MinParams}"/>
-                <Label Grid.Column="1" Grid.Row="2" Content="{Binding Value.MaxParams}"/>
+                <Label Grid.Column="1" Grid.Row="1" Content="{Binding Value.MinParams, Converter={StaticResource ParameterToStringConverter}}"/>
+                <Label Grid.Column="1" Grid.Row="2" Content="{Binding Value.MaxParams, Converter={StaticResource ParameterToStringConverter}}"/>
                 <Label x:Name="HistLabel" Grid.Row="3" Grid.ColumnSpan="2">Typeparameterhistogrammer:</Label>
                 <ItemsControl Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding Value.BarCharts}">
                     <ItemsControl.ItemsPanel>
