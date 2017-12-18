@@ -233,6 +233,7 @@ namespace HardHorn.Analysis
         {
             ErrorCount = 0;
             Tests.Clear();
+            _errorPostCaches.Clear();
         }
 
         internal void Flush()
