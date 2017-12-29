@@ -17,9 +17,12 @@ namespace HardHorn.Archiving
             set { _value = value; NotifyOfPropertyChanged("Value"); }
         }
 
-        public ParameterItem(int value)
+        public bool AddedAsDefault { get; set; }
+
+        public ParameterItem(int value, bool addedAsDefault=false)
         {
             Value = value;
+            AddedAsDefault = addedAsDefault;
         }
 
         public int CompareTo(ParameterItem other) {

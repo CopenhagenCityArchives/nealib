@@ -28,8 +28,15 @@ namespace HardHorn.Archiving
         {
             switch (dataType)
             {
+                case DataType.CHARACTER:
+                case DataType.CHARACTER_VARYING:
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                    return new Parameter(true, 1);
+                case DataType.TIME:
+                    return new Parameter(true, 1);
                 case DataType.TIMESTAMP:
-                    return new Parameter(6);
+                    return new Parameter(true, 6);
                 default:
                     return null;
             }
@@ -87,8 +94,55 @@ namespace HardHorn.Archiving
         /// Construct a parameter list.
         /// </summary>
         /// <param name="param">The integer parameters.</param>
-        public Parameter(params int[] param) : base(param.Select(i => new ParameterItem(i)))
+        public Parameter(bool defaultValues, params int[] param) : base(param.Select(i => new ParameterItem(i, defaultValues)))
         {
+        }
+
+        public void AddDefaultParametersIfNeeded(DataType dataType)
+        {
+            switch (dataType)
+            {
+                case DataType.DECIMAL:
+                    if (Count == 1)
+                    {
+                        Add(new ParameterItem(0, true));
+                    }
+                    break;
+                case DataType.CHARACTER:
+                case DataType.CHARACTER_VARYING:
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                    if (Count == 0)
+                    {
+                        Add(new ParameterItem(1, true));
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+        public bool ValidateLength(DataType type)
+        {
+            switch (type)
+            {
+                case DataType.CHARACTER:
+                case DataType.CHARACTER_VARYING:
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                    return Count == 1;
+                case DataType.TIMESTAMP:
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                case DataType.TIME:
+                case DataType.TIME_WITH_TIME_ZONE:
+                    return Count == 1;
+                case DataType.NUMERIC:
+                case DataType.DECIMAL:
+                    return Count == 1 || Count == 2;
+                default:
+                    return Count == 0;
+            }
         }
     }
 }

@@ -74,27 +74,5 @@ namespace HardHorn.Utility
             exp.Data["DataType"] = dataType;
             throw exp;
         }
-
-        public static bool ValidateParameterLength(DataType type, Parameter parameters)
-        {
-            switch (type)
-            {
-                case DataType.CHARACTER:
-                case DataType.CHARACTER_VARYING:
-                case DataType.NATIONAL_CHARACTER:
-                case DataType.NATIONAL_CHARACTER_VARYING:
-                    return parameters != null && parameters.Count == 1;
-                case DataType.TIMESTAMP:
-                case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                case DataType.TIME:
-                case DataType.TIME_WITH_TIME_ZONE:
-                    return parameters != null && parameters.Count == 1;
-                case DataType.NUMERIC:
-                case DataType.DECIMAL:
-                    return parameters != null && parameters.Count == 2;
-                default:
-                    return parameters == null || parameters.Count == 0;
-            }
-        }
     }
 }

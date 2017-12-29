@@ -120,15 +120,19 @@ namespace HardHorn.Archiving
                 {
                     var parameters = new List<string>(parameterGroup.Value.Split(',')).Select(n => int.Parse(n));
 
-                    parameter = new Parameter(parameters.ToArray());
+                    parameter = new Parameter(false, parameters.ToArray());
                 }
 
                 if (parameter == null)
                 {
                     parameter = Parameter.GetDefaultParameter(dataType);
                 }
+                else
+                {
+                    parameter.AddDefaultParametersIfNeeded(dataType);
+                }
 
-                if (!DataTypeUtility.ValidateParameterLength(dataType, parameter))
+                if (parameter != null && !parameter.ValidateLength(dataType))
                 {
                     throw new ArchiveVersionColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
                 }

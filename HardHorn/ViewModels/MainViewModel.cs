@@ -376,7 +376,7 @@ namespace HardHorn.ViewModels
         {
             if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter == null)
             {
-                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = new Archiving.Parameter(new int[0]);
+                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = new Archiving.Parameter(false, new int[0]);
             }
             SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.AddParameterItem(0);
         }
