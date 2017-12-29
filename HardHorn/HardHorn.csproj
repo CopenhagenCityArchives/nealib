@@ -140,12 +140,24 @@
     <Compile Include="Utilities\AttachedProperties.cs" />
     <Compile Include="Utilities\GridViewSort.cs" />
     <Compile Include="Utilities\RelayCommand.cs" />
+    <Compile Include="ViewModels\ArchiveVersionViewModel.cs" />
     <Compile Include="ViewModels\ErrorViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\StartTestViewModel.cs" />
     <Compile Include="ViewModels\TableViewModel.cs" />
+    <Compile Include="Views\ArchiveVersionView.xaml.cs">
+      <DependentUpon>ArchiveVersionView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\RegexTestView.xaml.cs">
       <DependentUpon>RegexTestView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\StartTestView.xaml.cs">
+      <DependentUpon>StartTestView.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Views\StartTestView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Resource Include="Resources\Templates.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -153,6 +165,10 @@
     <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ArchiveVersionView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\BarChartView.xaml">
       <SubType>Designer</SubType>

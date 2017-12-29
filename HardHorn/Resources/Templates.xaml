@@ -13,6 +13,8 @@
     <util:AnalysisErrorTypeToStringConverter x:Key="AnalysisErrorTypeToStringConverter" />
     <util:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     <util:ParameterToStringConverter x:Key="ParameterToStringConverter" />
+    <util:RecentLocationsMenuItemConverter x:Key="RecentLocationMenuItemConverter" />
+
 
     <Style x:Key="HyperlinkButtonStyle" TargetType="Button">
         <Setter Property="Focusable" Value="False" />
@@ -21,7 +23,7 @@
                 <ControlTemplate TargetType="Button">
                     <TextBlock>
                         <Hyperlink>
-                            <ContentControl Content="{TemplateBinding Content}"></ContentControl>
+                            <ContentControl Margin="0,-4,0,0" Content="{TemplateBinding Content}"></ContentControl>
                         </Hyperlink>
                     </TextBlock>
                 </ControlTemplate>
