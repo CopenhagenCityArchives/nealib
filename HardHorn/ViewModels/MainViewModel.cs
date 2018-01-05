@@ -219,10 +219,11 @@ namespace HardHorn.ViewModels
         {
             TAB_ARCHIVEVERSION = 0,
             TAB_ERRORS = 1,
-            TAB_STATISTICS = 2,
-            TAB_SPECTABLE = 3,
-            TAB_COMPARE = 4,
-            TAB_STATUSLOG = 5
+            TAB_METADATA = 2,
+            TAB_STATISTICS = 3,
+            TAB_SPECTABLE = 4,
+            TAB_COMPARE = 5,
+            TAB_STATUSLOG = 6
             }
 
         public Analyzer Analyzer { get; private set; }
