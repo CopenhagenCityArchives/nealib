@@ -17,8 +17,8 @@ namespace HardHorn.ViewModels
         public abstract void Add(object info);
         public ObservableCollection<object> Subjects { get; set; }
 
-        int _count = 0;
-        public int Count { get { return _count; } set { _count = value; NotifyOfPropertyChange("Count"); } }
+        long _count = 0;
+        public long Count { get { return _count; } set { _count = value; NotifyOfPropertyChange("Count"); } }
 
         protected ErrorViewModelBase()
         {

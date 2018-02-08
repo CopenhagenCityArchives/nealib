@@ -55,10 +55,12 @@
     <Compile Include="Archiving\DataType.cs" />
     <Compile Include="Archiving\Exceptions.cs" />
     <Compile Include="Archiving\ForeignKey.cs" />
+    <Compile Include="Archiving\ForeignKeyValue.cs" />
     <Compile Include="Archiving\Parameter.cs" />
     <Compile Include="Archiving\ParameterItem.cs" />
     <Compile Include="Archiving\Post.cs" />
     <Compile Include="Archiving\PrimaryKey.cs" />
+    <Compile Include="Archiving\Reference.cs" />
     <Compile Include="Archiving\Row.cs" />
     <Compile Include="Archiving\View.cs" />
     <Compile Include="Logging\ILogger.cs" />

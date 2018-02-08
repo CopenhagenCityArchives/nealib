@@ -115,29 +115,21 @@ namespace HardHorn.Archiving
                 }
 
                 var parameterGroup = match.Groups["params"];
-                Parameter parameter = null;
+                int[] parameters = null;
                 if (parameterGroup.Success)
                 {
-                    var parameters = new List<string>(parameterGroup.Value.Split(',')).Select(n => int.Parse(n));
-
-                    parameter = new Parameter(false, parameters.ToArray());
+                    parameters = new List<string>(parameterGroup.Value.Split(',')).Select(n => int.Parse(n)).ToArray<int>();
                 }
 
-                if (parameter == null)
+                try
                 {
-                    parameter = Parameter.GetDefaultParameter(dataType);
+                    Parameter parameter = new Parameter(dataType, parameters);
+                    return new ParameterizedDataType(dataType, parameter, element.Value);
                 }
-                else
+                catch (InvalidOperationException)
                 {
-                    parameter.AddDefaultParametersIfNeeded(dataType);
+                    throw new ArchiveVersionColumnTypeParsingException("Invalid parameters.", match.Groups["datatype"].Value, element, column, table);
                 }
-
-                if (parameter != null && !parameter.ValidateLength(dataType))
-                {
-                    throw new ArchiveVersionColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
-                }
-
-                return new ParameterizedDataType(dataType, parameter, element.Value);
             }
             else
             {

@@ -21,22 +21,22 @@ namespace HardHorn.Archiving
         /// <returns>The string representation of the parameter list.</returns>
         public override string ToString()
         {
-            return "(" + string.Join(", ", this.Select(p => p.Value)) + ")";
+            if (Count > 0)
+            {
+                return "(" + string.Join(", ", this.Select(p => p.Value)) + ")";
+            }
+            else
+            {
+                return "";
+            }
         }
 
         public static Parameter GetDefaultParameter(DataType dataType)
         {
             switch (dataType)
             {
-                case DataType.CHARACTER:
-                case DataType.CHARACTER_VARYING:
-                case DataType.NATIONAL_CHARACTER:
-                case DataType.NATIONAL_CHARACTER_VARYING:
-                    return new Parameter(true, 1);
-                case DataType.TIME:
-                    return new Parameter(true, 1);
                 case DataType.TIMESTAMP:
-                    return new Parameter(true, 6);
+                    return new Parameter(6);
                 default:
                     return null;
             }
@@ -94,54 +94,73 @@ namespace HardHorn.Archiving
         /// Construct a parameter list.
         /// </summary>
         /// <param name="param">The integer parameters.</param>
-        public Parameter(bool defaultValues, params int[] param) : base(param.Select(i => new ParameterItem(i, defaultValues)))
-        {
-        }
+        public Parameter(params int[] param) : base(param.Select(i => new ParameterItem(i))) { }
 
-        public void AddDefaultParametersIfNeeded(DataType dataType)
+        /// <summary>
+        /// Construct a parameter list.
+        /// </summary>
+        /// <param name="param">The integer parameters.</param>
+        public Parameter(DataType dataType, params int[] param)
         {
+            if (!DataTypeUtility.ValidateParameters(dataType, param))
+            {
+                throw new InvalidOperationException();
+            }
+
             switch (dataType)
             {
-                case DataType.DECIMAL:
-                    if (Count == 1)
-                    {
-                        Add(new ParameterItem(0, true));
-                    }
-                    break;
                 case DataType.CHARACTER:
                 case DataType.CHARACTER_VARYING:
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    if (Count == 0)
+                    if (param == null || param.Length == 0)
                     {
-                        Add(new ParameterItem(1, true));
+                        Add(new ParameterItem(1));
+                    }
+                    else
+                    {
+                        foreach (var p in param) Add(new ParameterItem(p));
                     }
                     break;
-                default:
-                    break;
-            }
-        }
-
-
-        public bool ValidateLength(DataType type)
-        {
-            switch (type)
-            {
-                case DataType.CHARACTER:
-                case DataType.CHARACTER_VARYING:
-                case DataType.NATIONAL_CHARACTER:
-                case DataType.NATIONAL_CHARACTER_VARYING:
-                    return Count == 1;
-                case DataType.TIMESTAMP:
-                case DataType.TIMESTAMP_WITH_TIME_ZONE:
                 case DataType.TIME:
                 case DataType.TIME_WITH_TIME_ZONE:
-                    return Count == 1;
-                case DataType.NUMERIC:
+                    if (param == null || param.Length == 0)
+                    {
+                        Add(new ParameterItem(0));
+                    }
+                    else
+                    {
+                        foreach (var p in param) Add(new ParameterItem(p));
+                    }
+                    break;
+                case DataType.TIMESTAMP:
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                    if (param == null || param.Length == 0)
+                    {
+                        Add(new ParameterItem(6));
+                    }
+                    else
+                    {
+                        foreach (var p in param) Add(new ParameterItem(p));
+                    }
+                    break;
                 case DataType.DECIMAL:
-                    return Count == 1 || Count == 2;
+                case DataType.NUMERIC:
+                    if (param.Length == 1)
+                    {
+                        foreach (var p in param) Add(new ParameterItem(p));
+                        Add(new ParameterItem(0));
+                    }
+                    else
+                    {
+                        foreach (var p in param) Add(new ParameterItem(p));
+                    }
+                    break;
                 default:
-                    return Count == 0;
+                    if (param != null)
+                        foreach (var p in param)
+                            Add(new ParameterItem(p));
+                    break;
             }
         }
     }

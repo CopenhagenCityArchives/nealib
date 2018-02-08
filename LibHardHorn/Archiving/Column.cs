@@ -60,6 +60,11 @@ namespace HardHorn.Archiving
             FunctionalDescription = functionalDescription;
         }
 
+        public override string ToString()
+        {
+            return string.Format("<{0}: {1} {2}>", ColumnId, Name, ParameterizedDataType.ToString());
+        }
+
         public ColumnComparison CompareTo(Column oldColumn)
         {
             var comparison = new ColumnComparison(this, oldColumn);
@@ -97,7 +102,7 @@ namespace HardHorn.Archiving
             {
                 for (int i = 0; i < ParameterizedDataType.Parameter.Count; i++)
                 {
-                    if (ParameterizedDataType.Parameter[i] != oldColumn.ParameterizedDataType.Parameter[i])
+                    if (ParameterizedDataType.Parameter[i].Value != oldColumn.ParameterizedDataType.Parameter[i].Value)
                     {
                         comparison.Modified = true;
                         comparison.DataTypeModified = true;

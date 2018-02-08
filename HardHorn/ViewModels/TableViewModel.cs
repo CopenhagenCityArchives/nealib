@@ -37,11 +37,16 @@ namespace HardHorn.ViewModels
         uint _browseCount;
         public uint BrowseCount { get { return _browseCount; } set { _browseCount = value; NotifyOfPropertyChange("BrowseCount"); } }
 
+        public ColumnViewModel _selectedColumnViewModel;
+        public ColumnViewModel SelectedColumnViewModel
+        {
+            get { return _selectedColumnViewModel; }
+            set { _selectedColumnViewModel = value; NotifyOfPropertyChange("SelectedColumnViewModel"); }
+        }
+        public ObservableCollection<ColumnViewModel> ColumnViewModels { get; private set; }
+
         public ObservableCollection<BrowseRow> BrowseRows { get; set; }
         BackgroundWorker browseRowsWorker;
-
-        ColumnAnalysis _selectedColumnAnalysis;
-        public ColumnAnalysis SelectedColumnAnalysis { get { return _selectedColumnAnalysis; } set { _selectedColumnAnalysis = value; NotifyOfPropertyChange("SelectedColumnAnalysis"); } }
 
         public bool Errors
         {
@@ -74,6 +79,7 @@ namespace HardHorn.ViewModels
         public TableViewModel(Table table)
         {
             Table = table;
+            ColumnViewModels = new ObservableCollection<ColumnViewModel>(table.Columns.Select(c => new ColumnViewModel(c)));
             BrowseRows = new ObservableCollection<BrowseRow>();
             BrowseOffset = 0;
             BrowseCount = 20;

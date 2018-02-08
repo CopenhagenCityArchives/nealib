@@ -9,14 +9,41 @@ using HardHorn.Archiving;
 using System.Windows.Media;
 using System.Windows;
 using HardHorn.Analysis;
+using System.Windows.Controls;
+using Caliburn.Micro;
 
 namespace HardHorn.Utilities
 {
+    public class RecentLocationsMenuItemConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var locations = value as IEnumerable<string>;
+
+            var menuItems = new List<MenuItem>();
+            int i = 1;
+            foreach (var location in locations)
+            {
+                var menuItem = new MenuItem();
+                menuItem.Header = i++ + ". " + location;
+                Message.SetAttach(menuItem, "LoadLocation('" + location + "')");
+                menuItems.Add(menuItem);
+            }
+
+            return menuItems;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class ParameterToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var param = value as Parameter;
+            var param = value as Archiving.Parameter;
             if (param == null)
             {
                 return null;

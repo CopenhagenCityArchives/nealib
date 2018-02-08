@@ -1,0 +1,76 @@
+﻿<UserControl x:Class="HardHorn.Views.StartTestView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HardHorn.Views"
+             xmlns:cal="http://www.caliburnproject.org"
+             xmlns:vm="clr-namespace:HardHorn.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    <StackPanel>
+        <GroupBox Grid.Row="1" Padding="5">
+            <GroupBox.Header>
+                <TextBlock>Vælg tests</TextBlock>
+            </GroupBox.Header>
+            <TreeView ItemsSource="{Binding SelectedTests}" MinHeight="200">
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestSelectionCategory}" ItemsSource="{Binding}">
+                        <CheckBox IsChecked="{Binding Selected}" Content="{Binding Name}" />
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TestTypeSelection}" ItemsSource="{Binding}">
+                        <CheckBox IsChecked="{Binding Selected}" Content="{Binding TestType, Converter={StaticResource AnalysisErrorTypeToStringConverter}}" />
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:DataTypeSelection}">
+                        <CheckBox IsChecked="{Binding Selected}" Content="{Binding DataType}" />
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="IsExpanded" Value="True" />
+                    </Style>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
+        </GroupBox>
+
+        <GroupBox Grid.Row="2" Padding="5">
+            <GroupBox.Header>
+                <TextBlock>Regulære udtryk</TextBlock>
+            </GroupBox.Header>
+            <Grid Grid.Row="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"  />
+                    <RowDefinition Height="Auto"  />
+                    <RowDefinition Height="Auto"  />
+                    <RowDefinition Height="*"  />
+                    <RowDefinition Height="Auto"  />
+                    <RowDefinition Height="*"  />
+                    <RowDefinition Height="*"  />
+                    <RowDefinition Height="*"  />
+                    <RowDefinition Height="*"  />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Row="0">Tabel:</Label>
+                <ComboBox Grid.Row="0" x:Name="RegexTableListBox" Grid.Column="1" Height="22" ItemsSource="{Binding ArchiveVersion.Tables}" ItemTemplate="{StaticResource RegexTableTemplate}"/>
+                <Label Grid.Row="1">Kolonne:</Label>
+                <ComboBox x:Name="RegexColumnListBox" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Path=SelectedItem.Columns, ElementName=RegexTableListBox}" ItemTemplate="{StaticResource RegexColumnTemplate}"/>
+                <Label Grid.Row="2">Udtryk:</Label>
+                <TextBox x:Name="RegexTextBox" FontFamily="Consolas" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Stretch"/>
+
+                <Button Margin="0 5 0 0" Grid.Row="3" Grid.ColumnSpan="2" cal:Message.Attach="AddRegex(RegexTextBox.Text, RegexColumnListBox.SelectedItem)">Tilføj udtryk</Button>
+                <ListBox Margin="0 5 0 5" x:Name="RegexListBox" Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding Regexes}" ItemTemplate="{StaticResource RegexItemTemplate}" Height="150"></ListBox>
+                <Button Grid.Row="5" Grid.ColumnSpan="2" cal:Message.Attach="RemoveRegex(RegexListBox.SelectedItem)">Fjern valgte</Button>
+            </Grid>
+        </GroupBox>
+
+        <DockPanel Margin="5">
+            <Button Margin="0 0 5 0" cal:Message.Attach="Cancel">Annuller</Button>
+            <Button DockPanel.Dock="Right" cal:Message.Attach="StartTest">Start test</Button>
+        </DockPanel>
+
+    </StackPanel>
+</UserControl>

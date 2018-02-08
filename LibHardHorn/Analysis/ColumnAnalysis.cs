@@ -234,6 +234,7 @@ namespace HardHorn.Analysis
             ErrorCount = 0;
             Tests.Clear();
             _errorPostCaches.Clear();
+            NotifyOfPropertyChanged("ErrorCount");
         }
 
         internal void Flush()
