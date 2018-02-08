@@ -63,7 +63,18 @@ namespace HardHorn.Archiving
                 views = xviews.Elements().Select(xview => View.Parse(xview));
             }
 
-            return new TableIndex(version, dbName, databaseProduct, tables, views);
+            var tableIndex = new TableIndex(version, dbName, databaseProduct, tables, views);
+
+            // Initialize relations
+            foreach (var table in tableIndex.Tables)
+            {
+                foreach (var fkey in table.ForeignKeys)
+                {
+                    fkey.Initialize(tableIndex, table);
+                }
+            }
+
+            return tableIndex; 
         }
 
         public static TableIndex ParseFile(string path, ILogger logger, Action<Exception> callback = null)

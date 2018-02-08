@@ -141,6 +141,7 @@
     <Compile Include="Utilities\GridViewSort.cs" />
     <Compile Include="Utilities\RelayCommand.cs" />
     <Compile Include="ViewModels\ArchiveVersionViewModel.cs" />
+    <Compile Include="ViewModels\ColumnViewModel.cs" />
     <Compile Include="ViewModels\ErrorViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\StartTestViewModel.cs" />
@@ -154,6 +155,10 @@
     <Compile Include="Views\StartTestView.xaml.cs">
       <DependentUpon>StartTestView.xaml</DependentUpon>
     </Compile>
+    <Resource Include="Resources\Styles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Resource>
     <Page Include="Views\StartTestView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

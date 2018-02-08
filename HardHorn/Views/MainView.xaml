@@ -36,7 +36,17 @@
                 <MenuItem.ItemsSource>
                     <CompositeCollection>
                         <MenuItem Header="Indlæs arkiveringsversion..." cal:Message.Attach="SelectLocation()" />
-                        <MenuItem Header="Gem tabelindex..." cal:Message.Attach="SaveTableIndex()" />
+                        <MenuItem Header="Gem tabelindex..." cal:Message.Attach="SaveTableIndex()">
+                            <MenuItem.Style>
+                                <Style>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedArchiveVersionViewModel}" Value="{x:Null}">
+                                            <Setter Property="MenuItem.IsEnabled" Value="False"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </MenuItem.Style>
+                        </MenuItem>
                         <Separator />
                         <CollectionContainer Collection="{Binding Source={StaticResource RecentLocationsMenuItems}}"></CollectionContainer>
                         <Separator />
@@ -44,10 +54,43 @@
                     </CompositeCollection>
                 </MenuItem.ItemsSource>
             </MenuItem>
+            <MenuItem Header="Test">
+                <MenuItem.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedArchiveVersionViewModel}" Value="{x:Null}">
+                                <Setter Property="MenuItem.IsEnabled" Value="False"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+                <MenuItem Header="Ny" cal:Message.Attach="NewTest">
+                    <MenuItem.Style>
+                        <Style>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedArchiveVersionViewModel.TestRunning}" Value="True">
+                                    <Setter Property="MenuItem.IsEnabled" Value="False"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
+                </MenuItem>
+                <MenuItem Header="Stop" cal:Message.Attach="StopTest">
+                    <MenuItem.Style>
+                        <Style>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedArchiveVersionViewModel.TestRunning}" Value="False">
+                                    <Setter Property="MenuItem.IsEnabled" Value="False"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </MenuItem.Style>
+                </MenuItem>
+            </MenuItem>
         </Menu>
 
         <!-- Main content -->
-        <TabControl Grid.Row="1" Grid.ColumnSpan="2" ItemsSource="{Binding ArchiveVersionViewModels}">
+        <TabControl Grid.Row="1" Grid.ColumnSpan="2" ItemsSource="{Binding ArchiveVersionViewModels}" SelectedItem="{Binding SelectedArchiveVersionViewModel}">
             <TabControl.ContentTemplate>
                 <DataTemplate>
                     <ContentControl cal:View.Model="{Binding}" />
@@ -55,7 +98,10 @@
             </TabControl.ContentTemplate>
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding ArchiveVersion.Id}"></TextBlock>
+                    <DockPanel VerticalAlignment="Center">
+                        <Label DockPanel.Dock="Left" Content="{Binding ArchiveVersion.Id}"></Label>
+                        <Button DockPanel.Dock="Right" cal:Bind.ModelWithoutContext="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" cal:Message.Attach="Close($dataContext)">x</Button>
+                    </DockPanel>
                 </DataTemplate>
             </TabControl.ItemTemplate>
         </TabControl>

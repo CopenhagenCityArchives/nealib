@@ -23,5 +23,10 @@ namespace HardHorn.Views
         {
             InitializeComponent();
         }
+
+        private void ColumnGridViewView_Filter(object sender, FilterEventArgs e)
+        {
+
+        }
     }
 }

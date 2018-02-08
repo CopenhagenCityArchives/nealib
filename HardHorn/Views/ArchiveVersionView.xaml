@@ -84,20 +84,20 @@
                 </DockPanel>
 
                 <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
-                <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnAnalysis}" ItemsSource="{Binding CurrentColumnAnalyses, Mode=OneWay}" util:GridViewSort.AutoSort="True">
+                <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel}" ItemsSource="{Binding ColumnsView}" util:GridViewSort.AutoSort="True">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Id" Width="50" DisplayMemberBinding="{Binding Column.ColumnId}" util:GridViewSort.PropertyName="Column.ColumnIdNumber"></GridViewColumn>
                             <GridViewColumn Header="Navn" Width="150" DisplayMemberBinding="{Binding Column.Name}" util:GridViewSort.PropertyName="Column.Name"></GridViewColumn>
-                            <GridViewColumn Header="Fejl" Width="80" util:GridViewSort.PropertyName="ErrorCount">
+                            <GridViewColumn Header="Fejl" Width="80" util:GridViewSort.PropertyName="Analysis.ErrorCount">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding ErrorCount}">
+                                        <TextBlock Text="{Binding Analysis.ErrorCount}">
                                             <TextBlock.Style>
                                                 <Style>
                                                     <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding ErrorCount}" Value="0">
+                                                        <DataTrigger Binding="{Binding Analysis.ErrorCount}" Value="0">
                                                             <Setter Property="TextBlock.Foreground" Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}"></Setter>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -130,16 +130,16 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Datatypeforslag" Width="170" util:GridViewSort.PropertyName="SuggestedType">
+                            <GridViewColumn Header="Datatypeforslag" Width="170" util:GridViewSort.PropertyName="Analysis.SuggestedType">
                                 <GridViewColumn.DisplayMemberBinding>
                                     <MultiBinding StringFormat="{}{0} {1}">
-                                        <Binding Path="SuggestedType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
-                                        <Binding Path="SuggestedType.Parameter" />
+                                        <Binding Path="Analysis.SuggestedType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
+                                        <Binding Path="Analysis.SuggestedType.Parameter" />
                                     </MultiBinding>
                                 </GridViewColumn.DisplayMemberBinding>
                             </GridViewColumn>
-                            <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding MinParam, Converter={StaticResource ParameterToStringConverter}}"  util:GridViewSort.PropertyName="MinParam"></GridViewColumn>
-                            <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding MaxParam,  Converter={StaticResource ParameterToStringConverter}}" util:GridViewSort.PropertyName="MaxParam"></GridViewColumn>
+                            <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding Analysis.MinParam, Converter={StaticResource ParameterToStringConverter}}"  util:GridViewSort.PropertyName="Analysis.MinParam"></GridViewColumn>
+                            <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding Analysis.MaxParam,  Converter={StaticResource ParameterToStringConverter}}" util:GridViewSort.PropertyName="Analysis.MaxParam"></GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
@@ -159,7 +159,7 @@
                             <Label>Datatype</Label>
                             <ComboBox
                                     Grid.Column="1"
-                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.DataType}">
+                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.DataType}">
                                 <ComboBox.Resources>
                                     <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
                                         <ObjectDataProvider.MethodParameters>
@@ -177,7 +177,7 @@
                             <StackPanel Grid.Row="1" Grid.Column="1"  Orientation="Horizontal">
                                 <Button cal:Message.Attach="AddParameter">+</Button>
                                 <Button cal:Message.Attach="RemoveParameter">-</Button>
-                                <ItemsControl ItemsSource="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter}">
+                                <ItemsControl ItemsSource="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <TextBox VerticalAlignment="Center" Text="{Binding Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
@@ -191,7 +191,7 @@
                                 </ItemsControl>
                             </StackPanel>
                             <Label Grid.Row="2">Kan være null</Label>
-                            <CheckBox VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnAnalysis.Column.Nullable}"></CheckBox>
+                            <CheckBox VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.Nullable}"></CheckBox>
                             <Button Grid.Row="3" cal:Message.Attach="ApplySuggestion">Anvend datatypeforslag</Button>
                         </Grid>
                     </TabItem>
@@ -339,7 +339,7 @@
                         </DockPanel>
                     </TabItem>
                     <TabItem Header="Fejlvisning">
-                        <TabControl SelectedItem="{Binding Path=SelectedItem.SelectedTest, ElementName=ColumnAnalysesListView}" ItemsSource="{Binding Path=SelectedItem.Tests, ElementName=ColumnAnalysesListView}">
+                        <TabControl SelectedItem="{Binding Path=SelectedItem.Analysis.SelectedTest, ElementName=ColumnAnalysesListView}" ItemsSource="{Binding Path=SelectedItem.Analysis.Tests, ElementName=ColumnAnalysesListView}">
                             <TabControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type ana:Test}">
                                     <TextBlock>
@@ -478,27 +478,76 @@
                 </Grid.ColumnDefinitions>
 
                 <GroupBox Header="Specificerede tabeller" Padding="5">
-                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" Text="{Binding SpecTables, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TestLoaded}" />
+                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" Text="{Binding SpecTables, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
                 </GroupBox>
                 <GroupBox Padding="5" Margin="5 0 0 0" Grid.Column="1">
                     <GroupBox.Header>
                         <TextBlock Text="Findes i specifikation og tabelindex" Foreground="Green" />
                     </GroupBox.Header>
-                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMatching}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
+                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMatching}" IsReadOnly="True" />
                 </GroupBox>
                 <GroupBox Padding="5" Margin="5 0 0 0"  Grid.Column="2">
                     <GroupBox.Header>
                         <TextBlock Text="Findes i specifikation, men ikke tabelindex" Foreground="Red" />
                     </GroupBox.Header>
-                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMissing}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
+                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesMissing}" IsReadOnly="True" />
                 </GroupBox>
                 <GroupBox Padding="5" Margin="5 0 0 0"  Grid.Column="3">
                     <GroupBox.Header>
                         <TextBlock Text="Findes ikke i specifikation, men i tabelindex" Foreground="Red" />
                     </GroupBox.Header>
-                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesUndefined}" IsReadOnly="True" IsEnabled="{Binding TestLoaded}" />
+                    <TextBox ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" Text="{Binding SpecTablesUndefined}" IsReadOnly="True" />
                 </GroupBox>
             </Grid>
+        </TabItem>
+
+        <TabItem Header="Nøgletest">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <ComboBox x:Name="TableViewModelComboBox" ItemsSource="{Binding TableViewModels}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Table.Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox x:Name="ForeignKeyComboBox" ItemsSource="{Binding Path=SelectedItem.Table.ForeignKeys, ElementName=TableViewModelComboBox}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button cal:Message.Attach="TestForeignKey(ForeignKeyComboBox.SelectedItem)">Test nøgle</Button>
+                    <ProgressBar Value="{Binding ForeignKeyTestProgress}" Height="20"></ProgressBar>
+                    <Label>
+                        <Label.Content>
+                            <TextBlock>
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}Test udført med {0} fejl fordelt over {1} nøgleværdier.">
+                                        <Binding Path="ForeignKeyTestErrorCount"></Binding>
+                                        <Binding Path="ForeignKeyTestErrorTypeCount"></Binding>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Label.Content>
+                    </Label>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding ForeignKeyOrderedErrorsSample}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0}: {1}">
+                                        <Binding Path="Key" />
+                                        <Binding Path="Value" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
         </TabItem>
 
         <TabItem Header="Sammenlign arkiveringsversion">
@@ -509,11 +558,11 @@
                     </GroupBox.Header>
                     <StackPanel>
                         <DockPanel>
-                            <Button IsEnabled="{Binding TestLoaded}" Margin="5 0 0 0" DockPanel.Dock="Right" Width="30" cal:Message.Attach="SelectTableIndex()">...</Button>
-                            <TextBox IsEnabled="{Binding TestLoaded}" DockPanel.Dock="Left" x:Name="CompareLocationTextBox" Text="{Binding CompareLocation, Mode=TwoWay}"></TextBox>
+                            <Button Margin="5 0 0 0" DockPanel.Dock="Right" Width="30" cal:Message.Attach="SelectTableIndex()">...</Button>
+                            <TextBox DockPanel.Dock="Left" x:Name="CompareLocationTextBox" Text="{Binding CompareLocation, Mode=TwoWay}"></TextBox>
                         </DockPanel>
 
-                        <Button IsEnabled="{Binding TestLoaded}" Margin="0 5 0 0" MinWidth="120" cal:Message.Attach="Compare(CompareLocationTextBox)">Sammenlign</Button>
+                        <Button Margin="0 5 0 0" MinWidth="120" cal:Message.Attach="Compare(CompareLocationTextBox)">Sammenlign</Button>
                     </StackPanel>
                 </GroupBox>
                 <Grid>

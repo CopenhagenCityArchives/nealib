@@ -24,6 +24,23 @@ namespace HardHorn.ViewModels
     class MainViewModel : PropertyChangedBase, ILogger
     {
         #region Properties
+        ArchiveVersionViewModel _selectedArchiveVersionViewModel;
+        public ArchiveVersionViewModel SelectedArchiveVersionViewModel
+        {
+            get { return _selectedArchiveVersionViewModel; }
+            set {
+                if (value == null)
+                {
+                    WindowTitle = "HardHorn";
+                }
+                else
+                {
+                    WindowTitle = string.Format("HardHorn - {0}", value.ArchiveVersion.Id);
+                }
+                _selectedArchiveVersionViewModel = value;
+                NotifyOfPropertyChange("SelectedArchiveVersionViewModel");
+            }
+        }
         public ObservableCollection<ArchiveVersionViewModel> ArchiveVersionViewModels { get; private set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
 
@@ -48,8 +65,6 @@ namespace HardHorn.ViewModels
         }
 
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
-
-        CancellationTokenSource _testCts;
 
         string _statusText = "";
         public string StatusText { get { return _statusText; } set { _statusText = value; NotifyOfPropertyChange("StatusText"); } }
@@ -76,9 +91,7 @@ namespace HardHorn.ViewModels
                 StatusText = msg;
             }
         }
-        #endregion
 
-        #region Actions
         public void OnArchiveVersionException(Exception ex)
         {
             ErrorViewModelBase errorViewModel;
@@ -97,10 +110,10 @@ namespace HardHorn.ViewModels
                 {
                     return;
                 }
-                
+
                 LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
                 //Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
-                
+
             }
             else
             {
@@ -108,6 +121,32 @@ namespace HardHorn.ViewModels
             }
 
             Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
+        }
+        #endregion
+
+        #region Actions
+        public void Close(ArchiveVersionViewModel avViewModel)
+        {
+            if (avViewModel.TestRunning)
+                avViewModel.StopTest();
+            ArchiveVersionViewModels.Remove(avViewModel);
+            avViewModel = null;
+        }
+
+        public void NewTest()
+        {
+            if (SelectedArchiveVersionViewModel != null)
+            {
+                SelectedArchiveVersionViewModel.StartTest();
+            }
+        }
+
+        public void StopTest()
+        {
+            if (SelectedArchiveVersionViewModel != null)
+            {
+                SelectedArchiveVersionViewModel.StopTest();
+            }
         }
 
         public void SaveTableIndex()
@@ -133,10 +172,11 @@ namespace HardHorn.ViewModels
                     ArchiveVersionViewModel vm = await Task.Run(() =>
                     {
                         var av = ArchiveVersion.Load(location, logger, OnArchiveVersionException);
-                        return new ArchiveVersionViewModel(av);
+                        return new ArchiveVersionViewModel(av, this as ILogger);
                     });
 
                     ArchiveVersionViewModels.Add(vm);
+                    SelectedArchiveVersionViewModel = vm;
 
                     // Add to recent locations
                     if (Properties.Settings.Default.RecentLocations == null)

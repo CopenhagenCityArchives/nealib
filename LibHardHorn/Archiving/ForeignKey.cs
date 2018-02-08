@@ -6,46 +6,49 @@ namespace HardHorn.Archiving
 {
     public class ForeignKey
     {
-        public class Reference
+        public string Name { get; private set; }
+        public Table Table { get; private set; }
+        public List<Reference> References { get; private set; }
+        public string ReferencedTableName { get; private set; }
+        public Table ReferencedTable { get; private set; }
+
+        public ForeignKey(string name, string referencedTableName, IEnumerable<Reference> references)
         {
-            public string Column { get; private set; }
-            public string Referenced { get; private set; }
+            Name = name;
+            ReferencedTableName = referencedTableName;
+            References = new List<Reference>(references);
+        }
 
-            public Reference(string column, string referenced)
+        public void Initialize(TableIndex tableIndex, Table table)
+        {
+            Table = table;
+            ReferencedTable = tableIndex.Tables.First(t => t.Name.ToLower() == ReferencedTableName.ToLower());
+            foreach (var reference in References)
             {
-                Column = column;
-                Referenced = referenced;
-            }
-
-            public static Reference Parse(XElement element)
-            {
-                XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
-
-                var column = element.Element(xmlns + "column").Value;
-                var referenced = element.Element(xmlns + "referenced").Value;
-
-                return new Reference(column, referenced);
-            }
-
-            public XElement ToXml()
-            {
-                XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
-
-                return new XElement(xmlns + "reference",
-                    new XElement(xmlns + "column", Column),
-                    new XElement(xmlns + "referenced", Referenced));
+                reference.Initialize(Table, ReferencedTable);
             }
         }
 
-        public string Name { get; private set; }
-        public string ReferencedTable { get; private set; }
-        public List<Reference> References { get; private set; }
-
-        public ForeignKey(string name, string referencedTable, IEnumerable<Reference> references)
+        public ForeignKeyValue GetValueFromRow(int row, Post[,] posts)
         {
-            Name = name;
-            ReferencedTable = referencedTable;
-            References = new List<Reference>(references);
+            var values = new List<string>();
+            foreach (var reference in References)
+            {
+                int index = reference.Column.ColumnIdNumber - 1;
+                values.Add(posts[row, index].Data);
+            }
+            return new ForeignKeyValue(values.ToArray());
+        }
+
+        public ForeignKeyValue GetReferencedValueFromRow(int row, Post[,] posts)
+        {
+            var values = new List<string>();
+            foreach (var reference in References)
+            {
+                int index = reference.ReferencedColumn.ColumnIdNumber - 1;
+                values.Add(posts[row, index].Data);
+            }
+            return new ForeignKeyValue(values.ToArray());
         }
 
         public static ForeignKey Parse(XElement element)

@@ -37,12 +37,18 @@ namespace HardHorn.ViewModels
 
     class ArchiveVersionViewModel : Screen, ILogger
     {
+        public IWindowManager windowManager = new WindowManager();
+
         #region Properties
         public ObservableCollection<TableComparison> TableComparisons { get; set; }
         public ObservableCollection<TableComparison> RemovedTableComparisons { get; set; }
         public ObservableCollection<TableComparison> AddedTableComparisons { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
+
+        ICollectionView _columnsView;
+        public ICollectionView ColumnsView { get { return _columnsView; } set { _columnsView = value; NotifyOfPropertyChange("ColumnsView"); } }
         public TestSelection SelectedTests { get; set; }
+        public ILogger MainLogger { get; private set; }
 
         public int[] BarChartValues { get; set; }
 
@@ -61,21 +67,21 @@ namespace HardHorn.ViewModels
         public bool ShowErrorReports
         {
             get { return _showErrorReports; }
-            set { _showErrorReports = value; UpdateInteractiveReportView(); }
+            set { _showErrorReports = value; ColumnsView.Refresh(); }
         }
 
         bool _showSuggestionReports = true;
         public bool ShowSuggestionReports
         {
             get { return _showSuggestionReports; }
-            set { _showSuggestionReports = value; UpdateInteractiveReportView(); }
+            set { _showSuggestionReports = value; ColumnsView.Refresh(); }
         }
 
         bool _showEmptyReports = false;
         public bool ShowEmptyReports
         {
             get { return _showEmptyReports; }
-            set { _showEmptyReports = value; UpdateInteractiveReportView(); }
+            set { _showEmptyReports = value; ColumnsView.Refresh(); }
         }
 
         bool _testRunning = false;
@@ -90,20 +96,6 @@ namespace HardHorn.ViewModels
         {
             get { return _loadingTableIndex; }
             set { _loadingTableIndex = value; NotifyOfPropertyChange("LoadingTableIndex"); }
-        }
-
-        private bool _testLoaded = false;
-        public bool TestLoaded
-        {
-            get
-            {
-                return _testLoaded;
-            }
-
-            set
-            {
-                _testLoaded = value; NotifyOfPropertyChange("TestLoaded");
-            }
         }
 
         int _testProgress;
@@ -124,7 +116,7 @@ namespace HardHorn.ViewModels
         public TableViewModel SelectedTableViewModel
         {
             get { return _SelectedTableViewModel; }
-            set { _SelectedTableViewModel = value; UpdateInteractiveReportView(); NotifyOfPropertyChange("SelectedTableViewModel"); }
+            set { _SelectedTableViewModel = value; NotifyOfPropertyChange("SelectedTableViewModel"); }
         }
 
         object _selectedTableViewModelDataType;
@@ -198,10 +190,10 @@ namespace HardHorn.ViewModels
 
         public ObservableCollection<ColumnAnalysis> CurrentColumnAnalyses { get; set; }
 
-        Dictionary<string, TableViewModel> ListTableLookup = new Dictionary<string, TableViewModel>();
         public ObservableCollection<TableViewModel> TableViewModels { get; set; }
         public ObservableCollection<TableViewModel> FilteredTableViewModels { get; set; }
         public ObservableCollection<ErrorViewModelBase> ErrorViewModels { get; set; }
+        Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
         Dictionary<AnalysisTestType, ErrorViewModelBase> TestErrorViewModelIndex { get; set; }
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
 
@@ -216,12 +208,12 @@ namespace HardHorn.ViewModels
             TAB_ERRORS = 1,
             TAB_STATISTICS = 2,
             TAB_SPECTABLE = 3,
-            TAB_COMPARE = 4,
-            TAB_STATUSLOG = 5
+            TAB_KEYTEST = 4,
+            TAB_COMPARE = 5,
+            TAB_STATUSLOG = 6
         }
 
-        Analyzer _analyzer;
-        public Analyzer Analyzer { get { return _analyzer; } }
+        public Analyzer Analyzer { get; private set; }
         DataStatistics _stats;
 
         public IEnumerable<KeyValuePair<DataType, dynamic>> DataTypeStatistics
@@ -240,21 +232,47 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public ObservableCollection<RegexTestViewModel> Regexes { get; private set; }
-
-        string _statusText = "";
-        public string StatusText { get { return _statusText; } set { _statusText = value; NotifyOfPropertyChange("StatusText"); } }
-
         string _compareLocation;
         public string CompareLocation { get { return _compareLocation; } set { _compareLocation = value; NotifyOfPropertyChange("CompareLocation"); } }
+
+        int _foreignKeyTestProgress = 0;
+        public int ForeignKeyTestProgress
+        {
+            get { return _foreignKeyTestProgress; }
+            private set { _foreignKeyTestProgress = value; NotifyOfPropertyChange("ForeignKeyTestProgress"); }
+        }
+
+        int _foreignKeyTestErrorCount = 0;
+        public int ForeignKeyTestErrorCount
+        {
+            get { return _foreignKeyTestErrorCount; }
+            private set { _foreignKeyTestErrorCount = value; NotifyOfPropertyChange("ForeignKeyTestErrorCount"); }
+        }
+
+        int _foreignKeyTestErrorTypeCount;
+        public int ForeignKeyTestErrorTypeCount
+        {
+            get { return _foreignKeyTestErrorTypeCount; }
+            private set { _foreignKeyTestErrorTypeCount = value; NotifyOfPropertyChange("ForeignKeyTestErrorTypeCount"); }
+        }
+
+        IEnumerable<KeyValuePair<ForeignKeyValue, int>> _foreignKeyOrderedErrorsSample;
+        public IEnumerable<KeyValuePair<ForeignKeyValue, int>> ForeignKeyOrderedErrorsSample
+        {
+            get { return _foreignKeyOrderedErrorsSample; }
+            private set { _foreignKeyOrderedErrorsSample = value; NotifyOfPropertyChange("ForeignKeyOrderedErrorsSample"); }
+        }
 
         #endregion
 
         #region Constructors
-        public ArchiveVersionViewModel(ArchiveVersion av)
+        public ArchiveVersionViewModel(ArchiveVersion av, ILogger mainLogger)
         {
             ArchiveVersion = av;
+            MainLogger = mainLogger;
             TableViewModels = new ObservableCollection<TableViewModel>(av.Tables.Select(t => new TableViewModel(t)));
+            TableViewModelIndex = new Dictionary<string, TableViewModel>();
+            foreach (var tableViewModel in TableViewModels) TableViewModelIndex[tableViewModel.Table.Name] = tableViewModel;
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
@@ -264,90 +282,41 @@ namespace HardHorn.ViewModels
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
             CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
-            Regexes = new ObservableCollection<RegexTestViewModel>();
-
-            if (Properties.Settings.Default.SelectedTestsBase64 == null)
+            PropertyChanged += (sender, arg) =>
             {
-                SelectedTests = TestSelection.GetFullSelection();
-                SetDefaultSelectedTests();
-            }
-            else
-            {
-                //SelectedTests = GetDefaultSelectedTests();
-                SelectedTests = TestSelection.GetFullSelection();
-                SetDefaultSelectedTests();
-            }
-
+                if (arg.PropertyName == "SelectedTableViewModel" && SelectedTableViewModel != null)
+                {
+                    ColumnsView = CollectionViewSource.GetDefaultView(SelectedTableViewModel.ColumnViewModels);
+                    ColumnsView.Filter = FilterColumnViewModels;
+                }
+            };
             Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
         }
         #endregion
 
         #region Methods
-        public void UpdateInteractiveReportView()
+        public bool FilterColumnViewModels(object obj)
         {
-            var table = SelectedTableViewModel == null ? null : SelectedTableViewModel.Table;
+            var columnViewModel = obj as ColumnViewModel;
 
-            CurrentColumnAnalyses.Clear();
-            if (table != null && _analyzer != null && _analyzer.TestHierachy.ContainsKey(table))
+            bool include = false;
+
+            if (ShowErrorReports)
             {
-
-                foreach (var report in _analyzer.TestHierachy[table].Values)
-                {
-                    if (((report.ErrorCount > 0 || report.Column.ParameterizedDataType.DataType == DataType.UNDEFINED) && ShowErrorReports) ||
-                        (report.SuggestedType != null && ShowSuggestionReports) ||
-                        (report.ErrorCount == 0 && report.SuggestedType == null && ShowEmptyReports))
-                        CurrentColumnAnalyses.Add(report);
-                }
-                if (SelectedTableViewModel != null && CurrentColumnAnalyses.Count > 0)
-                {
-                    SelectedTableViewModel.SelectedColumnAnalysis = CurrentColumnAnalyses[0];
-                }
-            }
-        }
-
-        public TestSelection GetDefaultSelectedTests()
-        {
-            TestSelection selection = null;
-            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            using (var stream = new MemoryStream())
-            {
-                using (var writer = new BinaryWriter(stream))
-                {
-                    writer.Write(Convert.FromBase64String(Properties.Settings.Default.SelectedTestsBase64));
-                    writer.Flush();
-                    stream.Position = 0;
-
-                    try
-                    {
-                        selection = formatter.Deserialize(stream) as TestSelection;
-                    }
-                    catch (Exception)
-                    {
-                        selection = null;
-                    }
-                }
+                include = include || (columnViewModel.Analysis != null && columnViewModel.Analysis.ErrorCount > 0);
             }
 
-            if (selection != null)
-                foreach (var category in selection)
-                    category.HookupEvents();
-
-            return selection;
-        }
-
-        public void SetDefaultSelectedTests()
-        {
-            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            using (var stream = new MemoryStream())
+            if (ShowSuggestionReports)
             {
-                try
-                {
-                    formatter.Serialize(stream, SelectedTests);
-                    Properties.Settings.Default.SelectedTestsBase64 = Convert.ToBase64String(stream.ToArray());
-                    Properties.Settings.Default.Save();
-                }
-                catch (Exception) { }
+                include = include || (columnViewModel.Analysis != null && columnViewModel.Analysis.SuggestedType != null);
             }
+
+            if (ShowEmptyReports)
+            {
+                include = include || columnViewModel.Analysis == null || (columnViewModel.Analysis.SuggestedType == null && columnViewModel.Analysis.ErrorCount == 0);
+            }
+
+            return include;
         }
 
         public void Log(string msg, LogLevel level = LogLevel.NORMAL)
@@ -356,7 +325,7 @@ namespace HardHorn.ViewModels
 
             if (level == LogLevel.SECTION || level == LogLevel.ERROR)
             {
-                StatusText = msg;
+                
             }
         }
 
@@ -369,247 +338,28 @@ namespace HardHorn.ViewModels
             System.Diagnostics.Process.Start(path);
         }
 
-        #endregion
-
-        #region Actions
-        public void AddParameter()
+        public void StopTest()
         {
-            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter == null)
-            {
-                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = new Archiving.Parameter(new int[0]);
-            }
-            SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.AddParameterItem(0);
+            _testCts.Cancel();
         }
 
-        public void RemoveParameter()
+        public async void StartTest()
         {
-            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter == null)
-                return;
-            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter.Count == 1)
-            {
-                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter = null;
-                return;
-            }
-            if (SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.Parameter.Count > 1)
-                SelectedTableViewModel.SelectedColumnAnalysis.Column.ParameterizedDataType.RemoveParameterItem(0);
-        }
-
-        public void OnArchiveVersionException(Exception ex)
-        {
-            ErrorViewModelBase errorViewModel;
-
-            if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
-            {
-                if (ex is ArchiveVersionColumnParsingException)
-                {
-                    errorViewModel = new ColumnParsingErrorViewModel();
-                }
-                else if (ex is ArchiveVersionColumnTypeParsingException)
-                {
-                    errorViewModel = new ColumnTypeParsingErrorViewModel();
-                }
-                else
-                {
-                    return;
-                }
-
-                LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
-                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
-
-            }
-            else
-            {
-                errorViewModel = LoadingErrorViewModelIndex[ex.GetType()];
-            }
-
-            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
-        }
-
-        public void OnTestError(object sender, AnalysisErrorsOccuredArgs e)
-        {
-            var columnAnalysis = sender as ColumnAnalysis;
-
-            ErrorViewModelBase errorViewModel;
-
-            if (!TestErrorViewModelIndex.ContainsKey(e.Test.Type))
-            {
-                errorViewModel = new TestErrorViewModel(e.Test.Type);
-                TestErrorViewModelIndex[e.Test.Type] = errorViewModel;
-                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
-            }
-            else
-            {
-                errorViewModel = TestErrorViewModelIndex[e.Test.Type];
-            }
-
-            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(e));
-        }
-
-        public void BrowseNext()
-        {
-            if (SelectedTableViewModel == null)
-                return;
-
-            SelectedTableViewModel.BrowseOffset = SelectedTableViewModel.BrowseOffset + SelectedTableViewModel.BrowseCount > SelectedTableViewModel.Table.Rows ? SelectedTableViewModel.BrowseOffset : SelectedTableViewModel.BrowseOffset + SelectedTableViewModel.BrowseCount;
-            SelectedTableViewModel.UpdateBrowseRows();
-        }
-
-        public void BrowsePrevious()
-        {
-            if (SelectedTableViewModel == null)
-                return;
-
-            SelectedTableViewModel.BrowseOffset = SelectedTableViewModel.BrowseCount > SelectedTableViewModel.BrowseOffset ? 0 : SelectedTableViewModel.BrowseOffset - SelectedTableViewModel.BrowseCount;
-            SelectedTableViewModel.UpdateBrowseRows();
-        }
-
-        public void BrowseUpdate()
-        {
-            if (SelectedTableViewModel == null)
-                return;
-
-            SelectedTableViewModel.UpdateBrowseRows();
-        }
-
-        public void Merge(TableComparison added, TableComparison removed)
-        {
-            if (added == null || removed == null)
-                return;
-
-            var tableComparison = added.NewTable.CompareTo(removed.OldTable);
-            tableComparison.Name = added.Name + " / " + removed.Name;
-            TableComparisons.Add(tableComparison);
-            TableComparisons.Remove(added);
-            TableComparisons.Remove(removed);
-            AddedTableComparisons.Remove(added);
-            RemovedTableComparisons.Remove(removed);
-        }
-
-        public void AddRegex(string pattern, Column column)
-        {
-            if (pattern == null || pattern.Length == 0 || column == null)
+            var startTestViewModel = new StartTestViewModel(this, MainLogger);
+            var windowSettings = new Dictionary<string, object>();
+            windowSettings.Add("Title", string.Format("Start test af {0}", ArchiveVersion.Id));
+            bool? success = windowManager.ShowDialog(startTestViewModel, null, windowSettings);
+            if (!success.HasValue || !success.Value)
             {
                 return;
             }
 
-            try
-            {
-                var regex = new Regex(pattern);
-                Regexes.Add(new RegexTestViewModel(new Test.Pattern(regex), column));
-            }
-            catch (ArgumentException)
-            {
-                Log(string.Format("Det regulære udtryk \"{0}\" er ikke gyldigt.", pattern), LogLevel.ERROR);
-            }
-        }
+            Analyzer = startTestViewModel.Analyzer;
 
-        public void RemoveRegex(RegexTestViewModel regex)
-        {
-            Regexes.Remove(regex);
-        }
+            foreach (var tableViewModel in TableViewModels)
+                foreach (var columnViewModel in tableViewModel.ColumnViewModels)
+                    columnViewModel.Analysis = Analyzer.TestHierachy[tableViewModel.Table][columnViewModel.Column];
 
-        public void ClearLog()
-        {
-            LogItems.Clear();
-        }
-
-        public void GoToTable(Table table)
-        {
-
-        }
-
-        public void GoToUndefinedColumn(ArchiveVersionColumnTypeParsingException ex)
-        {
-            var vm = ListTableLookup[ex.Table.Name];
-            if (vm == null)
-                return;
-
-            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
-            SelectedTableViewModel = vm;
-            vm.SelectedColumnAnalysis = CurrentColumnAnalyses.First(ca => ca.Column.ColumnId == ex.Id);
-        }
-
-        public void GoToColumn(ColumnCount c)
-        {
-            var vm = ListTableLookup[c.Column.Table.Name];
-            if (vm == null)
-                return;
-
-            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
-            SelectedTableViewModel = vm;
-            vm.SelectedColumnAnalysis = CurrentColumnAnalyses.First(ca => ca.Column == c.Column);
-        }
-
-        public void SaveLog()
-        {
-            using (var dialog = new System.Windows.Forms.SaveFileDialog())
-            {
-                dialog.OverwritePrompt = true;
-                dialog.Filter = "Tekstfil|*.txt|Logfil|*.log|Alle filtyper|*.*";
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    using (var stream = dialog.OpenFile())
-                    {
-                        using (var writer = new StreamWriter(stream))
-                        {
-                            bool first = true;
-                            foreach (var item in LogItems)
-                            {
-                                if (item.Item1 == LogLevel.SECTION)
-                                {
-                                    if (first)
-                                    {
-                                        first = false;
-                                    }
-                                    else
-                                    {
-                                        writer.Write(Environment.NewLine);
-                                    }
-                                    var section = item.Item2.ToLocalTime() + " " + item.Item3;
-                                    writer.Write(section + Environment.NewLine + string.Concat(Enumerable.Repeat("-", section.Length)) + Environment.NewLine);
-                                }
-                                else
-                                {
-                                    writer.Write(item.Item3 + Environment.NewLine);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        public void ApplySuggestion()
-        {
-            if (SelectedTableViewModel != null && _SelectedTableViewModel.SelectedColumnAnalysis != null)
-            {
-                SelectedTableViewModel.SelectedColumnAnalysis.ApplySuggestion();
-            }
-        }
-
-        public void ApplyAllSuggestions()
-        {
-            foreach (var columnAnalysis in _analyzer.TestHierachy.Values.SelectMany(d => d.Values))
-            {
-                columnAnalysis.ApplySuggestion();
-            }
-        }
-
-        public void SaveTableIndex()
-        {
-            using (var dialog = new System.Windows.Forms.SaveFileDialog())
-            {
-                dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    ArchiveVersion.TableIndex.ToXml().Save(dialog.FileName);
-                }
-            }
-
-        }
-
-        public async void ToggleTest()
-        {
             if (TestRunning)
             {
                 _testCts.Cancel();
@@ -642,76 +392,15 @@ namespace HardHorn.ViewModels
                     ErrorViewModels.Add(errorViewModel);
                 }
 
-                foreach (var table in _analyzer.TestHierachy.Values)
+                foreach (var table in Analyzer.TestHierachy.Values)
                     foreach (var columnAnalysis in table.Values)
                     {
-                        columnAnalysis.Clear();
                         columnAnalysis.AnalysisErrorsOccured += OnTestError;
                     }
 
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
-                var regexList = new List<RegexTestViewModel>();
-                foreach (var regex in Regexes)
-                {
-                    _analyzer.AddTest(regex.Column, regex.RegexTest);
-                }
 
                 TestProgress = 0;
-
-                SetDefaultSelectedTests();
-
-                foreach (var testSelectionCategory in SelectedTests)
-                    foreach (var testTypeSelection in testSelectionCategory)
-                        foreach (var dataTypeSelection in testTypeSelection)
-                        {
-                            if (!dataTypeSelection.Selected.HasValue || !dataTypeSelection.Selected.Value)
-                                continue;
-
-                            foreach (var column in ArchiveVersion.Columns)
-                            {
-                                if (dataTypeSelection.DataType == column.ParameterizedDataType.DataType)
-                                {
-                                    Test test;
-                                    switch (testTypeSelection.TestType)
-                                    {
-                                        case AnalysisTestType.BLANK:
-                                            test = new Test.Blank();
-                                            break;
-                                        case AnalysisTestType.OVERFLOW:
-                                            test = new Test.Overflow();
-                                            break;
-                                        case AnalysisTestType.UNDERFLOW:
-                                            test = new Test.Underflow();
-                                            break;
-                                        case AnalysisTestType.FORMAT:
-                                            switch (dataTypeSelection.DataType)
-                                            {
-                                                case DataType.TIMESTAMP:
-                                                    test = Test.TimestampFormatTest();
-                                                    break;
-                                                case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                                                    test = Test.TimestampWithTimeZoneFormatTest();
-                                                    break;
-                                                case DataType.DATE:
-                                                    test = Test.DateFormatTest();
-                                                    break;
-                                                case DataType.TIME:
-                                                    test = Test.TimeFormatTest();
-                                                    break;
-                                                case DataType.TIME_WITH_TIME_ZONE:
-                                                    test = Test.TimeWithTimeZoneTest();
-                                                    break;
-                                                default:
-                                                    continue;
-                                            }
-                                            break;
-                                        default:
-                                            continue;
-                                    }
-                                    _analyzer.AddTest(column, test);
-                                }
-                            }
-                        }
 
                 foreach (var tableViewModel in TableViewModels)
                 {
@@ -721,15 +410,15 @@ namespace HardHorn.ViewModels
                 IProgress<Table> updateTableProgress = new Progress<Table>(table =>
                 {
                     if (table == null) return;
-                    var tableViewModel = ListTableLookup[table.Name];
-                    if (_analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
+                    var tableViewModel = TableViewModelIndex[table.Name];
+                    if (Analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
                         tableViewModel.Errors = true;
                 });
 
                 IProgress<Table> showReportProgress = new Progress<Table>(table =>
                 {
 
-                    var tableReport = _analyzer.TestHierachy[table];
+                    var tableReport = Analyzer.TestHierachy[table];
                     Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
                         (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
                     int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
@@ -797,7 +486,7 @@ namespace HardHorn.ViewModels
                         {
                             logger.Log(string.Format("Tester tabellen '{0}' ({1})", table.Name, table.Folder), LogLevel.SECTION);
 
-                            ListTableLookup[table.Name].Busy = true;
+                            TableViewModelIndex[table.Name].Busy = true;
                             try
                             {
                                 using (var reader = table.GetReader())
@@ -814,7 +503,7 @@ namespace HardHorn.ViewModels
                                         if (token.IsCancellationRequested)
                                             return;
 
-                                        _analyzer.AnalyzeRows(table, rows, readRows);
+                                        Analyzer.AnalyzeRows(table, rows, readRows);
 
                                         updateTableProgress.Report(table);
 
@@ -831,15 +520,21 @@ namespace HardHorn.ViewModels
                                 logger.Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", table.Name, table.Folder), LogLevel.ERROR);
                             }
 
-                            foreach (var report in _analyzer.TestHierachy[table].Values)
+                            bool typesSuggested = false;
+                            foreach (var report in Analyzer.TestHierachy[table].Values)
                             {
                                 report.SuggestType();
+                                if (report.SuggestedType != null)
+                                    typesSuggested = true;
                             }
+
+                            if (typesSuggested)
+                                Application.Current.Dispatcher.Invoke(() => ColumnsView.Refresh());
 
                             showReportProgress.Report(table);
 
-                            ListTableLookup[table.Name].Busy = false;
-                            ListTableLookup[table.Name].Done = true;
+                            TableViewModelIndex[table.Name].Busy = false;
+                            TableViewModelIndex[table.Name].Done = true;
                         }
                     });
                 }
@@ -849,10 +544,10 @@ namespace HardHorn.ViewModels
                 }
                 finally
                 {
-                    var totalErrors = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
-                    var errorTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
-                    var totalSuggestions = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
-                    var suggestionTables = _analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
+                    var totalErrors = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
+                    var errorTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
+                    var totalSuggestions = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
+                    var suggestionTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
 
                     Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
 
@@ -863,6 +558,325 @@ namespace HardHorn.ViewModels
                     }
                 }
             }
+        }
+        #endregion
+
+        #region Actions
+        public async void TestForeignKey(ForeignKey fkey)
+        {
+            var progressHandler = new Progress<int>(value =>
+            {
+                ForeignKeyTestProgress = value;
+            });
+
+            var progress = progressHandler as IProgress<int>;
+            var fkeyResult = await Task.Run(() =>
+            {
+                int readRows;
+                int doneRows = 0;
+                int chunk = 10000;
+
+                var keyValues = new HashSet<ForeignKeyValue>();
+
+                //logger.Log("Indlæser nøgleværdier...", LogLevel.NORMAL);
+                using (var reader = fkey.ReferencedTable.GetReader())
+                {
+                    do
+                    {
+                        Post[,] rows;
+                        readRows = reader.Read(out rows, chunk);
+
+                        for (int i = 0; i < readRows; i++)
+                        {
+                            keyValues.Add(fkey.GetReferencedValueFromRow(i, rows));
+                        }
+
+                        doneRows += readRows;
+                    } while (readRows == chunk);
+                }
+                //logger.Log("Nøgleværdier indlæst.", LogLevel.NORMAL);
+
+                int lastPercentage = 0;
+                int thisPercentage = 0;
+                var errorKeys = new Dictionary<ForeignKeyValue, int>();
+                //logger.Log("Tester nøglen...", LogLevel.NORMAL);
+
+                doneRows = 0;
+                int errors = 0;
+                using (var reader = fkey.Table.GetReader())
+                {
+                    do
+                    {
+                        Post[,] rows;
+                        readRows = reader.Read(out rows, chunk);
+
+                        for (int i = 0; i < readRows; i++)
+                        {
+                            var key = fkey.GetValueFromRow(i, rows);
+                            if (!keyValues.Contains(key))
+                            {
+                                errors++;
+                                try
+                                {
+                                    errorKeys[key]++;
+                                }
+                                catch (KeyNotFoundException)
+                                {
+                                    errorKeys[key] = 1;
+                                }
+                            }
+                        }
+
+                        doneRows += readRows;
+
+                        thisPercentage = (doneRows * 100) / fkey.Table.Rows;
+                        if (thisPercentage > lastPercentage)
+                        {
+                            lastPercentage = thisPercentage;
+                            progress.Report(thisPercentage);
+                            //logger.Log(string.Format("Progress: {0} Fejl: {1}", thisPercentage, errors), LogLevel.NORMAL);
+                        }
+                    } while (readRows == chunk);
+                }
+
+                //Log(string.Format("Errors: {0}", errors), LogLevel.NORMAL);
+                var ordered = errorKeys.OrderBy(x => x.Value).Reverse().Take(1000);
+                //foreach (var pair in ordered)
+                //{
+                //    Console.WriteLine(string.Format("{0}/{1}/{2}: {3}", pair.Key.Item1, pair.Key.Item2, pair.Key.Item3, pair.Value));
+                //}
+
+                return new Tuple<int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>(errors, errorKeys.Count, ordered);
+            });
+
+            ForeignKeyTestErrorCount = fkeyResult.Item1;
+            ForeignKeyTestErrorTypeCount = fkeyResult.Item2;
+            ForeignKeyOrderedErrorsSample = fkeyResult.Item3;
+        }
+
+        public void AddParameter()
+        {
+            if (SelectedTableViewModel == null || SelectedTableViewModel.SelectedColumnViewModel == null)
+                return;
+
+            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter == null)
+            {
+                SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter = new Archiving.Parameter(new int[0]);
+            }
+            SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.AddParameterItem(0);
+        }
+
+        public void RemoveParameter()
+        {
+            if (SelectedTableViewModel == null || SelectedTableViewModel.SelectedColumnViewModel == null)
+                return;
+
+            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter == null)
+                return;
+            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter.Count == 1)
+            {
+                SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter = null;
+                return;
+            }
+            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter.Count > 1)
+                SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.RemoveParameterItem(0);
+        }
+
+        public void OnArchiveVersionException(Exception ex)
+        {
+            ErrorViewModelBase errorViewModel;
+
+            if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
+            {
+                if (ex is ArchiveVersionColumnParsingException)
+                {
+                    errorViewModel = new ColumnParsingErrorViewModel();
+                }
+                else if (ex is ArchiveVersionColumnTypeParsingException)
+                {
+                    errorViewModel = new ColumnTypeParsingErrorViewModel();
+                }
+                else
+                {
+                    return;
+                }
+
+                LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
+                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
+
+            }
+            else
+            {
+                errorViewModel = LoadingErrorViewModelIndex[ex.GetType()];
+            }
+
+            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
+        }
+
+        public void OnTestError(object sender, AnalysisErrorsOccuredArgs e)
+        {
+            var columnAnalysis = sender as ColumnAnalysis;
+
+            if (SelectedTableViewModel != null && columnAnalysis.Column.Table == SelectedTableViewModel.Table)
+            {
+                Application.Current.Dispatcher.Invoke(() => ColumnsView.Refresh());
+            }
+
+            ErrorViewModelBase errorViewModel;
+
+            if (!TestErrorViewModelIndex.ContainsKey(e.Test.Type))
+            {
+                errorViewModel = new TestErrorViewModel(e.Test.Type);
+                TestErrorViewModelIndex[e.Test.Type] = errorViewModel;
+                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
+            }
+            else
+            {
+                errorViewModel = TestErrorViewModelIndex[e.Test.Type];
+            }
+
+            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(e));
+        }
+
+        public void BrowseNext()
+        {
+            if (SelectedTableViewModel == null)
+                return;
+
+            SelectedTableViewModel.BrowseOffset = SelectedTableViewModel.BrowseOffset + SelectedTableViewModel.BrowseCount > SelectedTableViewModel.Table.Rows ? SelectedTableViewModel.BrowseOffset : SelectedTableViewModel.BrowseOffset + SelectedTableViewModel.BrowseCount;
+            SelectedTableViewModel.UpdateBrowseRows();
+        }
+
+        public void BrowsePrevious()
+        {
+            if (SelectedTableViewModel == null)
+                return;
+
+            SelectedTableViewModel.BrowseOffset = SelectedTableViewModel.BrowseCount > SelectedTableViewModel.BrowseOffset ? 0 : SelectedTableViewModel.BrowseOffset - SelectedTableViewModel.BrowseCount;
+            SelectedTableViewModel.UpdateBrowseRows();
+        }
+
+        public void BrowseUpdate()
+        {
+            if (SelectedTableViewModel == null)
+                return;
+
+            SelectedTableViewModel.UpdateBrowseRows();
+        }
+
+        public void Merge(TableComparison added, TableComparison removed)
+        {
+            if (added == null || removed == null)
+                return;
+
+            var tableComparison = added.NewTable.CompareTo(removed.OldTable);
+            tableComparison.Name = added.Name + " / " + removed.Name;
+            TableComparisons.Add(tableComparison);
+            TableComparisons.Remove(added);
+            TableComparisons.Remove(removed);
+            AddedTableComparisons.Remove(added);
+            RemovedTableComparisons.Remove(removed);
+        }
+
+        public void ClearLog()
+        {
+            LogItems.Clear();
+        }
+
+        public void GoToTable(Table table)
+        {
+
+        }
+
+        public void GoToUndefinedColumn(ArchiveVersionColumnTypeParsingException ex)
+        {
+            var vm = TableViewModelIndex[ex.Table.Name];
+            if (vm == null)
+                return;
+
+            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
+            SelectedTableViewModel = vm;
+        }
+
+        public void GoToColumn(ColumnCount c)
+        {
+            var vm = TableViewModelIndex[c.Column.Table.Name];
+            if (vm == null)
+                return;
+
+            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
+            SelectedTableViewModel = vm;
+        }
+
+        public void SaveLog()
+        {
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                dialog.OverwritePrompt = true;
+                dialog.Filter = "Tekstfil|*.txt|Logfil|*.log|Alle filtyper|*.*";
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    using (var stream = dialog.OpenFile())
+                    {
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            bool first = true;
+                            foreach (var item in LogItems)
+                            {
+                                if (item.Item1 == LogLevel.SECTION)
+                                {
+                                    if (first)
+                                    {
+                                        first = false;
+                                    }
+                                    else
+                                    {
+                                        writer.Write(Environment.NewLine);
+                                    }
+                                    var section = item.Item2.ToLocalTime() + " " + item.Item3;
+                                    writer.Write(section + Environment.NewLine + string.Concat(Enumerable.Repeat("-", section.Length)) + Environment.NewLine);
+                                }
+                                else
+                                {
+                                    writer.Write(item.Item3 + Environment.NewLine);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void ApplySuggestion()
+        {
+            if (SelectedTableViewModel != null
+                && SelectedTableViewModel.SelectedColumnViewModel != null
+                && SelectedTableViewModel.SelectedColumnViewModel.Analysis != null
+                && SelectedTableViewModel.SelectedColumnViewModel.Analysis.SuggestedType != null)
+            {
+                SelectedTableViewModel.SelectedColumnViewModel.Analysis.ApplySuggestion();
+            }
+        }
+
+        public void ApplyAllSuggestions()
+        {
+            foreach (var columnAnalysis in Analyzer.TestHierachy.Values.SelectMany(d => d.Values))
+            {
+                columnAnalysis.ApplySuggestion();
+            }
+        }
+
+        public void SaveTableIndex()
+        {
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    ArchiveVersion.TableIndex.ToXml().Save(dialog.FileName);
+                }
+            }
+
         }
 
         public void SelectTableIndex()
