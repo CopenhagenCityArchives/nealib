@@ -91,7 +91,7 @@ namespace HardHorn.Utility
                     return parameters == null || parameters.Length == 0 || parameters.Length == 1;
                 case DataType.NUMERIC:
                 case DataType.DECIMAL:
-                    return parameters == null || (parameters.Length >= 0 && parameters.Length <= 2);
+                    return parameters != null && (parameters.Length == 1 || parameters.Length == 2);
                 default:
                     return parameters == null || parameters.Length == 0;
             }

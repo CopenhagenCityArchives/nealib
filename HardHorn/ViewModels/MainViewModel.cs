@@ -171,12 +171,12 @@ namespace HardHorn.ViewModels
                     var logger = new ProgressLogger(this);
                     ArchiveVersionViewModel vm = await Task.Run(() =>
                     {
-                        var av = ArchiveVersion.Load(location, logger, OnArchiveVersionException);
-                        return new ArchiveVersionViewModel(av, this as ILogger);
+                        return new ArchiveVersionViewModel(logger, location);
                     });
 
                     ArchiveVersionViewModels.Add(vm);
-                    SelectedArchiveVersionViewModel = vm;
+                    if (SelectedArchiveVersionViewModel == null)
+                        SelectedArchiveVersionViewModel = vm;
 
                     // Add to recent locations
                     if (Properties.Settings.Default.RecentLocations == null)

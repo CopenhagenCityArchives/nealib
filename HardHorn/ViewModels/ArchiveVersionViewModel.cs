@@ -52,14 +52,50 @@ namespace HardHorn.ViewModels
 
         public int[] BarChartValues { get; set; }
 
+        public int TableTestProgress
+        {
+            get { return TableDoneRows == 0 ? 0 : TableDoneRows * 100 / TableTotalRows; }
+        }
+
+        public int TestProgress
+        {
+            get { return DoneRows == 0 ? 0 : DoneRows * 100 / TotalRows; }
+        }
+
         int _totalRows;
-        public int TotalRows { get { return _totalRows; } set { _totalRows = value; NotifyOfPropertyChange("TotalRows"); } }
+        public int TotalRows
+        {
+            get { return _totalRows; }
+            set { _totalRows = value; NotifyOfPropertyChange("TotalRows"); NotifyOfPropertyChange("TestProgress"); }
+        }
 
         int _doneRows;
-        public int DoneRows { get { return _doneRows; } set { _doneRows = value; NotifyOfPropertyChange("DoneRows"); } }
+        public int DoneRows
+        {
+            get { return _doneRows; }
+            set { _doneRows = value; NotifyOfPropertyChange("DoneRows"); NotifyOfPropertyChange("TestProgress"); }
+        }
+
+        int _tableTotalRows;
+        public int TableTotalRows
+        {
+            get { return _tableTotalRows; }
+            set { _tableTotalRows = value; NotifyOfPropertyChange("TableTotalRows"); NotifyOfPropertyChange("TableTestProgress"); }
+        }
+
+        int _tableDoneRows;
+        public int TableDoneRows
+        {
+            get { return _tableDoneRows; }
+            set { _tableDoneRows = value; NotifyOfPropertyChange("TableDoneRows"); NotifyOfPropertyChange("TableTestProgress"); }
+        }
 
         ArchiveVersion _archiveVersion;
-        public ArchiveVersion ArchiveVersion { get { return _archiveVersion; } set { _archiveVersion = value; NotifyOfPropertyChange("ArchiveVersion"); } }
+        public ArchiveVersion ArchiveVersion
+        {
+            get { return _archiveVersion; }
+            set { _archiveVersion = value; NotifyOfPropertyChange("ArchiveVersion"); }
+        }
 
         public ObservableCollection<string> RecentLocations { get { return Properties.Settings.Default.RecentLocations; } }
 
@@ -96,13 +132,6 @@ namespace HardHorn.ViewModels
         {
             get { return _loadingTableIndex; }
             set { _loadingTableIndex = value; NotifyOfPropertyChange("LoadingTableIndex"); }
-        }
-
-        int _testProgress;
-        public int TestProgress
-        {
-            get { return _testProgress; }
-            set { _testProgress = value; NotifyOfPropertyChange("TestProgress"); }
         }
 
         string _testLocation = "";
@@ -193,6 +222,7 @@ namespace HardHorn.ViewModels
         public ObservableCollection<TableViewModel> TableViewModels { get; set; }
         public ObservableCollection<TableViewModel> FilteredTableViewModels { get; set; }
         public ObservableCollection<ErrorViewModelBase> ErrorViewModels { get; set; }
+        public TableRowCountErrorViewModel TableRowCountErrorViewModel { get; set; }
         Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
         Dictionary<AnalysisTestType, ErrorViewModelBase> TestErrorViewModelIndex { get; set; }
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
@@ -216,17 +246,17 @@ namespace HardHorn.ViewModels
         public Analyzer Analyzer { get; private set; }
         DataStatistics _stats;
 
-        public IEnumerable<KeyValuePair<DataType, dynamic>> DataTypeStatistics
+        public IEnumerable<KeyValuePair<DataType, DataTypeStatistic>> DataTypeStatistics
         {
             get
             {
                 if (_stats != null && _stats.DataTypeStatistics != null)
                 {
-                    return _stats.DataTypeStatistics.Cast<KeyValuePair<DataType, dynamic>>();
+                    return _stats.DataTypeStatistics.Cast<KeyValuePair<DataType, DataTypeStatistic>>();
                 }
                 else
                 {
-                    return Enumerable.Empty<KeyValuePair<DataType, dynamic>>();
+                    return Enumerable.Empty<KeyValuePair<DataType, DataTypeStatistic>>();
                 }
 
             }
@@ -266,13 +296,38 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Constructors
-        public ArchiveVersionViewModel(ArchiveVersion av, ILogger mainLogger)
+        public ArchiveVersionViewModel(ILogger mainLogger, string location)
         {
-            ArchiveVersion = av;
+            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
+            ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
+            TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
+            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
+            FilteredTableViewModels = new ObservableCollection<TableViewModel>();
+            TableComparisons = new ObservableCollection<TableComparison>();
+            RemovedTableComparisons = new ObservableCollection<TableComparison>();
+            AddedTableComparisons = new ObservableCollection<TableComparison>();
+            CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
             MainLogger = mainLogger;
-            TableViewModels = new ObservableCollection<TableViewModel>(av.Tables.Select(t => new TableViewModel(t)));
+            LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
+            ArchiveVersion = ArchiveVersion.Load(location, this, OnArchiveVersionException);
+            TableViewModels = new ObservableCollection<TableViewModel>(ArchiveVersion.Tables.Select(t => new TableViewModel(t)));
             TableViewModelIndex = new Dictionary<string, TableViewModel>();
             foreach (var tableViewModel in TableViewModels) TableViewModelIndex[tableViewModel.Table.Name] = tableViewModel;
+            PropertyChanged += (sender, arg) =>
+            {
+                if (arg.PropertyName == "SelectedTableViewModel" && SelectedTableViewModel != null)
+                {
+                    ColumnsView = CollectionViewSource.GetDefaultView(SelectedTableViewModel.ColumnViewModels);
+                    ColumnsView.Filter = FilterColumnViewModels;
+                }
+            };
+
+            _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
+        }
+
+        public ArchiveVersionViewModel(ArchiveVersion av, ILogger mainLogger)
+        {
+            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
@@ -282,6 +337,12 @@ namespace HardHorn.ViewModels
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
             CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
+
+            ArchiveVersion = av;
+            MainLogger = mainLogger;
+            TableViewModels = new ObservableCollection<TableViewModel>(av.Tables.Select(t => new TableViewModel(t)));
+            TableViewModelIndex = new Dictionary<string, TableViewModel>();
+            foreach (var tableViewModel in TableViewModels) TableViewModelIndex[tableViewModel.Table.Name] = tableViewModel;
             PropertyChanged += (sender, arg) =>
             {
                 if (arg.PropertyName == "SelectedTableViewModel" && SelectedTableViewModel != null)
@@ -290,7 +351,7 @@ namespace HardHorn.ViewModels
                     ColumnsView.Filter = FilterColumnViewModels;
                 }
             };
-            Log("Så er det dælme tid til at teste datatyper!", LogLevel.SECTION);
+            _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
         }
         #endregion
 
@@ -303,7 +364,7 @@ namespace HardHorn.ViewModels
 
             if (ShowErrorReports)
             {
-                include = include || (columnViewModel.Analysis != null && columnViewModel.Analysis.ErrorCount > 0);
+                include = include || (columnViewModel.Column.ParameterizedDataType.DataType == DataType.UNDEFINED) || (columnViewModel.Analysis != null && columnViewModel.Analysis.ErrorCount > 0);
             }
 
             if (ShowSuggestionReports)
@@ -322,11 +383,7 @@ namespace HardHorn.ViewModels
         public void Log(string msg, LogLevel level = LogLevel.NORMAL)
         {
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
-
-            if (level == LogLevel.SECTION || level == LogLevel.ERROR)
-            {
-                
-            }
+            MainLogger.Log(msg, level);
         }
 
         public void OpenSelectedTableViewModel()
@@ -399,8 +456,6 @@ namespace HardHorn.ViewModels
                     }
 
                 Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
-
-                TestProgress = 0;
 
                 foreach (var tableViewModel in TableViewModels)
                 {
@@ -485,7 +540,8 @@ namespace HardHorn.ViewModels
                         foreach (var table in ArchiveVersion.Tables)
                         {
                             logger.Log(string.Format("Tester tabellen '{0}' ({1})", table.Name, table.Folder), LogLevel.SECTION);
-
+                            TableDoneRows = 0;
+                            TableTotalRows = table.Rows;
                             TableViewModelIndex[table.Name].Busy = true;
                             try
                             {
@@ -507,12 +563,30 @@ namespace HardHorn.ViewModels
 
                                         updateTableProgress.Report(table);
 
+                                        TableDoneRows += readRows;
                                         DoneRows += readRows;
-
-                                        TestProgress = (DoneRows * 100) / TotalRows;
                                     } while (readRows == chunk);
 
-                                    // TODO: Check if number of rows in table adds up
+                                    // Check if number of rows in table adds up
+                                    if (TableDoneRows != TableTotalRows)
+                                    {
+                                        if (TableRowCountErrorViewModel == null)
+                                        {
+                                            TableRowCountErrorViewModel = new TableRowCountErrorViewModel();
+                                            TableRowCountErrorViewModel.Count = 1;
+                                            Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(TableRowCountErrorViewModel));
+                                        }
+                                        else
+                                        {
+                                            TableRowCountErrorViewModel.Count++;
+                                        }
+
+                                        Application.Current.Dispatcher.Invoke(() =>
+                                        {
+                                            Log(string.Format("Tabellen '{0}' har ikke det definerede antal rækker. Defineret '{1}', aktuelt '{2}'.", table.Name, table.Rows, TableDoneRows));
+                                            TableRowCountErrorViewModel.Add(new Tuple<Table, int>(table, TableDoneRows));
+                                        });
+                                    }
                                 }
                             }
                             catch (FileNotFoundException)
@@ -529,13 +603,13 @@ namespace HardHorn.ViewModels
                             }
 
                             if (typesSuggested)
-                                Application.Current.Dispatcher.Invoke(() => ColumnsView.Refresh());
+                                Application.Current.Dispatcher.Invoke(() => { if (ColumnsView != null) ColumnsView.Refresh(); });
 
-                            showReportProgress.Report(table);
+                                showReportProgress.Report(table);
 
-                            TableViewModelIndex[table.Name].Busy = false;
-                            TableViewModelIndex[table.Name].Done = true;
-                        }
+                                TableViewModelIndex[table.Name].Busy = false;
+                                TableViewModelIndex[table.Name].Done = true;
+                            }
                     });
                 }
                 catch (Exception ex)
@@ -783,9 +857,14 @@ namespace HardHorn.ViewModels
             LogItems.Clear();
         }
 
-        public void GoToTable(Table table)
+        public void GoToTable(TableRowCountViewModel viewModel)
         {
+            var vm = TableViewModelIndex[viewModel.Table.Name];
+            if (vm == null)
+                return;
 
+            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
+            SelectedTableViewModel = vm;
         }
 
         public void GoToUndefinedColumn(ArchiveVersionColumnTypeParsingException ex)

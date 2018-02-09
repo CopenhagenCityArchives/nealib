@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HardHorn.ViewModels
 {
@@ -124,6 +122,35 @@ namespace HardHorn.ViewModels
 
             Count++;
             Subjects.Add(ex);
+        }
+    }
+
+    class TableRowCountViewModel : PropertyChangedBase
+    {
+        public Table Table { get; set; }
+        public int Count { get; set; }
+    }
+
+    class TableRowCountErrorViewModel : ErrorViewModelBase
+    {
+        public override string Header
+        {
+            get
+            {
+                return "Rækkeantalsfejl";
+            }
+        }
+
+        public override void Add(object info)
+        {
+            var tuple = info as Tuple<Table, int>;
+
+            if (tuple == null)
+            {
+                throw new InvalidOperationException("Added invalid object to TableRowCountErrorViewModel");
+            }
+
+            Subjects.Add(new TableRowCountViewModel() { Table = tuple.Item1, Count = tuple.Item2 });
         }
     }
 }

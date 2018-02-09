@@ -8,10 +8,10 @@
              xmlns:vm="clr-namespace:HardHorn.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="800">
-    <StackPanel>
+    <StackPanel Margin="5">
         <GroupBox Grid.Row="1" Padding="5">
             <GroupBox.Header>
-                <TextBlock>Vælg tests</TextBlock>
+                <TextBlock FontWeight="Bold">Vælg tests</TextBlock>
             </GroupBox.Header>
             <TreeView ItemsSource="{Binding SelectedTests}" MinHeight="200">
                 <TreeView.Resources>
@@ -33,9 +33,9 @@
             </TreeView>
         </GroupBox>
 
-        <GroupBox Grid.Row="2" Padding="5">
+        <GroupBox Grid.Row="2" Padding="5" Margin="0 5 0 0">
             <GroupBox.Header>
-                <TextBlock>Regulære udtryk</TextBlock>
+                <TextBlock FontWeight="Bold">Regulære udtryk</TextBlock>
             </GroupBox.Header>
             <Grid Grid.Row="3">
                 <Grid.RowDefinitions>

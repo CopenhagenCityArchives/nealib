@@ -32,7 +32,7 @@ namespace HardHorn.Utility
             rows = new Post[n, _table.Columns.Count];
             int row = 0;
 
-            while (_xmlReader.Read() && row < n)
+            while (row < n && _xmlReader.Read())
             {
                 if (_xmlReader.NodeType == XmlNodeType.Element && _xmlReader.Name.Equals("row"))
                 {

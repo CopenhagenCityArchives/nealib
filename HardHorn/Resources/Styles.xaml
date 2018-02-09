@@ -6,7 +6,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <TextBlock Margin="-5">
+                    <TextBlock>
                         <Hyperlink>
                             <ContentControl Content="{TemplateBinding Content}"></ContentControl>
                         </Hyperlink>

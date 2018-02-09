@@ -80,6 +80,7 @@ namespace HardHorn.ViewModels
         {
             Table = table;
             ColumnViewModels = new ObservableCollection<ColumnViewModel>(table.Columns.Select(c => new ColumnViewModel(c)));
+            Errors = ColumnViewModels.Any(cvm => cvm.Column.ParameterizedDataType.DataType == DataType.UNDEFINED);
             BrowseRows = new ObservableCollection<BrowseRow>();
             BrowseOffset = 0;
             BrowseCount = 20;

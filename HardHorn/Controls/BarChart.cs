@@ -88,9 +88,10 @@ namespace HardHorn.Controls
 
             var min = Values.Min();
             var max = Values.Max();
-            float interval = (float)max / BucketCount.Value;
+            int bucketCount = Math.Min(BucketCount.Value, Enumerable.Distinct(Values).Count());
+            float interval = (float)max / bucketCount;
 
-            for (int i = 0; i < BucketCount.Value; i++)
+            for (int i = 0; i < bucketCount; i++)
             {
                 dynamic b = new ExpandoObject();
                 b.Count = 0;
@@ -102,6 +103,8 @@ namespace HardHorn.Controls
             foreach (var val in Values)
             {
                 int i = (int)((val / interval) - 1.0f);
+                if (val == 0)
+                    i = 0;
                 dynamic b = Buckets[i];
                 b.Count++;
             }

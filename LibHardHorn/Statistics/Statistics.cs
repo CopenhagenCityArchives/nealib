@@ -6,13 +6,70 @@ using System.Linq;
 
 namespace HardHorn.Statistics
 {
+    public class BarChartConfiguration
+    {
+        public int BucketCount { get; set; }
+        public IList<int> Values { get; set; }
+
+        public BarChartConfiguration(int bCount, IList<int> values)
+        {
+            BucketCount = bCount;
+            Values = values;
+        }
+    }
+
+    public class DataTypeStatistic
+    {
+        public int Count { get; set; }
+        public Parameter MinParams { get; set; }
+        public Parameter MaxParams { get; set; }
+        public IList<int>[] ParamValues { get; set; }
+        public IList<BarChartConfiguration> BarCharts { get; set; }
+
+        public DataTypeStatistic(DataType dataType)
+        {
+            Count = 0;
+
+            int paramCount = 0;
+            switch (dataType)
+            {
+                case DataType.CHARACTER:
+                case DataType.CHARACTER_VARYING:
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                case DataType.TIME:
+                case DataType.TIME_WITH_TIME_ZONE:
+                case DataType.TIMESTAMP:
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                case DataType.REAL:
+                case DataType.FLOAT:
+                    paramCount = 1;
+                    break;
+                case DataType.DECIMAL:
+                case DataType.NUMERIC:
+                    paramCount = 2;
+                    break;
+            }
+            MinParams = new Parameter(new int[paramCount]);
+            MaxParams = new Parameter(new int[paramCount]);
+            ParamValues = new IList<int>[paramCount];
+            BarCharts = new List<BarChartConfiguration>();
+            for (int i = 0; i < paramCount; i++)
+            {
+                ParamValues[i] = new List<int>();
+                BarCharts.Add(new BarChartConfiguration(10, ParamValues[i]));
+            }
+        }
+    }
+
+
     public class DataStatistics
     {
-        public Dictionary<DataType, dynamic> DataTypeStatistics { get; private set; }
+        public Dictionary<DataType, DataTypeStatistic> DataTypeStatistics { get; private set; }
 
         public DataStatistics(params Table[] tables)
         {
-            DataTypeStatistics = new Dictionary<DataType, dynamic>();
+            DataTypeStatistics = new Dictionary<DataType, DataTypeStatistic>();
 
             foreach (var table in tables)
             {
@@ -36,22 +93,12 @@ namespace HardHorn.Statistics
                     }
                     else
                     {
-                        dynamic dataTypeStat = new ExpandoObject();
+                        DataTypeStatistic dataTypeStat = new DataTypeStatistic(column.ParameterizedDataType.DataType);
                         dataTypeStat.Count = 1;
-                        dataTypeStat.MaxParams = column.ParameterizedDataType.Parameter == null ? null : new Parameter(false, new int[column.ParameterizedDataType.Parameter.Count]);
-                        dataTypeStat.MinParams = column.ParameterizedDataType.Parameter == null ? null : new Parameter(false, new int[column.ParameterizedDataType.Parameter.Count]);
-                        if (column.ParameterizedDataType.Parameter != null && column.ParameterizedDataType.Parameter.Count > 0)
-                        {
-                            dataTypeStat.ParamValues = new List<int>[column.ParameterizedDataType.Parameter.Count];
-                        } else
-                        {
-                            dataTypeStat.ParamValues = new List<int>[0];
-                        }
                         for (int i = 0; i < (column.ParameterizedDataType.Parameter == null ? 0 : column.ParameterizedDataType.Parameter.Count); i++)
                         {
                             dataTypeStat.MaxParams[i].Value = column.ParameterizedDataType.Parameter[i].Value;
                             dataTypeStat.MinParams[i].Value = column.ParameterizedDataType.Parameter[i].Value;
-                            dataTypeStat.ParamValues[i] = new List<int>();
                             dataTypeStat.ParamValues[i].Add(column.ParameterizedDataType.Parameter[i].Value);
                         }
                         DataTypeStatistics.Add(column.ParameterizedDataType.DataType, dataTypeStat);
