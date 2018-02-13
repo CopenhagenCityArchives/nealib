@@ -583,7 +583,7 @@ namespace HardHorn.ViewModels
 
                                         Application.Current.Dispatcher.Invoke(() =>
                                         {
-                                            Log(string.Format("Tabellen '{0}' har ikke det definerede antal rækker. Defineret '{1}', aktuelt '{2}'.", table.Name, table.Rows, TableDoneRows));
+                                            Log(string.Format("Tabellen '{0}' har ikke det definerede antal rækker. Defineret '{1}', aktuelt '{2}'.", table.Name, table.Rows, TableDoneRows), LogLevel.ERROR);
                                             TableRowCountErrorViewModel.Add(new Tuple<Table, int>(table, TableDoneRows));
                                         });
                                     }
