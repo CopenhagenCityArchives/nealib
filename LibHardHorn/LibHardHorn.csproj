@@ -50,6 +50,7 @@
     <Compile Include="Analysis\AnalysisErrorsOccuredBase.cs" />
     <Compile Include="Analysis\AnalysisTestType.cs" />
     <Compile Include="Analysis\ColumnAnalysis.cs" />
+    <Compile Include="Analysis\ForeignKeyTest.cs" />
     <Compile Include="Analysis\Test.cs" />
     <Compile Include="Archiving\ArchiveVersion.cs" />
     <Compile Include="Archiving\DataType.cs" />

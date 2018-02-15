@@ -17,6 +17,7 @@ using System.Windows;
 using System.Threading.Tasks;
 using System.Threading;
 using HardHorn.Utility;
+using System.Collections;
 
 namespace HardHorn.ViewModels
 {
@@ -46,7 +47,9 @@ namespace HardHorn.ViewModels
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
 
         ICollectionView _columnsView;
+        ICollectionView _keyTestTableView;
         public ICollectionView ColumnsView { get { return _columnsView; } set { _columnsView = value; NotifyOfPropertyChange("ColumnsView"); } }
+        public ICollectionView KeyTestTableView { get { return _keyTestTableView; } set { _keyTestTableView = value;  NotifyOfPropertyChange("KeyTestTableView"); } }
         public TestSelection SelectedTests { get; set; }
         public ILogger MainLogger { get; private set; }
 
@@ -228,6 +231,7 @@ namespace HardHorn.ViewModels
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
 
         CancellationTokenSource _testCts;
+        CancellationTokenSource _keyTestCts;
 
         int _tabSelectedIndex = 0;
         public int TabSelectedIndex { get { return _tabSelectedIndex; } set { _tabSelectedIndex = value; NotifyOfPropertyChange("TabSelectedIndex"); } }
@@ -265,34 +269,52 @@ namespace HardHorn.ViewModels
         string _compareLocation;
         public string CompareLocation { get { return _compareLocation; } set { _compareLocation = value; NotifyOfPropertyChange("CompareLocation"); } }
 
-        int _foreignKeyTestProgress = 0;
-        public int ForeignKeyTestProgress
+        int _keyTestTotalRowCount;
+        public int KeyTestTotalRowCount
         {
-            get { return _foreignKeyTestProgress; }
-            private set { _foreignKeyTestProgress = value; NotifyOfPropertyChange("ForeignKeyTestProgress"); }
+            get { return _keyTestTotalRowCount; }
+            set { _keyTestTotalRowCount = value; NotifyOfPropertyChange("KeyTestTotalRowCount"); NotifyOfPropertyChange("KeyTestTotalProgress"); }
         }
 
-        int _foreignKeyTestErrorCount = 0;
-        public int ForeignKeyTestErrorCount
+        int _keyTestTotalDoneRows;
+        public int KeyTestTotalDoneRows
         {
-            get { return _foreignKeyTestErrorCount; }
-            private set { _foreignKeyTestErrorCount = value; NotifyOfPropertyChange("ForeignKeyTestErrorCount"); }
+            get { return _keyTestTotalDoneRows; }
+            set { _keyTestTotalDoneRows = value; NotifyOfPropertyChange("KeyTestTotalDoneRows"); NotifyOfPropertyChange("KeyTestTotalProgress"); }
         }
 
-        int _foreignKeyTestErrorTypeCount;
-        public int ForeignKeyTestErrorTypeCount
+        int _keyTestTableRowCount;
+        public int KeyTestTableRowCount
         {
-            get { return _foreignKeyTestErrorTypeCount; }
-            private set { _foreignKeyTestErrorTypeCount = value; NotifyOfPropertyChange("ForeignKeyTestErrorTypeCount"); }
+            get { return _keyTestTableRowCount; }
+            set { _keyTestTableRowCount = value; NotifyOfPropertyChange("KeyTestTableRowCount"); NotifyOfPropertyChange("KeyTestTableProgress"); }
         }
 
-        IEnumerable<KeyValuePair<ForeignKeyValue, int>> _foreignKeyOrderedErrorsSample;
-        public IEnumerable<KeyValuePair<ForeignKeyValue, int>> ForeignKeyOrderedErrorsSample
+        int _keyTestTableDoneRows;
+        public int KeyTestTableDoneRows
         {
-            get { return _foreignKeyOrderedErrorsSample; }
-            private set { _foreignKeyOrderedErrorsSample = value; NotifyOfPropertyChange("ForeignKeyOrderedErrorsSample"); }
+            get { return _keyTestTableDoneRows; }
+            set { _keyTestTableDoneRows = value; NotifyOfPropertyChange("KeyTestTableDoneRows"); NotifyOfPropertyChange("KeyTestTableProgress"); }
         }
 
+        public int KeyTestTableProgress
+        {
+            get { return KeyTestTableRowCount == 0 ? 0 : KeyTestTableDoneRows * 100 / KeyTestTableRowCount; }
+        }
+
+        public int KeyTestTotalProgress
+        {
+            get { return KeyTestTotalRowCount == 0 ? 0 : KeyTestTotalDoneRows * 100 / KeyTestTotalRowCount; }
+        }
+
+        bool _keyTestRunning = false;
+        public bool KeyTestRunning
+        {
+            get { return _keyTestRunning; }
+            set { _keyTestRunning = value; NotifyOfPropertyChange("KeyTestRunning"); }
+        }
+
+        public ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>> ForeignKeyTestResults { get; set; }
         #endregion
 
         #region Constructors
@@ -307,6 +329,7 @@ namespace HardHorn.ViewModels
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
             CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
+            ForeignKeyTestResults = new ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>();
             MainLogger = mainLogger;
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             ArchiveVersion = ArchiveVersion.Load(location, this, OnArchiveVersionException);
@@ -321,7 +344,12 @@ namespace HardHorn.ViewModels
                     ColumnsView.Filter = FilterColumnViewModels;
                 }
             };
-
+            KeyTestTableView = CollectionViewSource.GetDefaultView(TableViewModels);
+            KeyTestTableView.Filter += o =>
+            {
+                var vm = o as TableViewModel;
+                return vm != null && vm.Table.ForeignKeys.Count > 0;
+            };
             _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
         }
 
@@ -337,7 +365,7 @@ namespace HardHorn.ViewModels
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
             CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
-
+            ForeignKeyTestResults = new ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>();
             ArchiveVersion = av;
             MainLogger = mainLogger;
             TableViewModels = new ObservableCollection<TableViewModel>(av.Tables.Select(t => new TableViewModel(t)));
@@ -350,6 +378,12 @@ namespace HardHorn.ViewModels
                     ColumnsView = CollectionViewSource.GetDefaultView(SelectedTableViewModel.ColumnViewModels);
                     ColumnsView.Filter = FilterColumnViewModels;
                 }
+            };
+            KeyTestTableView = CollectionViewSource.GetDefaultView(TableViewModels);
+            KeyTestTableView.Filter += o =>
+            {
+                var vm = o as TableViewModel;
+                return vm != null && vm.Table.ForeignKeys.Count > 0;
             };
             _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
         }
@@ -636,96 +670,89 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Actions
-        public async void TestForeignKey(ForeignKey fkey)
+        public void StopKeyTest()
         {
-            var progressHandler = new Progress<int>(value =>
+            if (KeyTestRunning && _keyTestCts != null)
             {
-                ForeignKeyTestProgress = value;
-            });
+                _keyTestCts.Cancel();
+            }
+        }
 
-            var progress = progressHandler as IProgress<int>;
-            var fkeyResult = await Task.Run(() =>
+        public async void StartKeyTest(IList tableViewModels)
+        {
+            if (KeyTestRunning)
+                return;
+
+            var tables = new List<TableViewModel>(tableViewModels.Cast<TableViewModel>()).Select(tvm => tvm.Table);
+
+            var keyTest = new ForeignKeyTest(tables);
+
+            ForeignKeyTestResults.Clear();
+
+            KeyTestRunning = true;
+
+            var totalRowCountProgress = new Progress<int>(value => { KeyTestTotalRowCount = value; }) as IProgress<int>;
+            var totalDoneRowsProgress = new Progress<int>(value => { KeyTestTotalDoneRows = value; }) as IProgress<int>;
+            var tableRowCountProgress = new Progress<int>(value => { KeyTestTableRowCount = value; }) as IProgress<int>;
+            var tableDoneRowsProgress = new Progress<int>(value => { KeyTestTableDoneRows = value; }) as IProgress<int>;
+
+            var addResultProgress = new Progress<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>(tuple => ForeignKeyTestResults.Add(tuple)) as IProgress<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>;
+
+            totalRowCountProgress.Report(keyTest.TotalRowCount);
+
+            _keyTestCts = new CancellationTokenSource();
+
+            try
             {
-                int readRows;
-                int doneRows = 0;
-                int chunk = 10000;
+                await Task.Run(() => {
+                    bool readNext = false;
 
-                var keyValues = new HashSet<ForeignKeyValue>();
-
-                //logger.Log("Indlæser nøgleværdier...", LogLevel.NORMAL);
-                using (var reader = fkey.ReferencedTable.GetReader())
-                {
-                    do
+                    while (keyTest.MoveNextTable())
                     {
-                        Post[,] rows;
-                        readRows = reader.Read(out rows, chunk);
-
-                        for (int i = 0; i < readRows; i++)
+                        tableRowCountProgress.Report(keyTest.TableRowCount);
+                        keyTest.InitializeReferencedValueLoading();
+                        while (keyTest.MoveNextForeignKey())
                         {
-                            keyValues.Add(fkey.GetReferencedValueFromRow(i, rows));
-                        }
-
-                        doneRows += readRows;
-                    } while (readRows == chunk);
-                }
-                //logger.Log("Nøgleværdier indlæst.", LogLevel.NORMAL);
-
-                int lastPercentage = 0;
-                int thisPercentage = 0;
-                var errorKeys = new Dictionary<ForeignKeyValue, int>();
-                //logger.Log("Tester nøglen...", LogLevel.NORMAL);
-
-                doneRows = 0;
-                int errors = 0;
-                using (var reader = fkey.Table.GetReader())
-                {
-                    do
-                    {
-                        Post[,] rows;
-                        readRows = reader.Read(out rows, chunk);
-
-                        for (int i = 0; i < readRows; i++)
-                        {
-                            var key = fkey.GetValueFromRow(i, rows);
-                            if (!keyValues.Contains(key))
+                            do
                             {
-                                errors++;
-                                try
+                                readNext = keyTest.ReadReferencedForeignKeyValue();
+                                tableDoneRowsProgress.Report(keyTest.TableDoneRows);
+                                totalDoneRowsProgress.Report(keyTest.TotalDoneRows);
+                                if (_keyTestCts.IsCancellationRequested)
                                 {
-                                    errorKeys[key]++;
+                                    return;
                                 }
-                                catch (KeyNotFoundException)
-                                {
-                                    errorKeys[key] = 1;
-                                }
-                            }
-                        }
+                            } while (readNext);
+                        } 
 
-                        doneRows += readRows;
-
-                        thisPercentage = (doneRows * 100) / fkey.Table.Rows;
-                        if (thisPercentage > lastPercentage)
+                        keyTest.InitializeTableTest();
+                        do
                         {
-                            lastPercentage = thisPercentage;
-                            progress.Report(thisPercentage);
-                            //logger.Log(string.Format("Progress: {0} Fejl: {1}", thisPercentage, errors), LogLevel.NORMAL);
+                            readNext = keyTest.ReadForeignKeyValue();
+                            tableDoneRowsProgress.Report(keyTest.TableDoneRows);
+                            totalDoneRowsProgress.Report(keyTest.TotalDoneRows);
+                            if (_keyTestCts.IsCancellationRequested)
+                            {
+                                return;
+                            }
+                        } while (readNext);
+
+                        foreach (var foreignKey in keyTest.CurrentTable.ForeignKeys)
+                        {
+                            addResultProgress.Report(new Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>(foreignKey, keyTest.GetErrorCount(foreignKey), keyTest.GetErrorTypeCount(foreignKey), keyTest.GetOrderedErrorCounts(foreignKey)));
                         }
-                    } while (readRows == chunk);
-                }
+                    }
+                });
+            }
+            catch (Exception)
+            {
 
-                //Log(string.Format("Errors: {0}", errors), LogLevel.NORMAL);
-                var ordered = errorKeys.OrderBy(x => x.Value).Reverse().Take(1000);
-                //foreach (var pair in ordered)
-                //{
-                //    Console.WriteLine(string.Format("{0}/{1}/{2}: {3}", pair.Key.Item1, pair.Key.Item2, pair.Key.Item3, pair.Value));
-                //}
-
-                return new Tuple<int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>(errors, errorKeys.Count, ordered);
-            });
-
-            ForeignKeyTestErrorCount = fkeyResult.Item1;
-            ForeignKeyTestErrorTypeCount = fkeyResult.Item2;
-            ForeignKeyOrderedErrorsSample = fkeyResult.Item3;
+            }
+            finally
+            {
+                KeyTestRunning = false;
+                keyTest.Dispose();
+            }
         }
 
         public void AddParameter()

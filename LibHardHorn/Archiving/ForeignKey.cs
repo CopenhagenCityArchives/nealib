@@ -11,6 +11,9 @@ namespace HardHorn.Archiving
         public List<Reference> References { get; private set; }
         public string ReferencedTableName { get; private set; }
         public Table ReferencedTable { get; private set; }
+        public string Columns { get { return string.Join("/", References.Select(r => r.ColumnName)); } }
+        public string ReferencedColumns { get { return string.Join("/", References.Select(r => r.ReferencedColumnName)); } }
+
 
         public ForeignKey(string name, string referencedTableName, IEnumerable<Reference> references)
         {
