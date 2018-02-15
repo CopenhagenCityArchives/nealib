@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace HardHorn.ViewModels
 {
-    abstract class ErrorViewModelBase : PropertyChangedBase
+    public abstract class ErrorViewModelBase : PropertyChangedBase
     {
         public abstract string Header { get; }
 
@@ -31,7 +31,7 @@ namespace HardHorn.ViewModels
         public int Count { get { return _count; } set { _count = value; NotifyOfPropertyChange("Count"); } }
     }
 
-    class TestErrorViewModel : ErrorViewModelBase
+    public class TestErrorViewModel : ErrorViewModelBase
     {
         Dictionary<Column, ColumnCount> _subjectIndex = new Dictionary<Column, ColumnCount>();
 
@@ -73,7 +73,7 @@ namespace HardHorn.ViewModels
         }
     }
 
-    class ColumnTypeParsingErrorViewModel : ErrorViewModelBase
+    public class ColumnTypeParsingErrorViewModel : ErrorViewModelBase
     {
         public override string Header
         {
@@ -101,7 +101,7 @@ namespace HardHorn.ViewModels
         }
     }
 
-    class ColumnParsingErrorViewModel : ErrorViewModelBase
+    public class ColumnParsingErrorViewModel : ErrorViewModelBase
     {
         public override string Header
         {
@@ -125,13 +125,13 @@ namespace HardHorn.ViewModels
         }
     }
 
-    class TableRowCountViewModel : PropertyChangedBase
+    public class TableRowCountViewModel : PropertyChangedBase
     {
         public Table Table { get; set; }
         public int Count { get; set; }
     }
 
-    class TableRowCountErrorViewModel : ErrorViewModelBase
+    public class TableRowCountErrorViewModel : ErrorViewModelBase
     {
         public override string Header
         {

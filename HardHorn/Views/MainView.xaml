@@ -88,16 +88,29 @@
         <!-- Main content -->
         <TabControl Grid.Row="1" ItemsSource="{Binding ArchiveVersionViewModels}" SelectedItem="{Binding SelectedArchiveVersionViewModel}">
             <TabControl.ContentTemplate>
-                <DataTemplate>
+                <DataTemplate DataType="vm:ArchiveVersionViewModel">
                     <ContentControl cal:View.Model="{Binding}" />
                 </DataTemplate>
             </TabControl.ContentTemplate>
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <DockPanel VerticalAlignment="Center">
-                        <Label DockPanel.Dock="Left" Content="{Binding ArchiveVersion.Id}"></Label>
-                        <Button DockPanel.Dock="Right" cal:Bind.ModelWithoutContext="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" cal:Message.Attach="Close($dataContext)">x</Button>
-                    </DockPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding ArchiveVersion.Id}"></TextBlock>
+                        <Button Grid.Column="1"
+                                cal:Bind.ModelWithoutContext="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                                cal:Message.Attach="[Event Click] = [Action Close($dataContext)]" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <ContentPresenter Content="{TemplateBinding Content}"></ContentPresenter>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Margin="10 0 0 0" FontWeight="Bold">❌</TextBlock>
+                        </Button>
+                    </Grid>
                 </DataTemplate>
             </TabControl.ItemTemplate>
         </TabControl>

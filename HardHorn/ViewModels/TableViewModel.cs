@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace HardHorn.ViewModels
 {
-    class BrowseRow : PropertyChangedBase
+    public class BrowseRow : PropertyChangedBase
     {
         bool _isSelected;
         public bool IsSelected
@@ -28,7 +28,7 @@ namespace HardHorn.ViewModels
         }
     }
 
-    class TableViewModel : PropertyChangedBase
+    public class TableViewModel : PropertyChangedBase
     {
         public Table Table { get; set; }
 

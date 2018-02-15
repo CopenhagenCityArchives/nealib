@@ -36,7 +36,7 @@ namespace HardHorn.ViewModels
         }
     }
 
-    class ArchiveVersionViewModel : Screen, ILogger
+    public class ArchiveVersionViewModel : Screen, ILogger
     {
         public IWindowManager windowManager = new WindowManager();
 
