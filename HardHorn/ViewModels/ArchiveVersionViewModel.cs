@@ -350,41 +350,7 @@ namespace HardHorn.ViewModels
                 var vm = o as TableViewModel;
                 return vm != null && vm.Table.ForeignKeys.Count > 0;
             };
-            _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
-        }
-
-        public ArchiveVersionViewModel(ArchiveVersion av, ILogger mainLogger)
-        {
-            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
-            ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
-            TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
-            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
-            FilteredTableViewModels = new ObservableCollection<TableViewModel>();
-            LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
-            TableComparisons = new ObservableCollection<TableComparison>();
-            RemovedTableComparisons = new ObservableCollection<TableComparison>();
-            AddedTableComparisons = new ObservableCollection<TableComparison>();
-            CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
-            ForeignKeyTestResults = new ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>();
-            ArchiveVersion = av;
-            MainLogger = mainLogger;
-            TableViewModels = new ObservableCollection<TableViewModel>(av.Tables.Select(t => new TableViewModel(t)));
-            TableViewModelIndex = new Dictionary<string, TableViewModel>();
-            foreach (var tableViewModel in TableViewModels) TableViewModelIndex[tableViewModel.Table.Name] = tableViewModel;
-            PropertyChanged += (sender, arg) =>
-            {
-                if (arg.PropertyName == "SelectedTableViewModel" && SelectedTableViewModel != null)
-                {
-                    ColumnsView = CollectionViewSource.GetDefaultView(SelectedTableViewModel.ColumnViewModels);
-                    ColumnsView.Filter = FilterColumnViewModels;
-                }
-            };
-            KeyTestTableView = CollectionViewSource.GetDefaultView(TableViewModels);
-            KeyTestTableView.Filter += o =>
-            {
-                var vm = o as TableViewModel;
-                return vm != null && vm.Table.ForeignKeys.Count > 0;
-            };
+            Log("Indlæsningen er fuldført.", LogLevel.SECTION);
             _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
         }
         #endregion
@@ -417,7 +383,7 @@ namespace HardHorn.ViewModels
         public void Log(string msg, LogLevel level = LogLevel.NORMAL)
         {
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
-            MainLogger.Log(msg, level);
+            MainLogger.Log(ArchiveVersion.Id + " - " + msg, level);
         }
 
         public void OpenSelectedTableViewModel()
@@ -457,6 +423,8 @@ namespace HardHorn.ViewModels
             }
             else
             {
+                Log("Påbegynder dataanalyse.", LogLevel.SECTION);
+
                 _testCts = new CancellationTokenSource();
                 var token = _testCts.Token;
 
@@ -483,13 +451,14 @@ namespace HardHorn.ViewModels
                     ErrorViewModels.Add(errorViewModel);
                 }
 
-                foreach (var table in Analyzer.TestHierachy.Values)
-                    foreach (var columnAnalysis in table.Values)
+                foreach (var columnAnalysisMap in Analyzer.TestHierachy.Values)
+                {
+                    foreach (var columnAnalysis in columnAnalysisMap.Values)
                     {
                         columnAnalysis.AnalysisErrorsOccured += OnTestError;
                     }
+                }
 
-                Log("Påbegynder dataanalyse med følgende tests", LogLevel.SECTION);
 
                 foreach (var tableViewModel in TableViewModels)
                 {
@@ -521,13 +490,13 @@ namespace HardHorn.ViewModels
                         var column = columnAnalysis.Column;
                         if (columnAnalysis.ErrorCount > 0)
                         {
-                            Log(string.Format("\t- Felt '{0}' af typen '{1} {2}'", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter));
+                            Log("\t- " + column.ToString());
                             foreach (var test in columnAnalysis.Tests)
                             {
                                 if (test.ErrorCount == 0)
                                     continue;
 
-                                Log(string.Format("\t\t- {0} ({1} forekomster)", test.GetType(), test.ErrorCount));
+                                Log(string.Format("\t\t* {0}{1} ({2} forekomster)", test.Type.ToString(), test.Type == AnalysisTestType.REGEX ? " ("+(test as Test.Pattern).Regex.ToString()+")" : "", test.ErrorCount));
                                 int i = 0;
                                 foreach (var post in test.ErrorPosts)
                                 {
@@ -535,7 +504,7 @@ namespace HardHorn.ViewModels
                                         break;
 
                                     string pos = string.Format("({0}, {1})", post.Line, post.Position);
-                                    Log(string.Format("\t\t\t- {1} \"{0}\"", string.Join(Environment.NewLine + "\t\t\t" + string.Concat(Enumerable.Repeat(" ", pos.Length + 4)), (post.Data as string).Split(Environment.NewLine.ToCharArray())), pos));
+                                    Log(string.Format("\t\t\t> {1} \"{0}\"", string.Join(Environment.NewLine + "\t\t\t" + string.Concat(Enumerable.Repeat(" ", pos.Length + 4)), (post.Data as string).Split(Environment.NewLine.ToCharArray())), pos));
 
                                     i++;
                                 }
@@ -553,7 +522,7 @@ namespace HardHorn.ViewModels
                         if (suggestion == null)
                             continue;
 
-                        Log(string.Format("\t- Felt '{0}' kan ændres: {1} {2} => {3} {4}", column.Name, column.ParameterizedDataType.DataType, column.ParameterizedDataType.Parameter, suggestion.DataType, suggestion.Parameter));
+                        Log(string.Format("\t- {0} => {1}", column.ToString(), suggestion.ToString()));
                     }
                 });
 
@@ -573,7 +542,27 @@ namespace HardHorn.ViewModels
 
                         foreach (var table in ArchiveVersion.Tables)
                         {
-                            logger.Log(string.Format("Tester tabellen '{0}' ({1})", table.Name, table.Folder), LogLevel.SECTION);
+                            logger.Log(string.Format("Tester {0}.", table.ToString()), LogLevel.SECTION);
+
+                            foreach (var columnAnalysis in Analyzer.TestHierachy[table].Values)
+                            {
+                                if (columnAnalysis.Tests.Count == 0)
+                                    continue;
+
+                                logger.Log("\t- " + columnAnalysis.Column.ToString(), LogLevel.NORMAL);
+                                foreach (var test in columnAnalysis.Tests)
+                                {
+                                    if (test.Type == AnalysisTestType.REGEX)
+                                    {
+                                        logger.Log(string.Format("\t\t* {0} ({1})", test.Type.ToString(), (test as Test.Pattern).Regex.ToString()), LogLevel.NORMAL);
+                                    }
+                                    else
+                                    {
+                                        logger.Log(string.Format("\t\t* {0}", test.Type.ToString()), LogLevel.NORMAL);
+                                    }
+                                }
+                            }
+
                             TableDoneRows = 0;
                             TableTotalRows = table.Rows;
                             TableViewModelIndex[table.Name].Busy = true;
@@ -617,7 +606,7 @@ namespace HardHorn.ViewModels
 
                                         Application.Current.Dispatcher.Invoke(() =>
                                         {
-                                            Log(string.Format("Tabellen '{0}' har ikke det definerede antal rækker. Defineret '{1}', aktuelt '{2}'.", table.Name, table.Rows, TableDoneRows), LogLevel.ERROR);
+                                            Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", table.ToString(), table.Rows, TableDoneRows), LogLevel.ERROR);
                                             TableRowCountErrorViewModel.Add(new Tuple<Table, int>(table, TableDoneRows));
                                         });
                                     }
