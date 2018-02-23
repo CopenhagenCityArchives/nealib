@@ -92,6 +92,11 @@ namespace HardHorn.Analysis
                 return true;
             }
 
+            if (_tableReader != null)
+            {
+                _tableReader.Dispose();
+            }
+
             return false;
         }
 

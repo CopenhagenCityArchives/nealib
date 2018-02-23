@@ -7,24 +7,19 @@ using System.Xml.Linq;
 
 namespace HardHorn.Archiving
 {
-    public class ParameterizedDataType : NotifyPropertyChangedBase, IComparable
+    public class ParameterizedDataType : IComparable
     {
-        static Regex regex = new Regex(@"^(?<datatype>[a-zA-Z]+( *[a-zA-Z]+)*) *(\((?<params>\d+(,\d+)*)\))?$");
+        static Regex regex = new Regex(@"^(?<datatype>[a-zA-Z]+( *[a-zA-Z]+)*) *(\((?<params>\d+(, *\d+)*)\))?$");
 
         DataType _dataType;
         public DataType DataType
         {
-            get
-            {
-                return _dataType;
-            }
+            get { return _dataType; }
             set
             {
                 // If it is modified, it will stay modified
                 IsModified = IsModified || _dataType != value;
-
                 _dataType = value;
-                NotifyOfPropertyChanged("DataType");
             }
         }
 
@@ -33,54 +28,12 @@ namespace HardHorn.Archiving
         Parameter _parameter;
         public Parameter Parameter
         {
-            get
-            {
-                return _parameter;
-            }
+            get { return _parameter; }
             set
             {
                 // If it is modified, it will stay modified
                 IsModified = IsModified || _parameter != value && (_parameter == null || _parameter.CompareTo(value) != 0);
-
                 _parameter = value;
-                if (value != null)
-                {
-                    _parameter.CollectionChanged += (s, a) =>
-                    {
-                        NotifyOfPropertyChanged("ParameterString");
-                        NotifyOfPropertyChanged("Parameter");
-                    };
-                    foreach (var pItem in value)
-                    {
-                        pItem.PropertyChanged += (s, a) =>
-                        {
-                            NotifyOfPropertyChanged("ParameterString");
-                            NotifyOfPropertyChanged("Parameter");
-                        };
-                    }
-                }
-                NotifyOfPropertyChanged("ParameterString");
-                NotifyOfPropertyChanged("Parameter");
-            }
-        }
-
-        public string ParameterString { get { return Parameter == null ? "" : Parameter.ToString(); } }
-
-        public void AddParameterItem(int i)
-        {
-            var item = new ParameterItem(i);
-            item.PropertyChanged += (s, a) => {
-                NotifyOfPropertyChanged("ParameterString");
-                NotifyOfPropertyChanged("Parameter");
-            };
-            Parameter.Add(item);
-        }
-
-        public void RemoveParameterItem(int i)
-        {
-            if (i >= 0 && i < Parameter.Count)
-            {
-                Parameter.RemoveAt(i);
             }
         }
 
@@ -159,6 +112,27 @@ namespace HardHorn.Archiving
             else
             {
                 return 1;
+            }
+        }
+
+        public string ToString(bool overwriteUnchangedDataTypes)
+        {
+            if (overwriteUnchangedDataTypes)
+            {
+                var repr = "";
+
+                repr += DataTypeUtility.ToString(DataType);
+
+                if (Parameter != null && Parameter.Count > 0)
+                {
+                    repr += " " + Parameter.ToString(DataType);
+                }
+
+                return repr;
+            }
+            else
+            {
+                return ToString();
             }
         }
 

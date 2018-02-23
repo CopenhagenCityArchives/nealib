@@ -57,12 +57,12 @@ namespace HardHorn.ViewModels
 
         public int TableTestProgress
         {
-            get { return TableDoneRows == 0 ? 0 : TableDoneRows * 100 / TableTotalRows; }
+            get { return TableTotalRows == 0 ? 0 : (int)(((long)TableDoneRows) * 100 / TableTotalRows); }
         }
 
         public int TestProgress
         {
-            get { return DoneRows == 0 ? 0 : DoneRows * 100 / TotalRows; }
+            get { return TotalRows == 0 ? 0 : (int)(((long)DoneRows) * 100 / TotalRows); }
         }
 
         int _totalRows;
@@ -299,12 +299,12 @@ namespace HardHorn.ViewModels
 
         public int KeyTestTableProgress
         {
-            get { return KeyTestTableRowCount == 0 ? 0 : KeyTestTableDoneRows * 100 / KeyTestTableRowCount; }
+            get { return KeyTestTableRowCount == 0 ? 0 : (int)(((long)KeyTestTableDoneRows) * 100 / KeyTestTableRowCount); }
         }
 
         public int KeyTestTotalProgress
         {
-            get { return KeyTestTotalRowCount == 0 ? 0 : KeyTestTotalDoneRows * 100 / KeyTestTotalRowCount; }
+            get { return KeyTestTotalRowCount == 0 ? 0 : (int)(((long)KeyTestTotalDoneRows) * 100 / KeyTestTotalRowCount); }
         }
 
         bool _keyTestRunning = false;
@@ -332,7 +332,7 @@ namespace HardHorn.ViewModels
             ForeignKeyTestResults = new ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>();
             MainLogger = mainLogger;
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
-            ArchiveVersion = ArchiveVersion.Load(location, this, OnArchiveVersionException);
+            ArchiveVersion = ArchiveVersion.Load(location, mainLogger, OnArchiveVersionException);
             TableViewModels = new ObservableCollection<TableViewModel>(ArchiveVersion.Tables.Select(t => new TableViewModel(t)));
             TableViewModelIndex = new Dictionary<string, TableViewModel>();
             foreach (var tableViewModel in TableViewModels) TableViewModelIndex[tableViewModel.Table.Name] = tableViewModel;
@@ -385,7 +385,9 @@ namespace HardHorn.ViewModels
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
             MainLogger.Log(ArchiveVersion.Id + " - " + msg, level);
         }
+        #endregion
 
+        #region Actions
         public void OpenSelectedTableViewModel()
         {
             if (SelectedTableViewModel == null)
@@ -496,7 +498,7 @@ namespace HardHorn.ViewModels
                                 if (test.ErrorCount == 0)
                                     continue;
 
-                                Log(string.Format("\t\t* {0}{1} ({2} forekomster)", test.Type.ToString(), test.Type == AnalysisTestType.REGEX ? " ("+(test as Test.Pattern).Regex.ToString()+")" : "", test.ErrorCount));
+                                Log(string.Format("\t\t* {0}{1} ({2} forekomster)", test.Type.ToString(), test.Type == AnalysisTestType.REGEX ? " (" + (test as Test.Pattern).Regex.ToString() + ")" : "", test.ErrorCount));
                                 int i = 0;
                                 foreach (var post in test.ErrorPosts)
                                 {
@@ -526,6 +528,11 @@ namespace HardHorn.ViewModels
                     }
                 });
 
+                var totalRowCountProgress = new Progress<int>(value => { TotalRows = value; }) as IProgress<int>;
+                var totalDoneRowsProgress = new Progress<int>(value => { DoneRows = value; }) as IProgress<int>;
+                var tableRowCountProgress = new Progress<int>(value => { TableTotalRows = value; }) as IProgress<int>;
+                var tableDoneRowsProgress = new Progress<int>(value => { TableDoneRows = value; }) as IProgress<int>;
+
                 var logger = new ProgressLogger(this);
 
                 // Run test worker
@@ -540,11 +547,15 @@ namespace HardHorn.ViewModels
                         DoneRows = 0;
                         int chunk = 10000;
 
-                        foreach (var table in ArchiveVersion.Tables)
-                        {
-                            logger.Log(string.Format("Tester {0}.", table.ToString()), LogLevel.SECTION);
+                        totalRowCountProgress.Report(Analyzer.TotalRowCount);
 
-                            foreach (var columnAnalysis in Analyzer.TestHierachy[table].Values)
+                        bool readNext = false;
+                        while (Analyzer.MoveNextTable())
+                        {
+                            TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = true;
+                            logger.Log(string.Format("Tester {0}.", Analyzer.CurrentTable.ToString()), LogLevel.SECTION);
+
+                            foreach (var columnAnalysis in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
                             {
                                 if (columnAnalysis.Tests.Count == 0)
                                     continue;
@@ -563,62 +574,51 @@ namespace HardHorn.ViewModels
                                 }
                             }
 
-                            TableDoneRows = 0;
-                            TableTotalRows = table.Rows;
-                            TableViewModelIndex[table.Name].Busy = true;
                             try
                             {
-                                using (var reader = table.GetReader())
-                                {
-                                    int readRows = 0;
-                                    do
-                                    {
-                                        if (token.IsCancellationRequested)
-                                            return;
-
-                                        Post[,] rows;
-                                        readRows = reader.Read(out rows, chunk);
-
-                                        if (token.IsCancellationRequested)
-                                            return;
-
-                                        Analyzer.AnalyzeRows(table, rows, readRows);
-
-                                        updateTableProgress.Report(table);
-
-                                        TableDoneRows += readRows;
-                                        DoneRows += readRows;
-                                    } while (readRows == chunk);
-
-                                    // Check if number of rows in table adds up
-                                    if (TableDoneRows != TableTotalRows)
-                                    {
-                                        if (TableRowCountErrorViewModel == null)
-                                        {
-                                            TableRowCountErrorViewModel = new TableRowCountErrorViewModel();
-                                            TableRowCountErrorViewModel.Count = 1;
-                                            Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(TableRowCountErrorViewModel));
-                                        }
-                                        else
-                                        {
-                                            TableRowCountErrorViewModel.Count++;
-                                        }
-
-                                        Application.Current.Dispatcher.Invoke(() =>
-                                        {
-                                            Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", table.ToString(), table.Rows, TableDoneRows), LogLevel.ERROR);
-                                            TableRowCountErrorViewModel.Add(new Tuple<Table, int>(table, TableDoneRows));
-                                        });
-                                    }
-                                }
+                                Analyzer.InitializeTable();
+                                tableRowCountProgress.Report(Analyzer.TableRowCount);
                             }
                             catch (FileNotFoundException)
                             {
-                                logger.Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", table.Name, table.Folder), LogLevel.ERROR);
+                                logger.Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", Analyzer.CurrentTable.Name, Analyzer.CurrentTable.Folder), LogLevel.ERROR);
+                                continue;
+                            }
+
+                            do
+                            {
+                                readNext = Analyzer.AnalyzeRows(chunk);
+                                updateTableProgress.Report(Analyzer.CurrentTable);
+                                tableDoneRowsProgress.Report(Analyzer.TableDoneRows);
+                                totalDoneRowsProgress.Report(Analyzer.TotalDoneRows);
+
+                                if (_testCts.IsCancellationRequested)
+                                    return;
+                            } while (readNext);
+
+                            // Check if number of rows in table adds up
+                            if (TableDoneRows != TableTotalRows)
+                            {
+                                if (TableRowCountErrorViewModel == null)
+                                {
+                                    TableRowCountErrorViewModel = new TableRowCountErrorViewModel();
+                                    TableRowCountErrorViewModel.Count = 1;
+                                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(TableRowCountErrorViewModel));
+                                }
+                                else
+                                {
+                                    TableRowCountErrorViewModel.Count++;
+                                }
+
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", Analyzer.CurrentTable.ToString(), Analyzer.CurrentTable.Rows, TableDoneRows), LogLevel.ERROR);
+                                    TableRowCountErrorViewModel.Add(new Tuple<Table, int>(Analyzer.CurrentTable, TableDoneRows));
+                                });
                             }
 
                             bool typesSuggested = false;
-                            foreach (var report in Analyzer.TestHierachy[table].Values)
+                            foreach (var report in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
                             {
                                 report.SuggestType();
                                 if (report.SuggestedType != null)
@@ -628,11 +628,11 @@ namespace HardHorn.ViewModels
                             if (typesSuggested)
                                 Application.Current.Dispatcher.Invoke(() => { if (ColumnsView != null) ColumnsView.Refresh(); });
 
-                                showReportProgress.Report(table);
+                            showReportProgress.Report(Analyzer.CurrentTable);
 
-                                TableViewModelIndex[table.Name].Busy = false;
-                                TableViewModelIndex[table.Name].Done = true;
-                            }
+                            TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = false;
+                            TableViewModelIndex[Analyzer.CurrentTable.Name].Done = true;
+                        }
                     });
                 }
                 catch (Exception ex)
@@ -656,9 +656,7 @@ namespace HardHorn.ViewModels
                 }
             }
         }
-        #endregion
 
-        #region Actions
         public void StopKeyTest()
         {
             if (KeyTestRunning && _keyTestCts != null)
@@ -735,41 +733,13 @@ namespace HardHorn.ViewModels
             }
             catch (Exception)
             {
-
+                Log("En undtagelse resulterede i at nøgletesten afsluttedes.", LogLevel.ERROR);
             }
             finally
             {
                 KeyTestRunning = false;
                 keyTest.Dispose();
             }
-        }
-
-        public void AddParameter()
-        {
-            if (SelectedTableViewModel == null || SelectedTableViewModel.SelectedColumnViewModel == null)
-                return;
-
-            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter == null)
-            {
-                SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter = new Archiving.Parameter(new int[0]);
-            }
-            SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.AddParameterItem(0);
-        }
-
-        public void RemoveParameter()
-        {
-            if (SelectedTableViewModel == null || SelectedTableViewModel.SelectedColumnViewModel == null)
-                return;
-
-            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter == null)
-                return;
-            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter.Count == 1)
-            {
-                SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter = null;
-                return;
-            }
-            if (SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter.Count > 1)
-                SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.RemoveParameterItem(0);
         }
 
         public void OnArchiveVersionException(Exception ex)
@@ -788,7 +758,7 @@ namespace HardHorn.ViewModels
                 }
                 else
                 {
-                    return;
+                    errorViewModel = new XmlValidationErrorViewModel();
                 }
 
                 LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
@@ -961,14 +931,14 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public void SaveTableIndex()
+        public void SaveTableIndex(bool overwriteUnchangedDataTypes = false)
         {
             using (var dialog = new System.Windows.Forms.SaveFileDialog())
             {
                 dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    ArchiveVersion.TableIndex.ToXml().Save(dialog.FileName);
+                    ArchiveVersion.TableIndex.ToXml(overwriteUnchangedDataTypes).Save(dialog.FileName);
                 }
             }
 

@@ -12,34 +12,48 @@ namespace HardHorn.ViewModels
     public class ColumnViewModel : PropertyChangedBase
     {
         public Column Column { get; private set; }
+
         public ColumnAnalysis Analysis { get; set; }
+
+        public ParameterizedDataType ParameterizedDataType
+        {
+            get { return Column.ParameterizedDataType; }
+            set { Column.ParameterizedDataType = value; NotifyOfPropertyChange("ParameterizedDataType"); }
+        }
+
+        public DataType DataType
+        {
+            get { return ParameterizedDataType.DataType; }
+            set { ParameterizedDataType.DataType = value;  NotifyOfPropertyChange("DataType"); }
+        }
+
+        public Archiving.Parameter Parameter
+        {
+            get { return ParameterizedDataType.Parameter; }
+            set { ParameterizedDataType.Parameter = value; NotifyOfPropertyChange("Parameter"); NotifyOfPropertyChange("ParameterString"); if (Parameter != null) foreach (var paramValue in Parameter) paramValue.PropertyChanged += (s, a) => NotifyOfPropertyChange("ParameterString"); }
+        }
+
+        public string ParameterString
+        {
+            get
+            {
+                if (Parameter != null && Parameter.Count > 0)
+                {
+                    return "(" + string.Join(", ", Parameter.Select(pItem => pItem.Value.ToString())) + ")";
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+        }
 
         public ColumnViewModel(Column column, ColumnAnalysis analysis = null)
         {
             Column = column;
             Analysis = analysis;
-        }
-
-        public void AddParameter()
-        {
-            if (Column.ParameterizedDataType.Parameter == null)
-            {
-                Column.ParameterizedDataType.Parameter = new Archiving.Parameter(new int[0]);
-            }
-            Column.ParameterizedDataType.AddParameterItem(0);
-        }
-
-        public void RemoveParameter()
-        {
-            if (Column.ParameterizedDataType.Parameter == null)
-                return;
-            if (Column.ParameterizedDataType.Parameter.Count == 1)
-            {
-                Column.ParameterizedDataType.Parameter = null;
-                return;
-            }
-            if (Column.ParameterizedDataType.Parameter.Count > 1)
-                Column.ParameterizedDataType.RemoveParameterItem(0);
+            if (Parameter != null)
+            foreach (var paramValue in Parameter) paramValue.PropertyChanged += (s, a) => NotifyOfPropertyChange("ParameterString");
         }
     }
 }

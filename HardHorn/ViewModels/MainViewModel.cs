@@ -67,6 +67,8 @@ namespace HardHorn.ViewModels
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
 
         string _statusText = "";
+        LogLevel _statusLogLevel = LogLevel.SECTION;
+        public LogLevel StatusLogLevel { get { return _statusLogLevel; } set { _statusLogLevel = value; NotifyOfPropertyChange("StatusLogLevel"); } }
         public string StatusText { get { return _statusText; } set { _statusText = value; NotifyOfPropertyChange("StatusText"); } }
         #endregion
 
@@ -88,6 +90,7 @@ namespace HardHorn.ViewModels
 
             if (level == LogLevel.SECTION || level == LogLevel.ERROR)
             {
+                StatusLogLevel = level;
                 StatusText = msg;
             }
         }
@@ -129,6 +132,8 @@ namespace HardHorn.ViewModels
         {
             if (avViewModel.TestRunning)
                 avViewModel.StopTest();
+            if (avViewModel.KeyTestRunning)
+                avViewModel.StopKeyTest();
             ArchiveVersionViewModels.Remove(avViewModel);
             avViewModel = null;
         }
@@ -149,14 +154,19 @@ namespace HardHorn.ViewModels
             }
         }
 
-        public void SaveTableIndex()
+        public void SaveTableIndex(bool overwriteUnchangedDataTypes)
         {
+            if (SelectedArchiveVersionViewModel == null)
+                return;
+
+            var archiveVersion = SelectedArchiveVersionViewModel.ArchiveVersion;
+
             using (var dialog = new System.Windows.Forms.SaveFileDialog())
             {
                 dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    //ArchiveVersion.TableIndex.ToXml().Save(dialog.FileName);
+                    archiveVersion.TableIndex.ToXml(overwriteUnchangedDataTypes).Save(dialog.FileName);
                 }
             }
         }

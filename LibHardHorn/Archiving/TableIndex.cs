@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using System.Xml.Schema;
 
 namespace HardHorn.Archiving
 {
@@ -26,7 +27,7 @@ namespace HardHorn.Archiving
             Views = new List<View>(views);
         }
 
-        public XDocument ToXml()
+        public XDocument ToXml(bool overwriteUnchangedDataTypes)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
             XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
@@ -40,7 +41,7 @@ namespace HardHorn.Archiving
                 new XElement(xmlns + "version", Version),
                 new XElement(xmlns + "dbName", DBName),
                 new XElement(xmlns + "databaseProduct", DatabaseProduct),
-                new XElement(xmlns + "tables", Tables.Select(t => t.ToXml())),
+                new XElement(xmlns + "tables", Tables.Select(t => t.ToXml(overwriteUnchangedDataTypes))),
                 new XElement(xmlns + "views", Views.Select(v => v.ToXml())));
 
             return new XDocument(root);
@@ -80,6 +81,28 @@ namespace HardHorn.Archiving
         public static TableIndex ParseFile(string path, ILogger logger, Action<Exception> callback = null)
         {
             var tableIndexDocument = XDocument.Load(path);
+
+            XNamespace xmlns = "http://www.w3.org/2001/XMLSchema-instance";
+            var schemas = new XmlSchemaSet();
+            try
+            {
+                var schemaLocation = tableIndexDocument.Root.Attribute(xmlns + "schemaLocation").Value.Split(' ').ToArray();
+                var targetNamespace = schemaLocation[0];
+                var schemaUri = System.IO.Path.GetFullPath(System.IO.Path.GetDirectoryName(path) + "\\" + schemaLocation[1].Replace('/', '\\'));
+                schemas.Add(targetNamespace, schemaUri);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Kunne ikke indlæse skema fra tableIndex.xml.", ex);
+            }
+
+            tableIndexDocument.Validate(schemas, (o, e) =>
+            {
+                if (callback != null)
+                {
+                    callback(new ArchiveVersionXmlValidationException(o as XElement, e.Message));
+                }
+            });
 
             return Parse(tableIndexDocument.Root, logger, callback);
         }

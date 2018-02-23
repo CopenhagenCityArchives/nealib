@@ -138,6 +138,8 @@ namespace HardHorn.Archiving
                 tableComparison.FolderModified = true;
             }
 
+
+            // Compare columns
             foreach (var column in Columns)
             {
                 bool columnAdded = true;
@@ -176,16 +178,61 @@ namespace HardHorn.Archiving
                 }
             }
 
-            foreach (dynamic col in tableComparison.Columns)
+            foreach (var col in tableComparison.Columns)
             {
                 tableComparison.Modified = col.Modified || tableComparison.Modified;
                 tableComparison.ColumnsModified = col.Modified || tableComparison.ColumnsModified;
             }
 
+            // Compare foreign keys
+            foreach (var foreignKey in ForeignKeys)
+            {
+                bool foreignKeyAdded = true;
+                foreach (var oldForeignKey in oldTable.ForeignKeys)
+                {
+                    if (foreignKey.Name.ToLower() == oldForeignKey.Name.ToLower())
+                    {
+                        var foreignKeyComparison = foreignKey.CompareTo(oldForeignKey);
+                        foreignKeyComparison.Name = foreignKey.Name;
+                        tableComparison.ForeignKeys.Add(foreignKeyComparison);
+                        foreignKeyAdded = false;
+                        break;
+                    }
+                }
+
+                if (foreignKeyAdded)
+                {
+                    tableComparison.ForeignKeys.Add(new ForeignKeyComparison(foreignKey, null) { Name = foreignKey.Name, Added = true });
+                }
+            }
+
+            foreach (var oldForeignKey in oldTable.ForeignKeys)
+            {
+                bool foreignKeyRemoved = true;
+                foreach (var foreignKey in ForeignKeys)
+                {
+                    if (foreignKey.Name.ToLower() == oldForeignKey.Name.ToLower())
+                    {
+                        foreignKeyRemoved = false;
+                    }
+                }
+
+                if (foreignKeyRemoved)
+                {
+                    tableComparison.ForeignKeys.Add(new ForeignKeyComparison(null, oldForeignKey) { Name = oldForeignKey.Name, Removed = true });
+                }
+            }
+
+            foreach (var foreignKey in tableComparison.ForeignKeys)
+            {
+                tableComparison.Modified = foreignKey.Modified || tableComparison.Modified;
+                tableComparison.ForeignKeysModified = foreignKey.Modified || tableComparison.ForeignKeysModified;
+            }
+
             return tableComparison;
         }
 
-        internal XElement ToXml()
+        internal XElement ToXml(bool overwriteUnchangedDataTypes = false)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
@@ -193,7 +240,7 @@ namespace HardHorn.Archiving
                 new XElement(xmlns + "name", Name),
                 new XElement(xmlns + "folder", Folder),
                 new XElement(xmlns + "description", Description),
-                new XElement(xmlns + "columns", Columns.Select(c => c.ToXml())),
+                new XElement(xmlns + "columns", Columns.Select(c => c.ToXml(overwriteUnchangedDataTypes))),
                 PrimaryKey.ToXml(),
                 ForeignKeys.Count > 0 ? new XElement(xmlns + "foreignKeys", ForeignKeys.Select(fKey => fKey.ToXml())) : null,
                 new XElement(xmlns + "rows", Rows));

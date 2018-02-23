@@ -31,4 +31,14 @@ namespace HardHorn.Archiving
             Id = Column.ColumnId;
         }
     }
+
+    public class ArchiveVersionXmlValidationException : Exception
+    {
+        public XElement Element { get; set; }
+
+        public ArchiveVersionXmlValidationException(XElement element, string message) : base(message)
+        {
+            Element = element;
+        }
+    }
 }

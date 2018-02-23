@@ -125,6 +125,24 @@ namespace HardHorn.ViewModels
         }
     }
 
+    public class XmlValidationErrorViewModel : ErrorViewModelBase
+    {
+        public override string Header { get { return "XML-Valideringsfejl"; } }
+
+        public override void Add(object error)
+        {
+            var ex = error as ArchiveVersionXmlValidationException;
+
+            if (ex == null)
+            {
+                throw new InvalidOperationException("Added invalid object to XmlValidationErrorViewModel.");
+            }
+
+            Count++;
+            Subjects.Add(ex);
+        }
+    }
+
     public class TableRowCountViewModel : PropertyChangedBase
     {
         public Table Table { get; set; }

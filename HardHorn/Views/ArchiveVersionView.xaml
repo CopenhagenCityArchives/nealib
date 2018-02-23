@@ -208,20 +208,20 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="Datatype" Width="170" util:GridViewSort.PropertyName="Column.ParameterizedDataType">
+                            <GridViewColumn Header="Datatype" Width="170" util:GridViewSort.PropertyName="ParameterizedDataType">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock>
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}{0} {1}">
-                                                    <Binding Path="Column.ParameterizedDataType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
-                                                    <Binding Path="Column.ParameterizedDataType.ParameterString"/>
+                                                    <Binding Path="DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
+                                                    <Binding Path="ParameterString"/>
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                             <TextBlock.Style>
                                                 <Style>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Column.ParameterizedDataType.DataType}" Value="{x:Static av:DataType.UNDEFINED}">
+                                                        <DataTrigger Binding="{Binding DataType}" Value="{x:Static av:DataType.UNDEFINED}">
                                                             <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -260,7 +260,7 @@
                             <Label>Datatype</Label>
                             <ComboBox
                                     Grid.Column="1"
-                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.DataType}">
+                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel.DataType}">
                                 <ComboBox.Resources>
                                     <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
                                         <ObjectDataProvider.MethodParameters>
@@ -275,22 +275,18 @@
                                 </ComboBox.ItemsSource>
                             </ComboBox>
                             <Label Grid.Row="1">Parameter</Label>
-                            <StackPanel Grid.Row="1" Grid.Column="1"  Orientation="Horizontal">
-                                <Button cal:Message.Attach="AddParameter">+</Button>
-                                <Button cal:Message.Attach="RemoveParameter">-</Button>
-                                <ItemsControl ItemsSource="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.ParameterizedDataType.Parameter}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBox VerticalAlignment="Center" Text="{Binding Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel></WrapPanel>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </StackPanel>
+                            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding SelectedTableViewModel.SelectedColumnViewModel.Parameter}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBox VerticalAlignment="Center" Text="{Binding Path=Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel></WrapPanel>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
                             <Label Grid.Row="2">Kan være null</Label>
                             <CheckBox VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.Nullable}"></CheckBox>
                             <Button Grid.Row="3" cal:Message.Attach="ApplySuggestion">Anvend datatypeforslag</Button>
@@ -510,6 +506,12 @@
                 </ListView>
                 <ListView Grid.Column="1" ItemsSource="{Binding Path=SelectedItem.Subjects, ElementName=ErrorViewModelList}">
                     <ListView.Resources>
+                        <DataTemplate DataType="{x:Type vm:XmlValidationErrorViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="{Binding Message}"></TextBlock>
+                                <TextBlock Text="{Binding Element}"></TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
                         <DataTemplate DataType="{x:Type vm:TableRowCountViewModel}">
                             <StackPanel Margin="5">
                                 <Button Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToTable($dataContext)]">
@@ -766,8 +768,10 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <GroupBox Header="Tabeller" Padding="5">
+                    <GroupBox Header="Tabeller" Padding="5" Grid.RowSpan="3">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
@@ -827,11 +831,9 @@
                                 <Button cal:Message.Attach="Merge(AddedCombo, RemovedCombo)">Sammenflet</Button>
                             </StackPanel>
                         </Grid>
-
-                        <!--<ListBox x:Name="ComparedTableList" ItemsSource="{Binding TableComparisons}" ItemTemplate="{StaticResource ComparedTableItemTemplate}" />-->
                     </GroupBox>
 
-                    <GroupBox Header="Valgt tabel" Grid.Column="1" Padding="5" Margin="5 0 0 0">
+                    <GroupBox Header="Valgt tabel" Grid.Column="1" Grid.RowSpan="3" Padding="5" Margin="5 0 0 0">
                         <DockPanel>
                             <DockPanel.Style>
                                 <Style>
@@ -917,8 +919,22 @@
                                     Felter:
                                 </TextBlock>
                             </Grid>
-                            <!--<ListBox Margin="5" x:Name="ComparedColumnList" ItemsSource="{Binding SelectedItem.Columns, ElementName=ComparedTableList}" ItemTemplate="{StaticResource ComparedColumnItemTemplate}"></ListBox>-->
-                            <ListView x:Name="ComparedColumnList" ItemsSource="{Binding SelectedItem.Columns, ElementName=ComparedTableList}">
+                            <ListView DockPanel.Dock="Bottom" x:Name="ComparedForeignKeysList" ItemsSource="{Binding SelectedItem.ForeignKeys, ElementName=ComparedTableList}">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Navn" CellTemplate="{StaticResource ComparedTableItemTemplate}" />
+                                        <GridViewColumn Header="Referencer">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding ReferencesModified}" />
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+
+                            <ListView DockPanel.Dock="Bottom" x:Name="ComparedColumnList" ItemsSource="{Binding SelectedItem.Columns, ElementName=ComparedTableList}">
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn Header="Navn" CellTemplate="{StaticResource ComparedTableItemTemplate}" />
@@ -1068,6 +1084,57 @@
                         </Grid>
                     </GroupBox>
 
+                    <GroupBox Grid.Row="1" Grid.Column="2" Margin="5" Header="Valgt fremmednøgle">
+                        <Grid>
+                            <Grid.Style>
+                                <Style>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItem, ElementName=ComparedForeignKeysList}" Value="{x:Null}">
+                                            <Setter Property="Grid.Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Name -->
+                            <TextBlock>
+                                Navn:
+                            </TextBlock>
+
+                            <TextBlock Grid.Column="1" Text="{Binding SelectedItem.Name, ElementName=ComparedForeignKeysList}" />
+
+                            <TextBlock Grid.Row="1">Referencer:</TextBlock>
+                            <ListView Grid.Row="2" Grid.ColumnSpan="2" ItemsSource="{Binding SelectedItem.References, ElementName=ComparedForeignKeysList}" >
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Kolonne" DisplayMemberBinding="{Binding ColumnName}"></GridViewColumn>
+                                        <GridViewColumn Header="Refereret kolonne">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsHitTestVisible="False" Focusable="False" IsChecked="{Binding ReferencedColumn}" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Grid>
+                    </GroupBox>
+
+                    <GroupBox Grid.Column="2" Grid.Row="2" Margin="5" Header="Valgt reference">
+                        <Grid>
+                            <Grid.RowDefinitions></Grid.RowDefinitions>
+                        </Grid>
+                    </GroupBox>
                 </Grid>
             </DockPanel>
         </TabItem>

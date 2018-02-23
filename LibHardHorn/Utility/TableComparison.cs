@@ -8,7 +8,9 @@ namespace HardHorn.Utility
     {
         public bool Added { get; set; }
         public List<ColumnComparison> Columns { get; set; }
+        public List<ForeignKeyComparison> ForeignKeys { get; set; }
         public bool ColumnsModified { get; set; }
+        public bool ForeignKeysModified { get; set; }
         public bool DescriptionModified { get; set; }
         public bool FolderModified { get; set; }
         public bool Modified { get; set; }
@@ -23,11 +25,13 @@ namespace HardHorn.Utility
             NewTable = newTable;
             OldTable = oldTable;
             Columns = new List<ColumnComparison>();
+            ForeignKeys = new List<ForeignKeyComparison>();
             Added = false;
             Modified = false;
             Removed = false;
             DescriptionModified = false;
             ColumnsModified = false;
+            ForeignKeysModified = false;
             RowsModified = false;
             FolderModified = false;
         }

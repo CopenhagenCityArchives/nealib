@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HardHorn.Utility;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -43,6 +44,16 @@ namespace HardHorn.Archiving
             return new XElement(xmlns + "reference",
                 new XElement(xmlns + "column", ColumnName),
                 new XElement(xmlns + "referenced", ReferencedColumnName));
+        }
+
+        public ReferenceComparison CompareTo(Reference oldReference)
+        {
+            var referenceComparison = new ReferenceComparison(this, oldReference) { ColumnName = ColumnName };
+
+            referenceComparison.ReferencedColumnModified = ReferencedColumnName.ToLower() != oldReference.ReferencedColumnName.ToLower();
+            referenceComparison.Modified = referenceComparison.Modified || referenceComparison.ReferencedColumnModified;
+
+            return referenceComparison;
         }
     }
 }

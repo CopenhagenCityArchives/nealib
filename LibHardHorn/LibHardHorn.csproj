@@ -74,7 +74,9 @@
     <Compile Include="Archiving\TableIndex.cs" />
     <Compile Include="Utility\ColumnComparison.cs" />
     <Compile Include="Utility\DataTypeUtility.cs" />
+    <Compile Include="Utility\ForeignKeyComparison.cs" />
     <Compile Include="Utility\NotifyPropertyChangedBase.cs" />
+    <Compile Include="Utility\ReferenceComparison.cs" />
     <Compile Include="Utility\TableComparison.cs" />
     <Compile Include="Utility\TableReader.cs" />
   </ItemGroup>

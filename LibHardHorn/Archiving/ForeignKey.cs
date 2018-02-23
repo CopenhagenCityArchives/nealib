@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using HardHorn.Utility;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -71,8 +73,59 @@ namespace HardHorn.Archiving
 
             return new XElement(xmlns + "foreignKey",
                 new XElement(xmlns + "name", Name),
-                new XElement(xmlns + "referencedTable", ReferencedTable),
+                new XElement(xmlns + "referencedTable", ReferencedTable.Name),
                 References.Select(r => r.ToXml()));
+        }
+
+        public ForeignKeyComparison CompareTo(ForeignKey oldForeignKey)
+        {
+            var foreignKeyComparison = new ForeignKeyComparison(this, oldForeignKey);
+
+            // Compare references
+            foreach (var reference in References)
+            {
+                bool referenceAdded = true;
+                foreach (var oldReference in oldForeignKey.References)
+                {
+                    if (reference.ColumnName.ToLower() == oldReference.ColumnName.ToLower())
+                    {
+                        var referenceComparison = reference.CompareTo(oldReference);
+                        foreignKeyComparison.References.Add(referenceComparison);
+                        referenceAdded = false;
+                        break;
+                    }
+                }
+
+                if (referenceAdded)
+                {
+                    foreignKeyComparison.References.Add(new ReferenceComparison(reference, null) { ColumnName = reference.ColumnName, Added = true });
+                }
+            }
+
+            foreach (var oldReference in oldForeignKey.References)
+            {
+                bool referenceRemoved = true;
+                foreach (var reference in References)
+                {
+                    if (reference.ColumnName.ToLower() == oldReference.ColumnName.ToLower())
+                    {
+                        referenceRemoved = false;
+                    }
+                }
+
+                if (referenceRemoved)
+                {
+                    foreignKeyComparison.References.Add(new ReferenceComparison(null, oldReference) { ColumnName = oldReference.ColumnName, Removed = true });
+                }
+            }
+
+            foreach (var reference in foreignKeyComparison.References)
+            {
+                foreignKeyComparison.Modified = reference.Modified || foreignKeyComparison.Modified;
+                foreignKeyComparison.ReferencesModified = reference.Modified || foreignKeyComparison.ReferencesModified;
+            }
+
+            return foreignKeyComparison;
         }
     }
 }

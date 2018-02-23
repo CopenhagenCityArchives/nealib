@@ -10,6 +10,7 @@ using System.Dynamic;
 using HardHorn.Logging;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using HardHorn.Utility;
 
 namespace HardHorn.Analysis
 {
@@ -24,6 +25,17 @@ namespace HardHorn.Analysis
         public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
         public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
         public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
+
+        public int TableDoneRows { get; private set; }
+        public int TableRowCount { get; private set; }
+        public int TotalDoneRows { get; private set; }
+        public int TotalRowCount { get; private set; }
+
+        private IEnumerator<Table> _tableEnumerator;
+        public Table CurrentTable { get { return _tableEnumerator == null ? null : _tableEnumerator.Current; } }
+        private TableReader _tableReader;
+
+        private int _readRows = 0;
 
         public Dictionary<Table, Dictionary<Column, ColumnAnalysis>> TestHierachy { get; private set; }
 
@@ -41,6 +53,10 @@ namespace HardHorn.Analysis
                     TestHierachy[table].Add(column, new ColumnAnalysis(column));
                 }
             }
+
+            TotalDoneRows = 0;
+            TotalRowCount = ArchiveVersion.Tables.Aggregate(0, (n, t) => n + t.Rows);
+            _tableEnumerator = ArchiveVersion.Tables.GetEnumerator();
         }
 
         public void AddTest(Column column, Test test)
@@ -57,27 +73,63 @@ namespace HardHorn.Analysis
         /// </summary>
         /// <param name="n">The number of rows to analyze.</param>
         /// <returns>The number of rows analyzed.</returns>
-        public void AnalyzeRows(Table table, Post[,] rows, int n)
+        public bool AnalyzeRows(int n = 10000)
         {
+            Post[,] rows;
+            _readRows = _tableReader.Read(out rows, n);
+
             // analyze the rows
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < _readRows; i++)
             {
-                for (int j = 0; j < table.Columns.Count; j++)
+                for (int j = 0; j < CurrentTable.Columns.Count; j++)
                 {
                     var post = rows[i,j];
-                    TestHierachy[table][table.Columns[j]].UpdateLengthStatistics(post.Data);
-                    TestHierachy[table][table.Columns[j]].RunTests(post);
+                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].UpdateLengthStatistics(post.Data);
+                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].RunTests(post);
                 }
 
                 if (i == 0)
-                    foreach (var analysis in TestHierachy[table].Values)
+                    foreach (var analysis in TestHierachy[CurrentTable].Values)
                         analysis.FirstRowAnalyzed = true;
             }
 
-            foreach (var columnAnalysis in TestHierachy[table].Values)
+            foreach (var columnAnalysis in TestHierachy[CurrentTable].Values)
             {
                 columnAnalysis.Flush();
             }
+
+            TableDoneRows += _readRows;
+            TotalDoneRows += _readRows;
+
+            return _readRows == n;
+        }
+
+        public void InitializeTable()
+        {
+            TableDoneRows = 0;
+            TableRowCount = CurrentTable.Rows;
+            
+            if (_tableReader != null)
+            {
+                _tableReader.Dispose();
+            }
+
+            _tableReader = CurrentTable.GetReader();
+        }
+
+        public bool MoveNextTable()
+        {
+            if (_tableEnumerator.MoveNext())
+            {
+                return true;
+            }
+
+            if (_tableReader != null)
+            {
+                _tableReader.Dispose();
+            }
+
+            return false;
         }
 
         public static bool invalidTime(int hour, int minute, int second)

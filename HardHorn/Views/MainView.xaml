@@ -7,6 +7,7 @@
         xmlns:cal="http://www.caliburnproject.org"
         xmlns:vm="clr-namespace:HardHorn.ViewModels"
         xmlns:av="clr-namespace:HardHorn.Archiving;assembly=LibHardHorn"
+        xmlns:log="clr-namespace:HardHorn.Logging;assembly=LibHardHorn"
         xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
         xmlns:ctl="clr-namespace:HardHorn.Controls"
         xmlns:util="clr-namespace:HardHorn.Utilities"
@@ -32,7 +33,18 @@
                 <MenuItem.ItemsSource>
                     <CompositeCollection>
                         <MenuItem Header="Indlæs arkiveringsversion..." cal:Message.Attach="SelectLocation()" />
-                        <MenuItem Header="Gem tabelindex..." cal:Message.Attach="SaveTableIndex()">
+                        <MenuItem Header="Gem tabelindex..." cal:Message.Attach="SaveTableIndex('false')">
+                            <MenuItem.Style>
+                                <Style>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedArchiveVersionViewModel}" Value="{x:Null}">
+                                            <Setter Property="MenuItem.IsEnabled" Value="False"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </MenuItem.Style>
+                        </MenuItem>
+                        <MenuItem Header="Gem tabelindex (overskriv uændrede datatyper)..." cal:Message.Attach="SaveTableIndex('true')">
                             <MenuItem.Style>
                                 <Style>
                                     <Style.Triggers>
@@ -114,6 +126,16 @@
                 </DataTemplate>
             </TabControl.ItemTemplate>
         </TabControl>
-        <TextBox MaxLines="1" Grid.Row="2" Text="{Binding StatusText}" Background="{DynamicResource {x:Static SystemColors.ControlBrush}}"/>
+        <TextBox MaxLines="1" Grid.Row="2" Text="{Binding StatusText}" Background="{DynamicResource {x:Static SystemColors.ControlBrush}}">
+            <TextBox.Style>
+                <Style>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding StatusLogLevel}" Value="{x:Static log:LogLevel.ERROR}">
+                            <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
     </Grid>
 </Window>

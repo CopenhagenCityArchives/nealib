@@ -31,15 +31,30 @@ namespace HardHorn.Archiving
             }
         }
 
-        public static Parameter GetDefaultParameter(DataType dataType)
+        public string ToString(DataType dataType)
         {
-            switch (dataType)
+            if (Count == 0)
             {
-                case DataType.TIMESTAMP:
-                    return new Parameter(6);
-                default:
-                    return null;
+                return string.Empty;
             }
+
+            var repr = "(";
+            for (int i = 0; i < Count; i++)
+            {
+                if (i == 1 && (dataType == DataType.NUMERIC || dataType == DataType.DECIMAL) && this[i].Value == 0)
+                {
+                    continue;
+                }
+                else if (i > 0)
+                {
+                    repr += ", " + this[i].Value;
+                }
+                else
+                {
+                    repr += this[i].Value;
+                }
+            }
+            return repr + ")";
         }
 
         public int CompareTo(object obj)
@@ -148,7 +163,7 @@ namespace HardHorn.Archiving
                 case DataType.NUMERIC:
                     if (param.Length == 1)
                     {
-                        foreach (var p in param) Add(new ParameterItem(p));
+                        Add(new ParameterItem(param[0]));
                         Add(new ParameterItem(0));
                     }
                     else
