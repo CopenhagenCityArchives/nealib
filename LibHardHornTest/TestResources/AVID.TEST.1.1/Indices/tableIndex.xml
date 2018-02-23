@@ -35,20 +35,9 @@
         </column>
       </columns>
       <primaryKey>
-        <name>PK_WA00100T</name>
-        <column>KOMNR</column>
-        <column>PNRINSTB</column>
+        <name>PK_PERSONER</name>
+        <column>ID</column>
       </primaryKey>
-      <foreignKeys>
-        <foreignKey>
-          <name>FK_GAEST</name>
-          <referencedTable>WA91000T</referencedTable>
-          <reference>
-            <column>KOMNR</column>
-            <referenced>KOMNR</referenced>
-          </reference>
-        </foreignKey>
-      </foreignKeys>
       <rows>3</rows>
     </table>
     <table>

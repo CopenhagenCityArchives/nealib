@@ -78,31 +78,34 @@ namespace HardHorn.Archiving
             return tableIndex; 
         }
 
-        public static TableIndex ParseFile(string path, ILogger logger, Action<Exception> callback = null)
+        public static TableIndex ParseFile(string path, ILogger logger, Action<Exception> callback = null, bool validate = true)
         {
             var tableIndexDocument = XDocument.Load(path);
 
-            XNamespace xmlns = "http://www.w3.org/2001/XMLSchema-instance";
-            var schemas = new XmlSchemaSet();
-            try
+            if (validate)
             {
-                var schemaLocation = tableIndexDocument.Root.Attribute(xmlns + "schemaLocation").Value.Split(' ').ToArray();
-                var targetNamespace = schemaLocation[0];
-                var schemaUri = System.IO.Path.GetFullPath(System.IO.Path.GetDirectoryName(path) + "\\" + schemaLocation[1].Replace('/', '\\'));
-                schemas.Add(targetNamespace, schemaUri);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Kunne ikke indlæse skema fra tableIndex.xml.", ex);
-            }
-
-            tableIndexDocument.Validate(schemas, (o, e) =>
-            {
-                if (callback != null)
+                XNamespace xmlns = "http://www.w3.org/2001/XMLSchema-instance";
+                var schemas = new XmlSchemaSet();
+                try
                 {
-                    callback(new ArchiveVersionXmlValidationException(o as XElement, e.Message));
+                    var schemaLocation = tableIndexDocument.Root.Attribute(xmlns + "schemaLocation").Value.Split(' ').ToArray();
+                    var targetNamespace = schemaLocation[0];
+                    var schemaUri = System.IO.Path.GetFullPath(System.IO.Path.GetDirectoryName(path) + "\\" + schemaLocation[1].Replace('/', '\\'));
+                    schemas.Add(targetNamespace, schemaUri);
                 }
-            });
+                catch (Exception ex)
+                {
+                    throw new Exception("Kunne ikke indlæse skema fra tableIndex.xml.", ex);
+                }
+
+                tableIndexDocument.Validate(schemas, (o, e) =>
+                {
+                    if (callback != null)
+                    {
+                        callback(new ArchiveVersionXmlValidationException(o as XElement, e.Message));
+                    }
+                });
+            }
 
             return Parse(tableIndexDocument.Root, logger, callback);
         }
