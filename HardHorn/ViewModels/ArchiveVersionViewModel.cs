@@ -969,7 +969,7 @@ namespace HardHorn.ViewModels
                     var logger = new ProgressLogger(this);
                     IEnumerable<TableComparison> comparisons = await Task.Run(() =>
                     {
-                        var tableIndex = TableIndex.ParseFile(location, logger);
+                        var tableIndex = TableIndex.ParseFile(location, logger, null, false);
                         return ArchiveVersion.CompareWithTables(tableIndex.Tables);
                     });
 
