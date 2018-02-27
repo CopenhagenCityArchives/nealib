@@ -20,6 +20,11 @@ namespace HardHorn.Utilities
         {
             var locations = value as IEnumerable<string>;
 
+            if (locations == null || locations.Count() == 0)
+            {
+                return Enumerable.Empty<MenuItem>();
+            }
+
             var menuItems = new List<MenuItem>();
             int i = 1;
             foreach (var location in locations)
