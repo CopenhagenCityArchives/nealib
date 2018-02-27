@@ -25,6 +25,8 @@ namespace HardHorn.ViewModels
             get; set;
         }
 
+        public int ErrorCount { get { return Analysis.ErrorCount; } }
+
         public ParameterizedDataType ParameterizedDataType
         {
             get { return Column.ParameterizedDataType; }

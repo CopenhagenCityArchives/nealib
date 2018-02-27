@@ -193,12 +193,12 @@
                             <GridViewColumn Header="Fejl" Width="80" util:GridViewSort.PropertyName="Analysis.ErrorCount">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Analysis.ErrorCount}">
+                                        <TextBlock Text="{Binding ErrorCount}">
                                             <TextBlock.Style>
                                                 <Style>
                                                     <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Analysis.ErrorCount}" Value="0">
+                                                        <DataTrigger Binding="{Binding ErrorCount}" Value="0">
                                                             <Setter Property="TextBlock.Foreground" Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}"></Setter>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -500,7 +500,8 @@
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Fejltype" DisplayMemberBinding="{Binding Header}"></GridViewColumn>
-                            <GridViewColumn Header="Antal" DisplayMemberBinding="{Binding Count}"></GridViewColumn>
+                            <GridViewColumn Header="Antal subjekter" DisplayMemberBinding="{Binding Subjects.Count}"></GridViewColumn>
+                            <GridViewColumn Header="Samlet antal" DisplayMemberBinding="{Binding Count}"></GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>

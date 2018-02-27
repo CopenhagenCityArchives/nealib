@@ -45,24 +45,25 @@ namespace HardHorn.ViewModels
 
         public override void Add(object info)
         {
-            var ea = info as AnalysisErrorsOccuredArgs;
-            
-            if (ea == null)
+            var ccount = info as ColumnCount;
+
+            if (ccount == null)
             {
                 throw new InvalidOperationException("Added invalid object to TestErrorViewModel.");
             }
 
-            if (_subjectIndex.ContainsKey(ea.Column))
+            if (_subjectIndex.ContainsKey(ccount.Column))
             {
-                _subjectIndex[ea.Column].Count += ea.Posts.Count();
+                _subjectIndex[ccount.Column].Count = ccount.Count;
             }
             else
             {
-                _subjectIndex[ea.Column] = new ColumnCount() { Count = ea.Posts.Count(), Column = ea.Column };
-                Subjects.Add(_subjectIndex[ea.Column]);
+                _subjectIndex[ccount.Column] = ccount;
+                Subjects.Add(_subjectIndex[ccount.Column]);
             }
 
-            Count += ea.Posts.Count();
+            // Re-count total errors
+            Count = Subjects.Aggregate(0, (n, c) => n + (c as ColumnCount).Count);
         }
 
         public AnalysisTestType TestType { get; set; }

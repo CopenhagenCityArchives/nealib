@@ -419,261 +419,254 @@ namespace HardHorn.ViewModels
                 foreach (var columnViewModel in tableViewModel.ColumnViewModels)
                     columnViewModel.Analysis = Analyzer.TestHierachy[tableViewModel.Table][columnViewModel.Column];
 
-            if (TestRunning)
+            Log("Påbegynder dataanalyse.", LogLevel.SECTION);
+
+            _testCts = new CancellationTokenSource();
+            var token = _testCts.Token;
+
+            foreach (var tableViewModel in TableViewModels)
             {
-                _testCts.Cancel();
+                tableViewModel.Busy = false;
+                tableViewModel.Done = false;
             }
-            else
+
+            // Clear test error view models from list and index
+            TestErrorViewModelIndex.Clear();
+            var filteredErrorViewModels = new List<ErrorViewModelBase>();
+            foreach (var errorViewModel in ErrorViewModels)
             {
-                Log("Påbegynder dataanalyse.", LogLevel.SECTION);
-
-                _testCts = new CancellationTokenSource();
-                var token = _testCts.Token;
-
-                foreach (var tableViewModel in TableViewModels)
+                if (errorViewModel is ColumnParsingErrorViewModel
+                    || errorViewModel is ColumnTypeParsingErrorViewModel)
                 {
-                    tableViewModel.Busy = false;
-                    tableViewModel.Done = false;
+                    filteredErrorViewModels.Add(errorViewModel);
+                }
+            }
+            ErrorViewModels.Clear();
+            foreach (var errorViewModel in filteredErrorViewModels)
+            {
+                ErrorViewModels.Add(errorViewModel);
+            }
+
+            foreach (var tableViewModel in TableViewModels)
+            {
+                tableViewModel.Errors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
+            }
+
+            IProgress<Table> updateTableProgress = new Progress<Table>(table =>
+            {
+                // Update table view model error flag
+                var tableViewModel = TableViewModelIndex[table.Name];
+                if (Analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
+                    tableViewModel.Errors = true;
+
+                // Update error information
+                if (ColumnsView != null)
+                {
+                    ColumnsView.Refresh();
                 }
 
-                // Clear test error view models from list and index
-                TestErrorViewModelIndex.Clear();
-                var filteredErrorViewModels = new List<ErrorViewModelBase>();
-                foreach (var errorViewModel in ErrorViewModels)
+                // Update error view
+                foreach (var analysis in Analyzer.TestHierachy[table].Values)
                 {
-                    if (errorViewModel is ColumnParsingErrorViewModel
-                        || errorViewModel is ColumnTypeParsingErrorViewModel)
+                    foreach (var test in analysis.Tests)
                     {
-                        filteredErrorViewModels.Add(errorViewModel);
-                    }
-                }
-                ErrorViewModels.Clear();
-                foreach (var errorViewModel in filteredErrorViewModels)
-                {
-                    ErrorViewModels.Add(errorViewModel);
-                }
-
-                foreach (var tableViewModel in TableViewModels)
-                {
-                    tableViewModel.Errors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
-                }
-
-                IProgress<Table> updateTableProgress = new Progress<Table>(table =>
-                {
-                    if (table == null) return;
-                    var tableViewModel = TableViewModelIndex[table.Name];
-                    if (Analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
-                        tableViewModel.Errors = true;
-                });
-
-                IProgress<Table> showReportProgress = new Progress<Table>(table =>
-                {
-
-                    var tableReport = Analyzer.TestHierachy[table];
-                    Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
-                        (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
-                    int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
-                    Log(string.Format("I alt: {0} fejl i {1} kolonner, {2} forslag.", errors.Item1, errors.Item2, suggestions));
-                    if (errors.Item1 > 0)
-                    {
-                        Log("Fejl:");
-                    }
-                    foreach (var columnAnalysis in tableReport.Values)
-                    {
-                        var column = columnAnalysis.Column;
-                        if (columnAnalysis.ErrorCount > 0)
+                        if (test.ErrorCount > 0)
                         {
-                            Log("\t- " + column.ToString());
-                            foreach (var test in columnAnalysis.Tests)
+                            ErrorViewModelBase testErrorViewModel;
+                            if (!TestErrorViewModelIndex.TryGetValue(test.Type, out testErrorViewModel))
                             {
-                                if (test.ErrorCount == 0)
-                                    continue;
-
-                                Log(string.Format("\t\t* {0}{1} ({2} forekomster)", test.Type.ToString(), test.Type == AnalysisTestType.REGEX ? " (" + (test as Test.Pattern).Regex.ToString() + ")" : "", test.ErrorCount));
-                                int i = 0;
-                                foreach (var post in test.ErrorPosts)
-                                {
-                                    if (i >= Math.Min(10, test.ErrorCount))
-                                        break;
-
-                                    string pos = string.Format("({0}, {1})", post.Line, post.Position);
-                                    Log(string.Format("\t\t\t> {1} \"{0}\"", string.Join(Environment.NewLine + "\t\t\t" + string.Concat(Enumerable.Repeat(" ", pos.Length + 4)), (post.Data as string).Split(Environment.NewLine.ToCharArray())), pos));
-
-                                    i++;
-                                }
+                                testErrorViewModel = new TestErrorViewModel(test.Type);
+                                TestErrorViewModelIndex[test.Type] = testErrorViewModel;
+                                ErrorViewModels.Add(testErrorViewModel);
                             }
+
+                            testErrorViewModel.Add(new ColumnCount() { Column = analysis.Column, Count = test.ErrorCount });
+                            testErrorViewModel.NotifyOfPropertyChange("ErrorCount");
                         }
                     }
-                    if (suggestions > 0)
-                    {
-                        Log("Forslag:");
-                    }
-                    foreach (var columnReport in tableReport.Values)
-                    {
-                        var column = columnReport.Column;
-                        var suggestion = columnReport.SuggestedType;
-                        if (suggestion == null)
-                            continue;
+                }
+            });
 
-                        Log(string.Format("\t- {0} => {1}", column.ToString(), suggestion.ToString()));
-                    }
-                });
+            IProgress<Table> showReportProgress = new Progress<Table>(table =>
+            {
 
-                var totalRowCountProgress = new Progress<int>(value => { TotalRows = value; }) as IProgress<int>;
-                var totalDoneRowsProgress = new Progress<int>(value => { DoneRows = value; }) as IProgress<int>;
-                var tableRowCountProgress = new Progress<int>(value => { TableTotalRows = value; }) as IProgress<int>;
-                var tableDoneRowsProgress = new Progress<int>(value => { TableDoneRows = value; }) as IProgress<int>;
-                var errorProgress = new Progress<Table>(value =>
+                var tableReport = Analyzer.TestHierachy[table];
+                Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
+                    (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
+                int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
+                Log(string.Format("I alt: {0} fejl i {1} kolonner, {2} forslag.", errors.Item1, errors.Item2, suggestions));
+                if (errors.Item1 > 0)
                 {
-                    if (SelectedTableViewModel != null && value == SelectedTableViewModel.Table)
+                    Log("Fejl:");
+                }
+                foreach (var columnAnalysis in tableReport.Values)
+                {
+                    var column = columnAnalysis.Column;
+                    if (columnAnalysis.ErrorCount > 0)
                     {
-                        ColumnsView.Refresh();
-                    }
-
-                    ErrorViewModelBase errorViewModel;
-
-                    foreach (var columnAnalysis in Analyzer.TestHierachy[value].Values)
-                    {
+                        Log("\t- " + column.ToString());
                         foreach (var test in columnAnalysis.Tests)
                         {
-                            if (!TestErrorViewModelIndex.ContainsKey(test.Type))
-                            {
-                                errorViewModel = new TestErrorViewModel(test.Type);
-                                TestErrorViewModelIndex[test.Type] = errorViewModel;
-                                ErrorViewModels.Add(errorViewModel);
-                            }
-                            else
-                            {
-                                errorViewModel = TestErrorViewModelIndex[test.Type];
-                            }
+                            if (test.ErrorCount == 0)
+                                continue;
 
-                            errorViewModel.Add(e);
+                            Log(string.Format("\t\t* {0}{1} ({2} forekomster)", test.Type.ToString(), test.Type == AnalysisTestType.REGEX ? " (" + (test as Test.Pattern).Regex.ToString() + ")" : "", test.ErrorCount));
+                            int i = 0;
+                            foreach (var post in test.ErrorPosts)
+                            {
+                                if (i >= Math.Min(10, test.ErrorCount))
+                                    break;
+
+                                string pos = string.Format("({0}, {1})", post.Line, post.Position);
+                                Log(string.Format("\t\t\t> {1} \"{0}\"", string.Join(Environment.NewLine + "\t\t\t" + string.Concat(Enumerable.Repeat(" ", pos.Length + 4)), (post.Data as string).Split(Environment.NewLine.ToCharArray())), pos));
+
+                                i++;
+                            }
                         }
                     }
-
-                    errorViewModel.Add(e);
-                }) as Progress<Table>();
-
-                var logger = new ProgressLogger(this);
-
-                // Run test worker
-                try
+                }
+                if (suggestions > 0)
                 {
-                    TestRunning = true;
+                    Log("Forslag:");
+                }
+                foreach (var columnReport in tableReport.Values)
+                {
+                    var column = columnReport.Column;
+                    var suggestion = columnReport.SuggestedType;
+                    if (suggestion == null)
+                        continue;
 
-                    await Task.Run(() =>
+                    Log(string.Format("\t- {0} => {1}", column.ToString(), suggestion.ToString()));
+                }
+            });
+
+            var totalRowCountProgress = new Progress<int>(value => { TotalRows = value; }) as IProgress<int>;
+            var totalDoneRowsProgress = new Progress<int>(value => { DoneRows = value; }) as IProgress<int>;
+            var tableRowCountProgress = new Progress<int>(value => { TableTotalRows = value; }) as IProgress<int>;
+            var tableDoneRowsProgress = new Progress<int>(value => { TableDoneRows = value; }) as IProgress<int>;
+
+            var logger = new ProgressLogger(this);
+
+            // Run test worker
+            try
+            {
+                TestRunning = true;
+
+                await Task.Run(() =>
+                {
+                    // Count total rows
+                    TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
+                    DoneRows = 0;
+                    int chunk = 10000;
+
+                    totalRowCountProgress.Report(Analyzer.TotalRowCount);
+
+                    bool readNext = false;
+                    while (Analyzer.MoveNextTable())
                     {
-                        // Count total rows
-                        TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
-                        DoneRows = 0;
-                        int chunk = 10000;
+                        TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = true;
 
-                        totalRowCountProgress.Report(Analyzer.TotalRowCount);
-
-                        bool readNext = false;
-                        while (Analyzer.MoveNextTable())
+                        // Print information of chosen tests for this table
+                        logger.Log(string.Format("Tester {0}.", Analyzer.CurrentTable.ToString()), LogLevel.SECTION);
+                        foreach (var columnAnalysis in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
                         {
-                            TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = true;
-                            logger.Log(string.Format("Tester {0}.", Analyzer.CurrentTable.ToString()), LogLevel.SECTION);
-
-                            foreach (var columnAnalysis in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
-                            {
-                                if (columnAnalysis.Tests.Count == 0)
-                                    continue;
-
-                                logger.Log("\t- " + columnAnalysis.Column.ToString(), LogLevel.NORMAL);
-                                foreach (var test in columnAnalysis.Tests)
-                                {
-                                    if (test.Type == AnalysisTestType.REGEX)
-                                    {
-                                        logger.Log(string.Format("\t\t* {0} ({1})", test.Type.ToString(), (test as Test.Pattern).Regex.ToString()), LogLevel.NORMAL);
-                                    }
-                                    else
-                                    {
-                                        logger.Log(string.Format("\t\t* {0}", test.Type.ToString()), LogLevel.NORMAL);
-                                    }
-                                }
-                            }
-
-                            try
-                            {
-                                Analyzer.InitializeTable();
-                                tableRowCountProgress.Report(Analyzer.TableRowCount);
-                            }
-                            catch (FileNotFoundException)
-                            {
-                                logger.Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", Analyzer.CurrentTable.Name, Analyzer.CurrentTable.Folder), LogLevel.ERROR);
+                            if (columnAnalysis.Tests.Count == 0)
                                 continue;
-                            }
 
-                            do
+                            logger.Log("\t- " + columnAnalysis.Column.ToString(), LogLevel.NORMAL);
+                            foreach (var test in columnAnalysis.Tests)
                             {
-                                readNext = Analyzer.AnalyzeRows(chunk);
-                                updateTableProgress.Report(Analyzer.CurrentTable);
-                                tableDoneRowsProgress.Report(Analyzer.TableDoneRows);
-                                totalDoneRowsProgress.Report(Analyzer.TotalDoneRows);
-
-                                if (_testCts.IsCancellationRequested)
-                                    return;
-                            } while (readNext);
-
-                            // Check if number of rows in table adds up
-                            if (TableDoneRows != TableTotalRows)
-                            {
-                                if (TableRowCountErrorViewModel == null)
+                                if (test.Type == AnalysisTestType.REGEX)
                                 {
-                                    TableRowCountErrorViewModel = new TableRowCountErrorViewModel();
-                                    TableRowCountErrorViewModel.Count = 1;
-                                    Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(TableRowCountErrorViewModel));
+                                    logger.Log(string.Format("\t\t* {0} ({1})", test.Type.ToString(), (test as Test.Pattern).Regex.ToString()), LogLevel.NORMAL);
                                 }
                                 else
                                 {
-                                    TableRowCountErrorViewModel.Count++;
+                                    logger.Log(string.Format("\t\t* {0}", test.Type.ToString()), LogLevel.NORMAL);
                                 }
-
-                                Application.Current.Dispatcher.Invoke(() =>
-                                {
-                                    Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", Analyzer.CurrentTable.ToString(), Analyzer.CurrentTable.Rows, TableDoneRows), LogLevel.ERROR);
-                                    TableRowCountErrorViewModel.Add(new Tuple<Table, int>(Analyzer.CurrentTable, TableDoneRows));
-                                });
                             }
-
-                            bool typesSuggested = false;
-                            foreach (var report in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
-                            {
-                                report.SuggestType();
-                                if (report.SuggestedType != null)
-                                    typesSuggested = true;
-                            }
-
-                            if (typesSuggested)
-                                Application.Current.Dispatcher.Invoke(() => { if (ColumnsView != null) ColumnsView.Refresh(); });
-
-                            showReportProgress.Report(Analyzer.CurrentTable);
-
-                            TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = false;
-                            TableViewModelIndex[Analyzer.CurrentTable.Name].Done = true;
                         }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Log(string.Format("En fejl af typen '{0}' opstod med beskeden: '{1}'. Testen afbrydes.", ex.GetType(), ex.Message), LogLevel.ERROR);
-                }
-                finally
-                {
-                    var totalErrors = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
-                    var errorTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
-                    var totalSuggestions = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
-                    var suggestionTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
 
-                    Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
+                        // Initialize reader for table, handle missing file.
+                        try
+                        {
+                            Analyzer.InitializeTable();
+                            tableRowCountProgress.Report(Analyzer.TableRowCount);
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            logger.Log(string.Format("Tabelfilen for '{0}' ({1}) findes ikke.", Analyzer.CurrentTable.Name, Analyzer.CurrentTable.Folder), LogLevel.ERROR);
+                            continue;
+                        }
 
-                    TestRunning = false;
-                    foreach (var tableViewModel in TableViewModels)
-                    {
-                        tableViewModel.Busy = false;
+                        // Perform analysis
+                        do
+                        {
+                            readNext = Analyzer.AnalyzeRows(chunk);
+                            updateTableProgress.Report(Analyzer.CurrentTable);
+                            tableDoneRowsProgress.Report(Analyzer.TableDoneRows);
+                            totalDoneRowsProgress.Report(Analyzer.TotalDoneRows);
+
+                            if (_testCts.IsCancellationRequested)
+                                return;
+                        } while (readNext);
+
+                        // Check if number of rows in table adds up
+                        if (Analyzer.TableDoneRows != Analyzer.TableRowCount)
+                        {
+                            if (TableRowCountErrorViewModel == null)
+                            {
+                                TableRowCountErrorViewModel = new TableRowCountErrorViewModel();
+                                TableRowCountErrorViewModel.Count = 1;
+                                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(TableRowCountErrorViewModel));
+                            }
+                            else
+                            {
+                                TableRowCountErrorViewModel.Count++;
+                            }
+
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", Analyzer.CurrentTable.ToString(), Analyzer.CurrentTable.Rows, TableDoneRows), LogLevel.ERROR);
+                                TableRowCountErrorViewModel.Add(new Tuple<Table, int>(Analyzer.CurrentTable, TableDoneRows));
+                            });
+                        }
+
+                        bool typesSuggested = false;
+                        foreach (var report in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
+                        {
+                            report.SuggestType();
+                            if (report.SuggestedType != null)
+                                typesSuggested = true;
+                        }
+
+                        if (typesSuggested)
+                            Application.Current.Dispatcher.Invoke(() => { if (ColumnsView != null) ColumnsView.Refresh(); });
+
+                        showReportProgress.Report(Analyzer.CurrentTable);
+
+                        TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = false;
+                        TableViewModelIndex[Analyzer.CurrentTable.Name].Done = true;
                     }
+                });
+            }
+            catch (Exception ex)
+            {
+                Log(string.Format("En fejl af typen '{0}' opstod med beskeden: '{1}'. Testen afbrydes.", ex.GetType(), ex.Message), LogLevel.ERROR);
+            }
+            finally
+            {
+                var totalErrors = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.ErrorCount + m) + n);
+                var errorTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.ErrorCount > 0) ? n + 1 : n);
+                var totalSuggestions = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => n + columnAnalyses.Values.Aggregate(0, (m, columnAnalysis) => columnAnalysis.SuggestedType != null ? m + 1 : m));
+                var suggestionTables = Analyzer.TestHierachy.Values.Aggregate(0, (n, columnAnalyses) => columnAnalyses.Values.Any(columnAnalysis => columnAnalysis.SuggestedType != null) ? n + 1 : n);
+
+                Log(string.Format("Testen er afsluttet. I alt {0} fejl i {1} tabeller, og {2} foreslag i {3} tabeller.", totalErrors, errorTables, totalSuggestions, suggestionTables), LogLevel.SECTION);
+
+                TestRunning = false;
+                foreach (var tableViewModel in TableViewModels)
+                {
+                    tableViewModel.Busy = false;
                 }
             }
         }
