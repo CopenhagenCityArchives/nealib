@@ -9,18 +9,9 @@ using System.Threading.Tasks;
 
 namespace HardHorn.Analysis
 {
-    public abstract class Test : INotifyPropertyChanged
+    public abstract class Test
     {
         public static readonly int MAX_ERROR_POSTS = 50;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void NotifyOfPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
 
         public enum Result
         {
@@ -39,10 +30,8 @@ namespace HardHorn.Analysis
             if (ErrorCount < MAX_ERROR_POSTS)
             {
                 _posts.Add(post);
-                NotifyOfPropertyChanged("ErrorPosts");
             }
             ErrorCount++;
-            NotifyOfPropertyChanged("ErrorCount");
         }
 
         public Result Run(Post post, Column column)

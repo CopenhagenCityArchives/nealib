@@ -185,7 +185,7 @@
                 </DockPanel>
 
                 <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
-                <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel}" ItemsSource="{Binding ColumnsView}" util:GridViewSort.AutoSort="True">
+                <ListView SelectionMode="Single" x:Name="ColumnListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel}" ItemsSource="{Binding ColumnsView}" util:GridViewSort.AutoSort="True">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Id" Width="50" DisplayMemberBinding="{Binding Column.ColumnId}" util:GridViewSort.PropertyName="Column.ColumnIdNumber"></GridViewColumn>
@@ -436,7 +436,7 @@
                         </DockPanel>
                     </TabItem>
                     <TabItem Header="Fejlvisning">
-                        <TabControl SelectedItem="{Binding Path=SelectedItem.Analysis.SelectedTest, ElementName=ColumnAnalysesListView}" ItemsSource="{Binding Path=SelectedItem.Analysis.Tests, ElementName=ColumnAnalysesListView}">
+                        <TabControl SelectedItem="{Binding Path=SelectedItem.SelectedTest, ElementName=ColumnListView}" ItemsSource="{Binding Path=SelectedItem.Tests, ElementName=ColumnListView}">
                             <TabControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type ana:Test}">
                                     <TextBlock>

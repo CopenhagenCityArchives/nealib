@@ -453,15 +453,6 @@ namespace HardHorn.ViewModels
                     ErrorViewModels.Add(errorViewModel);
                 }
 
-                foreach (var columnAnalysisMap in Analyzer.TestHierachy.Values)
-                {
-                    foreach (var columnAnalysis in columnAnalysisMap.Values)
-                    {
-                        columnAnalysis.AnalysisErrorsOccured += OnTestError;
-                    }
-                }
-
-
                 foreach (var tableViewModel in TableViewModels)
                 {
                     tableViewModel.Errors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
@@ -532,6 +523,36 @@ namespace HardHorn.ViewModels
                 var totalDoneRowsProgress = new Progress<int>(value => { DoneRows = value; }) as IProgress<int>;
                 var tableRowCountProgress = new Progress<int>(value => { TableTotalRows = value; }) as IProgress<int>;
                 var tableDoneRowsProgress = new Progress<int>(value => { TableDoneRows = value; }) as IProgress<int>;
+                var errorProgress = new Progress<Table>(value =>
+                {
+                    if (SelectedTableViewModel != null && value == SelectedTableViewModel.Table)
+                    {
+                        ColumnsView.Refresh();
+                    }
+
+                    ErrorViewModelBase errorViewModel;
+
+                    foreach (var columnAnalysis in Analyzer.TestHierachy[value].Values)
+                    {
+                        foreach (var test in columnAnalysis.Tests)
+                        {
+                            if (!TestErrorViewModelIndex.ContainsKey(test.Type))
+                            {
+                                errorViewModel = new TestErrorViewModel(test.Type);
+                                TestErrorViewModelIndex[test.Type] = errorViewModel;
+                                ErrorViewModels.Add(errorViewModel);
+                            }
+                            else
+                            {
+                                errorViewModel = TestErrorViewModelIndex[test.Type];
+                            }
+
+                            errorViewModel.Add(e);
+                        }
+                    }
+
+                    errorViewModel.Add(e);
+                }) as Progress<Table>();
 
                 var logger = new ProgressLogger(this);
 
@@ -771,31 +792,6 @@ namespace HardHorn.ViewModels
             }
 
             Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
-        }
-
-        public void OnTestError(object sender, AnalysisErrorsOccuredArgs e)
-        {
-            var columnAnalysis = sender as ColumnAnalysis;
-
-            if (SelectedTableViewModel != null && columnAnalysis.Column.Table == SelectedTableViewModel.Table)
-            {
-                Application.Current.Dispatcher.Invoke(() => ColumnsView.Refresh());
-            }
-
-            ErrorViewModelBase errorViewModel;
-
-            if (!TestErrorViewModelIndex.ContainsKey(e.Test.Type))
-            {
-                errorViewModel = new TestErrorViewModel(e.Test.Type);
-                TestErrorViewModelIndex[e.Test.Type] = errorViewModel;
-                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
-            }
-            else
-            {
-                errorViewModel = TestErrorViewModelIndex[e.Test.Type];
-            }
-
-            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(e));
         }
 
         public void BrowseNext()

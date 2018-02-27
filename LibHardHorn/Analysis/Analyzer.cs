@@ -62,10 +62,6 @@ namespace HardHorn.Analysis
         public void AddTest(Column column, Test test)
         {
             TestHierachy[column.Table][column].Tests.Add(test);
-            if (TestHierachy[column.Table][column].Tests.Count == 1)
-            {
-                TestHierachy[column.Table][column].SelectedTest = test;
-            }
         }
 
         /// <summary>
@@ -91,11 +87,6 @@ namespace HardHorn.Analysis
                 if (i == 0)
                     foreach (var analysis in TestHierachy[CurrentTable].Values)
                         analysis.FirstRowAnalyzed = true;
-            }
-
-            foreach (var columnAnalysis in TestHierachy[CurrentTable].Values)
-            {
-                columnAnalysis.Flush();
             }
 
             TableDoneRows += _readRows;
