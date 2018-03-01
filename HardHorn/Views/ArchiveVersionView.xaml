@@ -215,7 +215,7 @@
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}{0} {1}">
                                                     <Binding Path="DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
-                                                    <Binding Path="ParameterString"/>
+                                                    <Binding Path="ParameterizedDataType" Converter="{StaticResource ParameterizedDataTypeToParameterStringConverter}"/>
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                             <TextBlock.Style>
@@ -235,12 +235,12 @@
                                 <GridViewColumn.DisplayMemberBinding>
                                     <MultiBinding StringFormat="{}{0} {1}">
                                         <Binding Path="Analysis.SuggestedType.DataType" Converter="{StaticResource DataTypeToStringConverter}"/>
-                                        <Binding Path="Analysis.SuggestedType.Parameter" />
+                                        <Binding Path="Analysis.SuggestedType" Converter="{StaticResource ParameterizedDataTypeToParameterStringConverter}"/>
                                     </MultiBinding>
                                 </GridViewColumn.DisplayMemberBinding>
                             </GridViewColumn>
                             <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding Analysis.MinParam, Converter={StaticResource ParameterToStringConverter}}"  util:GridViewSort.PropertyName="Analysis.MinParam"></GridViewColumn>
-                            <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding Analysis.MaxParam,  Converter={StaticResource ParameterToStringConverter}}" util:GridViewSort.PropertyName="Analysis.MaxParam"></GridViewColumn>
+                            <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding Analysis.MaxParam, Converter={StaticResource ParameterToStringConverter}}" util:GridViewSort.PropertyName="Analysis.MaxParam"></GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>

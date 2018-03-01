@@ -44,17 +44,32 @@ namespace HardHorn.Utilities
         }
     }
 
+    public class ParameterizedDataTypeToParameterStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var paramDataType = value as ParameterizedDataType;
+            if (paramDataType == null)
+            {
+                return null;
+            }
+
+            return paramDataType.Parameter.ToString(paramDataType.DataType);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+
     public class ParameterToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var param = value as Archiving.Parameter;
-            if (param == null)
-            {
-                return null;
-            }
-
-            return string.Format("({0})", string.Join(", ", param.Select(p => p.Value)));
+            return param == null || param.Count == 0 ? "" : param.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
