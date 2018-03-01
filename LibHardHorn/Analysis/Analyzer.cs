@@ -19,13 +19,6 @@ namespace HardHorn.Analysis
         public ArchiveVersion ArchiveVersion { get; private set; }
         ILogger _log;
 
-        public static Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
-        public static Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        public static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
-        public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
-        public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
-
         public int TableDoneRows { get; private set; }
         public int TableRowCount { get; private set; }
         public int TotalDoneRows { get; private set; }
@@ -121,27 +114,6 @@ namespace HardHorn.Analysis
             }
 
             return false;
-        }
-
-        public static bool invalidTime(int hour, int minute, int second)
-        {
-            return hour > 23 ||
-                   hour < 0 ||
-                   minute > 59 ||
-                   minute < 0 ||
-                   second > 59 ||
-                   second < 0;
-        }
-
-        public static bool invalidDate(int year, int month, int day)
-        {
-            bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-            return year <= 0 ||
-                   month > 12 ||
-                   month < 1 ||
-                   day < 1 ||
-                   month == 2 && leap && day > months[2] - 1 ||
-                   day > months[month - 1];
         }
     }
 }
