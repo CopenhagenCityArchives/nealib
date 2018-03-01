@@ -132,13 +132,6 @@ namespace HardHorn.ViewModels
             set { _loadingTableIndex = value; NotifyOfPropertyChange("LoadingTableIndex"); }
         }
 
-        string _testLocation = "";
-        public string TestLocation
-        {
-            get { return _testLocation; }
-            set { _testLocation = value; NotifyOfPropertyChange("TestLocation"); }
-        }
-
         TableViewModel _SelectedTableViewModel = null;
         public TableViewModel SelectedTableViewModel
         {
@@ -388,7 +381,7 @@ namespace HardHorn.ViewModels
             if (SelectedTableViewModel == null)
                 return;
 
-            var path = Path.Combine(TestLocation, "tables", SelectedTableViewModel.Table.Folder, SelectedTableViewModel.Table.Folder + ".xml");
+            var path = Path.Combine(ArchiveVersion.Path, "tables", SelectedTableViewModel.Table.Folder, SelectedTableViewModel.Table.Folder + ".xml");
             System.Diagnostics.Process.Start(path);
         }
 
