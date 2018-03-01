@@ -15,6 +15,18 @@ namespace HardHorn.ViewModels
 
         public ColumnAnalysis Analysis { get; set; }
 
+        public IEnumerable<Test> Tests
+        {
+            get { return Analysis.Tests; }
+        }
+
+        public Test SelectedTest
+        {
+            get; set;
+        }
+
+        public int ErrorCount { get { return Analysis.ErrorCount; } }
+
         public ParameterizedDataType ParameterizedDataType
         {
             get { return Column.ParameterizedDataType; }

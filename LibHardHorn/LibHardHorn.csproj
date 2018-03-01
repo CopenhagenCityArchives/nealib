@@ -47,7 +47,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analysis\AnalysisErrorsOccuredBase.cs" />
     <Compile Include="Analysis\AnalysisTestType.cs" />
     <Compile Include="Analysis\ColumnAnalysis.cs" />
     <Compile Include="Analysis\ForeignKeyTest.cs" />

@@ -1,26 +1,11 @@
 ﻿using HardHorn.Archiving;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HardHorn.Analysis
 {
-    public class ColumnAnalysis : AnalysisErrorsOccuredBase
+    public class ColumnAnalysis
     {
-
-        Test _selectedTest;
-        public Test SelectedTest
-        {
-            get { return _selectedTest; }
-            set
-            {
-                _selectedTest = Tests.IndexOf(value) == -1 ? _selectedTest : value;
-                NotifyOfPropertyChanged("SelectedTest");
-            }
-        }
-
         Dictionary<Test, List<Post>> _errorPostCaches = new Dictionary<Test, List<Post>>();
         DateTime _lastErrorsEventTime = DateTime.Now;
 
@@ -63,15 +48,6 @@ namespace HardHorn.Analysis
                     if (!_errorPostCaches.ContainsKey(test))
                     {
                         _errorPostCaches.Add(test, new List<Post>());
-                    }
-                    _errorPostCaches[test].Add(post);
-                    TimeSpan diff = DateTime.Now - _lastErrorsEventTime;
-                    if (_errorPostCaches[test].Count == 10000 || diff.Seconds > 2)
-                    {
-                        NotifyOfAnalysisErrorOccured(test, new List<Post>(_errorPostCaches[test]), Column);
-                        NotifyOfPropertyChanged("ErrorCount");
-                        _lastErrorsEventTime = DateTime.Now;
-                        _errorPostCaches[test].Clear();
                     }
                 }
             }
@@ -225,8 +201,6 @@ namespace HardHorn.Analysis
                     }
                     break;
             }
-
-            NotifyOfPropertyChanged("SuggestedType");
         }
 
         public void Clear()
@@ -234,19 +208,6 @@ namespace HardHorn.Analysis
             ErrorCount = 0;
             Tests.Clear();
             _errorPostCaches.Clear();
-            NotifyOfPropertyChanged("ErrorCount");
-        }
-
-        internal void Flush()
-        {
-            foreach (var testCache in _errorPostCaches)
-            {
-                if (testCache.Value.Count > 0)
-                {
-                    NotifyOfAnalysisErrorOccured(testCache.Key, new List<Post>(testCache.Value), Column);
-                }
-            }
-            NotifyOfPropertyChanged("ErrorCount");
         }
     }
 }

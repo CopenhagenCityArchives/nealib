@@ -86,40 +86,40 @@
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="DoneRows" />
-                                        <Binding Path="TotalRows" />
+                                        <Binding Path="AnalysisTotalDoneRows" />
+                                        <Binding Path="AnalysisTotalRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="0" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="DoneRows" />
-                                        <Binding Path="TotalRows" />
+                                        <Binding Path="AnalysisTotalDoneRows" />
+                                        <Binding Path="AnalysisTotalRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="2" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="DoneRows" />
-                                        <Binding Path="TotalRows" />
+                                        <Binding Path="AnalysisTotalDoneRows" />
+                                        <Binding Path="AnalysisTotalRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="2" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="DoneRows" />
-                                        <Binding Path="TotalRows" />
+                                        <Binding Path="AnalysisTotalDoneRows" />
+                                        <Binding Path="AnalysisTotalRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="1" Canvas.Left="1" Foreground="White">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="DoneRows" />
-                                        <Binding Path="TotalRows" />
+                                        <Binding Path="AnalysisTotalDoneRows" />
+                                        <Binding Path="AnalysisTotalRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
@@ -142,40 +142,40 @@
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="TableDoneRows" />
-                                        <Binding Path="TableTotalRows" />
+                                        <Binding Path="AnalysisTableDoneRows" />
+                                        <Binding Path="AnalysisTableRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="0" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="TableDoneRows" />
-                                        <Binding Path="TableTotalRows" />
+                                        <Binding Path="AnalysisTableDoneRows" />
+                                        <Binding Path="AnalysisTableRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="2" Canvas.Left="2" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="TableDoneRows" />
-                                        <Binding Path="TableTotalRows" />
+                                        <Binding Path="AnalysisTableDoneRows" />
+                                        <Binding Path="AnalysisTableRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="0" Canvas.Left="2" Foreground="Black">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="TableDoneRows" />
-                                        <Binding Path="TableTotalRows" />
+                                        <Binding Path="AnalysisTableDoneRows" />
+                                        <Binding Path="AnalysisTableRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
                             <TextBlock FontWeight="Bold" Width="300" TextAlignment="Center" Canvas.Top="1" Canvas.Left="1" Foreground="White">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0:N0}/{1:N0}">
-                                        <Binding Path="TableDoneRows" />
-                                        <Binding Path="TableTotalRows" />
+                                        <Binding Path="AnalysisTableDoneRows" />
+                                        <Binding Path="AnalysisTableRowCount" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
@@ -185,7 +185,7 @@
                 </DockPanel>
 
                 <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
-                <ListView SelectionMode="Single" x:Name="ColumnAnalysesListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel}" ItemsSource="{Binding ColumnsView}" util:GridViewSort.AutoSort="True">
+                <ListView SelectionMode="Single" x:Name="ColumnListView" Grid.Row="1" Grid.Column="2" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel}" ItemsSource="{Binding ColumnsView}" util:GridViewSort.AutoSort="True">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Id" Width="50" DisplayMemberBinding="{Binding Column.ColumnId}" util:GridViewSort.PropertyName="Column.ColumnIdNumber"></GridViewColumn>
@@ -193,12 +193,12 @@
                             <GridViewColumn Header="Fejl" Width="80" util:GridViewSort.PropertyName="Analysis.ErrorCount">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Analysis.ErrorCount}">
+                                        <TextBlock Text="{Binding ErrorCount}">
                                             <TextBlock.Style>
                                                 <Style>
                                                     <Setter Property="TextBlock.Foreground" Value="Red"></Setter>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Analysis.ErrorCount}" Value="0">
+                                                        <DataTrigger Binding="{Binding ErrorCount}" Value="0">
                                                             <Setter Property="TextBlock.Foreground" Value="{StaticResource {x:Static SystemColors.ControlTextBrushKey}}"></Setter>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -436,7 +436,7 @@
                         </DockPanel>
                     </TabItem>
                     <TabItem Header="Fejlvisning">
-                        <TabControl SelectedItem="{Binding Path=SelectedItem.Analysis.SelectedTest, ElementName=ColumnAnalysesListView}" ItemsSource="{Binding Path=SelectedItem.Analysis.Tests, ElementName=ColumnAnalysesListView}">
+                        <TabControl SelectedItem="{Binding Path=SelectedItem.SelectedTest, ElementName=ColumnListView}" ItemsSource="{Binding Path=SelectedItem.Tests, ElementName=ColumnListView}">
                             <TabControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type ana:Test}">
                                     <TextBlock>
@@ -500,7 +500,8 @@
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Fejltype" DisplayMemberBinding="{Binding Header}"></GridViewColumn>
-                            <GridViewColumn Header="Antal" DisplayMemberBinding="{Binding Count}"></GridViewColumn>
+                            <GridViewColumn Header="Antal subjekter" DisplayMemberBinding="{Binding Subjects.Count}"></GridViewColumn>
+                            <GridViewColumn Header="Samlet antal" DisplayMemberBinding="{Binding Count}"></GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>

@@ -14,31 +14,56 @@ using HardHorn.Utility;
 
 namespace HardHorn.Analysis
 {
+    /// <summary>
+    /// Encapsulates the analysis of the table data.
+    /// </summary>
     public class Analyzer
     {
+        /// <summary>
+        /// The archive version whose data will be analyzed.
+        /// </summary>
         public ArchiveVersion ArchiveVersion { get; private set; }
-        ILogger _log;
 
-        public static Regex date_regex = new Regex(@"(\d\d\d\d)-(\d\d)-(\d\d)$");
-        public static Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        public static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$");
-        public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
-        public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$");
-        public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
-
+        /// <summary>
+        /// The number of rows analyzed of the current table.
+        /// </summary>
         public int TableDoneRows { get; private set; }
+
+        /// <summary>
+        /// The row count of the current table.
+        /// </summary>
         public int TableRowCount { get; private set; }
+
+        /// <summary>
+        /// The number of rows analyzed in total.
+        /// </summary>
         public int TotalDoneRows { get; private set; }
+
+        /// <summary>
+        /// The total row count of all tables to be analyzed.
+        /// </summary>
         public int TotalRowCount { get; private set; }
 
-        private IEnumerator<Table> _tableEnumerator;
+        /// <summary>
+        /// The currently selected table.
+        /// </summary>
         public Table CurrentTable { get { return _tableEnumerator == null ? null : _tableEnumerator.Current; } }
-        private TableReader _tableReader;
 
-        private int _readRows = 0;
-
+        /// <summary>
+        /// The hierachy of tests.
+        /// </summary>
         public Dictionary<Table, Dictionary<Column, ColumnAnalysis>> TestHierachy { get; private set; }
 
+        private IEnumerator<Table> _tableEnumerator;
+        ILogger _log;
+        private TableReader _tableReader;
+        private int _readRows = 0;
+
+        /// <summary>
+        /// Construct an analyzer object.
+        /// </summary>
+        /// <param name="archiveVersion">The archive version whose data will be analyzed.</param>
+        /// <param name="log">The logger, which will receive logging calls from the analyzer.</param>
         public Analyzer(ArchiveVersion archiveVersion, ILogger log)
         {
             _log = log;
@@ -59,13 +84,14 @@ namespace HardHorn.Analysis
             _tableEnumerator = ArchiveVersion.Tables.GetEnumerator();
         }
 
+        /// <summary>
+        /// Add a test to a column.
+        /// </summary>
+        /// <param name="column">The column that will be tested.</param>
+        /// <param name="test">The test that will be performed.</param>
         public void AddTest(Column column, Test test)
         {
             TestHierachy[column.Table][column].Tests.Add(test);
-            if (TestHierachy[column.Table][column].Tests.Count == 1)
-            {
-                TestHierachy[column.Table][column].SelectedTest = test;
-            }
         }
 
         /// <summary>
@@ -73,8 +99,14 @@ namespace HardHorn.Analysis
         /// </summary>
         /// <param name="n">The number of rows to analyze.</param>
         /// <returns>The number of rows analyzed.</returns>
+        /// <exception cref="System.InvalidOperationException">Thrown when called and the current table is not initialized.</exception>
         public bool AnalyzeRows(int n = 10000)
         {
+            if (_tableReader == null)
+            {
+                throw new InvalidOperationException("A table must be initialized before rows can be analyzed.");
+            }
+
             Post[,] rows;
             _readRows = _tableReader.Read(out rows, n);
 
@@ -93,19 +125,23 @@ namespace HardHorn.Analysis
                         analysis.FirstRowAnalyzed = true;
             }
 
-            foreach (var columnAnalysis in TestHierachy[CurrentTable].Values)
-            {
-                columnAnalysis.Flush();
-            }
-
             TableDoneRows += _readRows;
             TotalDoneRows += _readRows;
 
             return _readRows == n;
         }
 
+        /// <summary>
+        /// Initialize the analyzer for the current table.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException">Thrown when a table is not selected.</exception>
         public void InitializeTable()
         {
+            if (CurrentTable == null)
+            {
+                throw new InvalidOperationException("A table must be selected, before the analyzer can initialize it.");
+            }
+
             TableDoneRows = 0;
             TableRowCount = CurrentTable.Rows;
             
@@ -117,6 +153,10 @@ namespace HardHorn.Analysis
             _tableReader = CurrentTable.GetReader();
         }
 
+        /// <summary>
+        /// Advances the table enumerator of the analyzer to the next table.
+        /// </summary>
+        /// <returns></returns>
         public bool MoveNextTable()
         {
             if (_tableEnumerator.MoveNext())
@@ -130,27 +170,6 @@ namespace HardHorn.Analysis
             }
 
             return false;
-        }
-
-        public static bool invalidTime(int hour, int minute, int second)
-        {
-            return hour > 23 ||
-                   hour < 0 ||
-                   minute > 59 ||
-                   minute < 0 ||
-                   second > 59 ||
-                   second < 0;
-        }
-
-        public static bool invalidDate(int year, int month, int day)
-        {
-            bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-            return year <= 0 ||
-                   month > 12 ||
-                   month < 1 ||
-                   day < 1 ||
-                   month == 2 && leap && day > months[2] - 1 ||
-                   day > months[month - 1];
         }
     }
 }

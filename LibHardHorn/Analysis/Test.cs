@@ -9,18 +9,16 @@ using System.Threading.Tasks;
 
 namespace HardHorn.Analysis
 {
-    public abstract class Test : INotifyPropertyChanged
+    public abstract class Test
     {
-        public static readonly int MAX_ERROR_POSTS = 50;
+        public static Regex date_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)$", RegexOptions.Compiled);
+        public static Regex timestamp_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?$", RegexOptions.Compiled);
+        public static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$", RegexOptions.Compiled);
+        public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$", RegexOptions.Compiled);
+        public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$", RegexOptions.Compiled);
+        public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void NotifyOfPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
+        public static readonly int MAX_ERROR_POSTS = 50;
 
         public enum Result
         {
@@ -39,10 +37,29 @@ namespace HardHorn.Analysis
             if (ErrorCount < MAX_ERROR_POSTS)
             {
                 _posts.Add(post);
-                NotifyOfPropertyChanged("ErrorPosts");
             }
             ErrorCount++;
-            NotifyOfPropertyChanged("ErrorCount");
+        }
+
+        public static bool InvalidTime(int hour, int minute, int second)
+        {
+            return hour > 23 ||
+                   hour < 0 ||
+                   minute > 59 ||
+                   minute < 0 ||
+                   second > 59 ||
+                   second < 0;
+        }
+
+        public static bool InvalidDate(int year, int month, int day)
+        {
+            bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+            return year <= 0 ||
+                   month > 12 ||
+                   month < 1 ||
+                   day < 1 ||
+                   month == 2 && leap && day > months[2] - 1 ||
+                   day > months[month - 1];
         }
 
         public Result Run(Post post, Column column)
@@ -63,12 +80,12 @@ namespace HardHorn.Analysis
         #region Predefined format tests
         public static Test DateFormatTest()
         {
-            return new Pattern(Analyzer.date_regex, m => {
+            return new Pattern(date_regex, m => {
                 int year = int.Parse(m[0].Groups[1].Value);
                 int month = int.Parse(m[0].Groups[2].Value);
                 int day = int.Parse(m[0].Groups[3].Value);
 
-                if (Analyzer.invalidDate(year, month, day))
+                if (InvalidDate(year, month, day))
                 {
                     return Result.ERROR;
                 }
@@ -79,12 +96,12 @@ namespace HardHorn.Analysis
 
         public static Test TimeFormatTest()
         {
-            return new Pattern(Analyzer.time_regex, m => {
+            return new Pattern(time_regex, m => {
                 int hour = int.Parse(m[0].Groups[1].Value);
                 int minute = int.Parse(m[0].Groups[2].Value);
                 int second = int.Parse(m[0].Groups[3].Value);
 
-                if (Analyzer.invalidTime(hour, minute, second))
+                if (InvalidTime(hour, minute, second))
                 {
                     return Result.ERROR;
                 }
@@ -95,7 +112,7 @@ namespace HardHorn.Analysis
 
         public static Test TimeWithTimeZoneTest()
         {
-            return new Pattern(Analyzer.time_timezone_regex, m => {
+            return new Pattern(time_timezone_regex, m => {
                 int hour = int.Parse(m[0].Groups[1].Value);
                 int minute = int.Parse(m[0].Groups[2].Value);
                 int second = int.Parse(m[0].Groups[3].Value);
@@ -111,7 +128,7 @@ namespace HardHorn.Analysis
                         return Result.ERROR;
                 }
 
-                if (Analyzer.invalidTime(hour, minute, second))
+                if (InvalidTime(hour, minute, second))
                 {
                     return Result.ERROR;
                 }
@@ -122,7 +139,7 @@ namespace HardHorn.Analysis
 
         public static Test TimestampWithTimeZoneFormatTest()
         {
-            return new Pattern(Analyzer.timestamp_timezone_regex, m => {
+            return new Pattern(timestamp_timezone_regex, m => {
                 int year = int.Parse(m[0].Groups[1].Value);
                 int month = int.Parse(m[0].Groups[2].Value);
                 int day = int.Parse(m[0].Groups[3].Value);
@@ -141,7 +158,7 @@ namespace HardHorn.Analysis
                         return Result.ERROR;
                 }
 
-                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
+                if (InvalidDate(year, month, day) || InvalidTime(hour, minute, second))
                 {
                     return Result.ERROR;
                 }
@@ -152,7 +169,7 @@ namespace HardHorn.Analysis
 
         public static Test TimestampFormatTest()
         {
-            return new Pattern(Analyzer.timestamp_regex, m =>
+            return new Pattern(timestamp_regex, m =>
             {
                 int year = int.Parse(m[0].Groups[1].Value);
                 int month = int.Parse(m[0].Groups[2].Value);
@@ -161,7 +178,7 @@ namespace HardHorn.Analysis
                 int minute = int.Parse(m[0].Groups[5].Value);
                 int second = int.Parse(m[0].Groups[6].Value);
 
-                if (Analyzer.invalidDate(year, month, day) || Analyzer.invalidTime(hour, minute, second))
+                if (InvalidDate(year, month, day) || InvalidTime(hour, minute, second))
                 {
                     return Result.ERROR;
                 }
@@ -203,28 +220,28 @@ namespace HardHorn.Analysis
                             overflow = components[0].Length + components[1].Length > column.ParameterizedDataType.Parameter[0].Value || components[1].Length > column.ParameterizedDataType.Parameter[1].Value;
                         break;
                     case DataType.TIME:
-                        match = Analyzer.time_regex.Match(post.Data);
+                        match = time_regex.Match(post.Data);
                         if (match.Success)
                         {
                             overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter[0].Value;
                         }
                         break;
                     case DataType.TIME_WITH_TIME_ZONE:
-                        match = Analyzer.time_timezone_regex.Match(post.Data);
+                        match = time_timezone_regex.Match(post.Data);
                         if (match.Success)
                         {
                             overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter[0].Value;
                         }
                         break;
                     case DataType.TIMESTAMP:
-                        match = Analyzer.timestamp_regex.Match(post.Data);
+                        match = timestamp_regex.Match(post.Data);
                         if (match.Success)
                         {
                             overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter[0].Value;
                         }
                         break;
                     case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                        match = Analyzer.timestamp_timezone_regex.Match(post.Data);
+                        match = timestamp_timezone_regex.Match(post.Data);
                         if (match.Success)
                         {
                             overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter[0].Value;
