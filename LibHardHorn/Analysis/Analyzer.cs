@@ -14,24 +14,56 @@ using HardHorn.Utility;
 
 namespace HardHorn.Analysis
 {
+    /// <summary>
+    /// Encapsulates the analysis of the table data.
+    /// </summary>
     public class Analyzer
     {
+        /// <summary>
+        /// The archive version whose data will be analyzed.
+        /// </summary>
         public ArchiveVersion ArchiveVersion { get; private set; }
-        ILogger _log;
 
+        /// <summary>
+        /// The number of rows analyzed of the current table.
+        /// </summary>
         public int TableDoneRows { get; private set; }
+
+        /// <summary>
+        /// The row count of the current table.
+        /// </summary>
         public int TableRowCount { get; private set; }
+
+        /// <summary>
+        /// The number of rows analyzed in total.
+        /// </summary>
         public int TotalDoneRows { get; private set; }
+
+        /// <summary>
+        /// The total row count of all tables to be analyzed.
+        /// </summary>
         public int TotalRowCount { get; private set; }
 
-        private IEnumerator<Table> _tableEnumerator;
+        /// <summary>
+        /// The currently selected table.
+        /// </summary>
         public Table CurrentTable { get { return _tableEnumerator == null ? null : _tableEnumerator.Current; } }
-        private TableReader _tableReader;
 
-        private int _readRows = 0;
-
+        /// <summary>
+        /// The hierachy of tests.
+        /// </summary>
         public Dictionary<Table, Dictionary<Column, ColumnAnalysis>> TestHierachy { get; private set; }
 
+        private IEnumerator<Table> _tableEnumerator;
+        ILogger _log;
+        private TableReader _tableReader;
+        private int _readRows = 0;
+
+        /// <summary>
+        /// Construct an analyzer object.
+        /// </summary>
+        /// <param name="archiveVersion">The archive version whose data will be analyzed.</param>
+        /// <param name="log">The logger, which will receive logging calls from the analyzer.</param>
         public Analyzer(ArchiveVersion archiveVersion, ILogger log)
         {
             _log = log;
@@ -52,6 +84,11 @@ namespace HardHorn.Analysis
             _tableEnumerator = ArchiveVersion.Tables.GetEnumerator();
         }
 
+        /// <summary>
+        /// Add a test to a column.
+        /// </summary>
+        /// <param name="column">The column that will be tested.</param>
+        /// <param name="test">The test that will be performed.</param>
         public void AddTest(Column column, Test test)
         {
             TestHierachy[column.Table][column].Tests.Add(test);
@@ -62,8 +99,14 @@ namespace HardHorn.Analysis
         /// </summary>
         /// <param name="n">The number of rows to analyze.</param>
         /// <returns>The number of rows analyzed.</returns>
+        /// <exception cref="System.InvalidOperationException">Thrown when called and the current table is not initialized.</exception>
         public bool AnalyzeRows(int n = 10000)
         {
+            if (_tableReader == null)
+            {
+                throw new InvalidOperationException("A table must be initialized before rows can be analyzed.");
+            }
+
             Post[,] rows;
             _readRows = _tableReader.Read(out rows, n);
 
@@ -88,8 +131,17 @@ namespace HardHorn.Analysis
             return _readRows == n;
         }
 
+        /// <summary>
+        /// Initialize the analyzer for the current table.
+        /// </summary>
+        /// <exception cref="System.InvalidOperationException">Thrown when a table is not selected.</exception>
         public void InitializeTable()
         {
+            if (CurrentTable == null)
+            {
+                throw new InvalidOperationException("A table must be selected, before the analyzer can initialize it.");
+            }
+
             TableDoneRows = 0;
             TableRowCount = CurrentTable.Rows;
             
@@ -101,6 +153,10 @@ namespace HardHorn.Analysis
             _tableReader = CurrentTable.GetReader();
         }
 
+        /// <summary>
+        /// Advances the table enumerator of the analyzer to the next table.
+        /// </summary>
+        /// <returns></returns>
         public bool MoveNextTable()
         {
             if (_tableEnumerator.MoveNext())
