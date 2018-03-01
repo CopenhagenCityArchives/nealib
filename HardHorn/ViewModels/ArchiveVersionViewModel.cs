@@ -57,48 +57,43 @@ namespace HardHorn.ViewModels
 
         public int TableTestProgress
         {
-            get { return TableTotalRows == 0 ? 0 : (int)(((long)TableDoneRows) * 100 / TableTotalRows); }
+            get { return AnalysisTableRowCount == 0 ? 0 : (int)(((long)AnalysisTableDoneRows) * 100 / AnalysisTableRowCount); }
         }
 
         public int TestProgress
         {
-            get { return TotalRows == 0 ? 0 : (int)(((long)DoneRows) * 100 / TotalRows); }
+            get { return AnalysisTotalRowCount == 0 ? 0 : (int)(((long)AnalysisTotalDoneRows) * 100 / AnalysisTotalRowCount); }
         }
 
-        int _totalRows;
-        public int TotalRows
+        int _analysisTotalRowCount;
+        public int AnalysisTotalRowCount
         {
-            get { return _totalRows; }
-            set { _totalRows = value; NotifyOfPropertyChange("TotalRows"); NotifyOfPropertyChange("TestProgress"); }
+            get { return _analysisTotalRowCount; }
+            set { _analysisTotalRowCount = value; NotifyOfPropertyChange("AnalysisTotalRowCount"); NotifyOfPropertyChange("TestProgress"); }
         }
 
-        int _doneRows;
-        public int DoneRows
+        int _analysisTotalDoneRows;
+        public int AnalysisTotalDoneRows
         {
-            get { return _doneRows; }
-            set { _doneRows = value; NotifyOfPropertyChange("DoneRows"); NotifyOfPropertyChange("TestProgress"); }
+            get { return _analysisTotalDoneRows; }
+            set { _analysisTotalDoneRows = value; NotifyOfPropertyChange("AnalysisTotalDoneRows"); NotifyOfPropertyChange("TestProgress"); }
         }
 
-        int _tableTotalRows;
-        public int TableTotalRows
+        int _analysisTableRowCount;
+        public int AnalysisTableRowCount
         {
-            get { return _tableTotalRows; }
-            set { _tableTotalRows = value; NotifyOfPropertyChange("TableTotalRows"); NotifyOfPropertyChange("TableTestProgress"); }
+            get { return _analysisTableRowCount; }
+            set { _analysisTableRowCount = value; NotifyOfPropertyChange("AnalysisTableRowCount"); NotifyOfPropertyChange("TableTestProgress"); }
         }
 
-        int _tableDoneRows;
-        public int TableDoneRows
+        int _analysisTableDoneRows;
+        public int AnalysisTableDoneRows
         {
-            get { return _tableDoneRows; }
-            set { _tableDoneRows = value; NotifyOfPropertyChange("TableDoneRows"); NotifyOfPropertyChange("TableTestProgress"); }
+            get { return _analysisTableDoneRows; }
+            set { _analysisTableDoneRows = value; NotifyOfPropertyChange("AnalysisTableDoneRows"); NotifyOfPropertyChange("TableTestProgress"); }
         }
 
-        ArchiveVersion _archiveVersion;
-        public ArchiveVersion ArchiveVersion
-        {
-            get { return _archiveVersion; }
-            set { _archiveVersion = value; NotifyOfPropertyChange("ArchiveVersion"); }
-        }
+        public ArchiveVersion ArchiveVersion { get; private set; }
 
         public ObservableCollection<string> RecentLocations { get { return Properties.Settings.Default.RecentLocations; } }
 
@@ -404,6 +399,7 @@ namespace HardHorn.ViewModels
 
         public async void StartTest()
         {
+            // Create the analyzer
             var startTestViewModel = new StartTestViewModel(this, MainLogger);
             var windowSettings = new Dictionary<string, object>();
             windowSettings.Add("Title", string.Format("Start test af {0}", ArchiveVersion.Id));
@@ -412,18 +408,20 @@ namespace HardHorn.ViewModels
             {
                 return;
             }
-
             Analyzer = startTestViewModel.Analyzer;
 
+            // Create cancallation token
+            _testCts = new CancellationTokenSource();
+            var token = _testCts.Token;
+
+            // Connect the column analysis objects to the corresponding column view models
             foreach (var tableViewModel in TableViewModels)
                 foreach (var columnViewModel in tableViewModel.ColumnViewModels)
                     columnViewModel.Analysis = Analyzer.TestHierachy[tableViewModel.Table][columnViewModel.Column];
 
             Log("Påbegynder dataanalyse.", LogLevel.SECTION);
 
-            _testCts = new CancellationTokenSource();
-            var token = _testCts.Token;
-
+            // Reset table view model states
             foreach (var tableViewModel in TableViewModels)
             {
                 tableViewModel.Busy = false;
@@ -446,12 +444,12 @@ namespace HardHorn.ViewModels
             {
                 ErrorViewModels.Add(errorViewModel);
             }
-
             foreach (var tableViewModel in TableViewModels)
             {
                 tableViewModel.Errors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
             }
 
+            // Progress handlers
             IProgress<Table> updateTableProgress = new Progress<Table>(table =>
             {
                 // Update table view model error flag
@@ -540,10 +538,10 @@ namespace HardHorn.ViewModels
                 }
             });
 
-            var totalRowCountProgress = new Progress<int>(value => { TotalRows = value; }) as IProgress<int>;
-            var totalDoneRowsProgress = new Progress<int>(value => { DoneRows = value; }) as IProgress<int>;
-            var tableRowCountProgress = new Progress<int>(value => { TableTotalRows = value; }) as IProgress<int>;
-            var tableDoneRowsProgress = new Progress<int>(value => { TableDoneRows = value; }) as IProgress<int>;
+            var totalRowCountProgress = new Progress<int>(value => { AnalysisTotalRowCount = value; }) as IProgress<int>;
+            var totalDoneRowsProgress = new Progress<int>(value => { AnalysisTotalDoneRows = value; }) as IProgress<int>;
+            var tableRowCountProgress = new Progress<int>(value => { AnalysisTableRowCount = value; }) as IProgress<int>;
+            var tableDoneRowsProgress = new Progress<int>(value => { AnalysisTableDoneRows = value; }) as IProgress<int>;
 
             var logger = new ProgressLogger(this);
 
@@ -555,8 +553,8 @@ namespace HardHorn.ViewModels
                 await Task.Run(() =>
                 {
                     // Count total rows
-                    TotalRows = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
-                    DoneRows = 0;
+                    AnalysisTotalRowCount = ArchiveVersion.Tables.Aggregate(0, (r, t) => r + t.Rows);
+                    AnalysisTotalDoneRows = 0;
                     int chunk = 10000;
 
                     totalRowCountProgress.Report(Analyzer.TotalRowCount);
@@ -627,8 +625,8 @@ namespace HardHorn.ViewModels
 
                             Application.Current.Dispatcher.Invoke(() =>
                             {
-                                Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", Analyzer.CurrentTable.ToString(), Analyzer.CurrentTable.Rows, TableDoneRows), LogLevel.ERROR);
-                                TableRowCountErrorViewModel.Add(new Tuple<Table, int>(Analyzer.CurrentTable, TableDoneRows));
+                                Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", Analyzer.CurrentTable.ToString(), Analyzer.CurrentTable.Rows, AnalysisTableDoneRows), LogLevel.ERROR);
+                                TableRowCountErrorViewModel.Add(new Tuple<Table, int>(Analyzer.CurrentTable, AnalysisTableDoneRows));
                             });
                         }
 
