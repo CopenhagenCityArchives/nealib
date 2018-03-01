@@ -4,6 +4,7 @@ using HardHorn.Archiving;
 using System.Collections.Generic;
 using HardHorn.Analysis;
 using LibHardHornTest.Utilities;
+using System.Text.RegularExpressions;
 
 namespace LibHardHornTest
 {
@@ -135,6 +136,79 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
+        public void TestAnalyzeTimestampFormatTest()
+        {
+            var test = Test.TimestampFormatTest();
+            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIMESTAMP, new Parameter(10)), "TIMESTAMP (10)", false, "desc", "c1", 1, null, null);
+
+            AssertOkay(column, test, "2000-01-01T14:15:20");
+            AssertOkay(column, test, "1899-12-31T10:30:00");
+            AssertOkay(column, test, "2018-01-03T17:30:00");
+            AssertOkay(column, test, "2000-08-10T13:37:00");
+            AssertOkay(column, test, "2000-08-10T00:00:00"); // minimum time
+            AssertOkay(column, test, "2000-08-10T23:59:59"); // maximum time
+
+            AssertError(column, test, "2000-08-10T14:15:20+05:00"); // contains correctly formatted time zone
+            AssertError(column, test, "2000-08-10T14:15:20+5:00"); // contains incorrectly formatted time zonee
+            AssertError(column, test, "2000-08-10T14:15:20 "); // with a blank
+            AssertError(column, test, " 2000-08-10T14:15:20"); // with a blank
+            AssertError(column, test, "2000-08-10T25:20:11"); // Hour out of range
+            AssertError(column, test, "2000-08-10T1:11:11"); // 1-digit hour
+            AssertError(column, test, "2000-08-10T111:11:11"); // 3-digit hour
+            AssertError(column, test, "2000-08-10T10:63:30"); // minute out of range
+            AssertError(column, test, "2000-08-10T10:5:30"); // 1-digit minute
+            AssertError(column, test, "2000-08-10T10:555:30"); // 3-digit minute
+            AssertError(column, test, "2000-08-10T10:10:99"); // second out of range
+            AssertError(column, test, "2000-08-10T10:10:1"); // 1-digit second
+            AssertError(column, test, "2000-08-10T10:10:123"); // 3-digit second
+            AssertError(column, test, "abc"); // non-format string
+            AssertError(column, test, ""); // empty string
+
+            // dates with minimum time
+            AssertOkay(column, test, "0001-01-01T00:00:00");
+            AssertOkay(column, test, "2016-05-23T00:00:00");
+            AssertOkay(column, test, "2016-05-23T00:00:00");
+            AssertOkay(column, test, "2016-05-23T00:00:00");
+            AssertOkay(column, test, "1994-12-31T00:00:00");
+            AssertOkay(column, test, "2016-12-01T00:00:00");
+            AssertOkay(column, test, "2017-01-31T00:00:00");
+            AssertOkay(column, test, "1991-05-16T00:00:00");
+            AssertOkay(column, test, "9999-12-31T00:00:00");
+
+            // dates with maximum time
+            AssertOkay(column, test, "0001-01-01T23:59:59");
+            AssertOkay(column, test, "2016-05-23T23:59:59");
+            AssertOkay(column, test, "2016-05-23T23:59:59");
+            AssertOkay(column, test, "2016-05-23T23:59:59");
+            AssertOkay(column, test, "1994-12-31T23:59:59");
+            AssertOkay(column, test, "2016-12-01T23:59:59");
+            AssertOkay(column, test, "2017-01-31T23:59:59");
+            AssertOkay(column, test, "1991-05-16T23:59:59");
+            AssertOkay(column, test, "9999-12-31T23:59:59");
+
+            // dates with other time
+            AssertOkay(column, test, "0001-01-01T14:15:20");
+            AssertOkay(column, test, "2016-05-23T14:15:20");
+            AssertOkay(column, test, "2016-05-23T14:15:20");
+            AssertOkay(column, test, "2016-05-23T14:15:20");
+            AssertOkay(column, test, "1994-12-31T14:15:20");
+            AssertOkay(column, test, "2016-12-01T14:15:20");
+            AssertOkay(column, test, "2017-01-31T14:15:20");
+            AssertOkay(column, test, "1991-05-16T14:15:20");
+            AssertOkay(column, test, "9999-12-31T14:15:20");
+
+            AssertError(column, test, "99-1-31T14:15:20"); // two-digit year
+            AssertError(column, test, "2017-12-1T14:15:20"); // one-digit-month
+            AssertError(column, test, "2017-1-31T14:15:20"); // one-digit day
+            AssertError(column, test, "abc"); // letters
+            AssertError(column, test, "2016-15-23T14:15:20"); // Month out of range
+            AssertError(column, test, "2016-06-80T14:15:20"); // Day out of range
+            AssertError(column, test, "1905-10T14:15:20"); // Day missing
+            AssertError(column, test, ""); // Empty string
+            AssertError(column, test, "   "); // Blank string
+        }
+
+        [TestMethod]
         public void TestAnalyzeTimestampWithTimezoneFormatTest()
         {
             var test = Test.TimestampWithTimeZoneFormatTest();
@@ -173,6 +247,29 @@ namespace LibHardHornTest
             AssertError(column, test, "abc"); // non-format string
             AssertError(column, test, ""); // empty string
 
+            // dates with minimum time
+            AssertOkay(column, test, "0001-01-01T00:00:00Z");
+            AssertOkay(column, test, "2016-05-23T00:00:00Z");
+            AssertOkay(column, test, "2016-05-23T00:00:00Z");
+            AssertOkay(column, test, "2016-05-23T00:00:00Z");
+            AssertOkay(column, test, "1994-12-31T00:00:00Z");
+            AssertOkay(column, test, "2016-12-01T00:00:00Z");
+            AssertOkay(column, test, "2017-01-31T00:00:00Z");
+            AssertOkay(column, test, "1991-05-16T00:00:00Z");
+            AssertOkay(column, test, "9999-12-31T00:00:00Z");
+
+            // dates with maximum time
+            AssertOkay(column, test, "0001-01-01T23:59:59Z");
+            AssertOkay(column, test, "2016-05-23T23:59:59Z");
+            AssertOkay(column, test, "2016-05-23T23:59:59Z");
+            AssertOkay(column, test, "2016-05-23T23:59:59Z");
+            AssertOkay(column, test, "1994-12-31T23:59:59Z");
+            AssertOkay(column, test, "2016-12-01T23:59:59Z");
+            AssertOkay(column, test, "2017-01-31T23:59:59Z");
+            AssertOkay(column, test, "1991-05-16T23:59:59Z");
+            AssertOkay(column, test, "9999-12-31T23:59:59Z");
+
+            // dates with other time
             AssertOkay(column, test, "0001-01-01T14:15:20Z");
             AssertOkay(column, test, "2016-05-23T14:15:20Z");
             AssertOkay(column, test, "2016-05-23T14:15:20Z");
@@ -192,6 +289,26 @@ namespace LibHardHornTest
             AssertError(column, test, "1905-10T14:15:20Z"); // Day missing
             AssertError(column, test, ""); // Empty string
             AssertError(column, test, "   "); // Blank string
+        }
+
+        [TestMethod]
+        public void TestPatternTest()
+        {
+            var test = new Test.Pattern(new Regex(@"[a-zA-Z][0-9]"), m =>
+            {
+                foreach (Match match in m)
+                {
+                    if (match.Success)
+                    {
+                        return Test.Result.OKAY;
+                    }
+                }
+
+                return Test.Result.ERROR;
+            });
+            var column = new Column(null, "name", new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(100)), "VARCHAR (100)", false, "desc", "c1", 1, null, null);
+            AssertOkay(column, test, "a1");
+            AssertError(column, test, "12");
         }
     }
 }
