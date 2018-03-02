@@ -88,33 +88,62 @@ namespace HardHorn.Analysis
                     }
                     break;
                 case DataType.DECIMAL:
-                    var components = data.Split('.');
-                    if (components.Length > 0 && components[0].Length > 0 && components[0][0] == '-')
                     {
-                        components[0] = components[0].Substring(1);
-                    }
-                    if (components.Length == 1)
-                    {
-                        components = new string[] { components[0], "" };
-                    }
-                    if (FirstRowAnalyzed)
-                    {
-                        MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        MaxParam[0].Value = Math.Max(MaxParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                        MinParam[1].Value = Math.Min(MinParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
-                        MaxParam[1].Value = Math.Max(MaxParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
-                    }
-                    else
-                    {
-                        MinParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        MaxParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                        MinParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
-                        MaxParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
+                        var components = data.Split('.');
+                        if (components.Length > 0 && components[0].Length > 0 && components[0][0] == '-')
+                        {
+                            components[0] = components[0].Substring(1);
+                        }
+                        if (components.Length == 1)
+                        {
+                            components = new string[] { components[0], "" };
+                        }
+                        if (FirstRowAnalyzed)
+                        {
+                            MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                            MaxParam[0].Value = Math.Max(MaxParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                            MinParam[1].Value = Math.Min(MinParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
+                            MaxParam[1].Value = Math.Max(MaxParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
+                        }
+                        else
+                        {
+                            MinParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                            MaxParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
+                            MinParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
+                            MaxParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
+                        }
                     }
                     break;
                 case DataType.TIME:
-                case DataType.DATE:
                 case DataType.TIMESTAMP:
+                    {
+                        var components = data.Split('.');
+                        if (components.Length == 1)
+                        {
+                            components = new string[] { components[0], "" };
+                        }
+                        if (FirstRowAnalyzed)
+                        {
+                            MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
+                            MaxParam[0].Value = Math.Max(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
+                        }
+                        else
+                        {
+                            MinParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
+                            MaxParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
+                        }
+                    }
+                    break;
+                case DataType.TIME_WITH_TIME_ZONE:
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                    if (FirstRowAnalyzed)
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
                     break;
             }
         }

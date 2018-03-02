@@ -160,5 +160,46 @@ namespace LibHardHornTest
             Assert.AreEqual("ADDRESSE", tables[1].Columns[1].Name);
             Assert.AreEqual("INDFLYT", tables[1].Columns[2].Name);
         }
+
+        [TestMethod]
+        public void TestParameterCompareTo()
+        {
+            Assert.AreEqual(-1, new Parameter(1).CompareTo(new Parameter(2)));
+            Assert.AreEqual(1, new Parameter(2).CompareTo(new Parameter(1)));
+
+            // Compare same Parameter
+            for (int i = 0; i < 10; i++)
+            {
+                var param1 = new Parameter(i);
+                var param2 = new Parameter(i);
+                Assert.AreEqual(0, param1.CompareTo(param1));
+                Assert.AreEqual(0, param2.CompareTo(param1));
+                Assert.AreEqual(0, param1.CompareTo(param2));
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    // single parameter
+                    var parami = new Parameter(i);
+                    var paramj = new Parameter(j);
+                    Assert.AreEqual(i.CompareTo(j), parami.CompareTo(paramj));
+                    Assert.AreEqual(j.CompareTo(i), paramj.CompareTo(parami));
+
+                    // same first parameter item
+                    parami = new Parameter(10, i);
+                    paramj = new Parameter(10, j);
+                    Assert.AreEqual(i.CompareTo(j), parami.CompareTo(paramj));
+                    Assert.AreEqual(j.CompareTo(i), paramj.CompareTo(parami));
+
+                    // compare with different first parameter items
+                    var param1 = new Parameter(1, i);
+                    var param2 = new Parameter(2, j);
+                    Assert.AreEqual(-1, param1.CompareTo(param2));
+                    Assert.AreEqual(1, param2.CompareTo(param1));
+                }
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using HardHorn.Analysis;
 using LibHardHornTest.Utilities;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace LibHardHornTest
 {
@@ -309,6 +310,50 @@ namespace LibHardHornTest
             var column = new Column(null, "name", new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(100)), "VARCHAR (100)", false, "desc", "c1", 1, null, null);
             AssertOkay(column, test, "a1");
             AssertError(column, test, "12");
+        }
+
+        [TestMethod]
+        [DeploymentItem(@"..\..\TestResources", @"TestResources")]
+        public void TestAnalyzer()
+        {
+            var AV = ArchiveVersion.Load(@"TestResources\AVID.OVERFLOW.1.1", new TestLogger());
+            var Analyzer = new Analyzer(AV, new TestLogger());
+
+            var table1 = AV.Tables.First();
+            var idColumn = table1.Columns[0];
+            Assert.AreEqual(idColumn.ColumnIdNumber, 1);
+            var nameColumn = table1.Columns[1];
+            Assert.AreEqual(nameColumn.ColumnIdNumber, 2);
+            var phoneColumn = table1.Columns[2];
+            Assert.AreEqual(phoneColumn.ColumnIdNumber, 3);
+            var timeColumn = table1.Columns[3];
+            Assert.AreEqual(timeColumn.ColumnIdNumber, 4);
+
+            foreach (var column in AV.Tables.First().Columns)
+            {
+                if (column.ColumnIdNumber != 1) // First column is integer
+                {
+                    Analyzer.AddTest(column, new Test.Overflow());
+                }
+            }
+
+            Analyzer.MoveNextTable();
+            Analyzer.InitializeTable();
+            Analyzer.AnalyzeRows(3);
+
+            foreach (var columnAnalysis in Analyzer.TestHierachy[table1].Values)
+            {
+                columnAnalysis.SuggestType();
+            }
+
+            Assert.AreEqual(0, Analyzer.TestHierachy[table1][idColumn].ErrorCount);
+            Assert.AreEqual(1, Analyzer.TestHierachy[table1][nameColumn].ErrorCount);
+            Assert.AreEqual(1, Analyzer.TestHierachy[table1][phoneColumn].ErrorCount);
+            Assert.AreEqual(1, Analyzer.TestHierachy[table1][timeColumn].ErrorCount);
+
+            Assert.AreEqual(1, Analyzer.TestHierachy[table1][nameColumn].SuggestedType.Parameter.CompareTo(nameColumn.ParameterizedDataType.Parameter));
+            Assert.AreEqual(1, Analyzer.TestHierachy[table1][phoneColumn].SuggestedType.Parameter.CompareTo(phoneColumn.ParameterizedDataType.Parameter));
+            Assert.AreEqual(1, Analyzer.TestHierachy[table1][timeColumn].SuggestedType.Parameter.CompareTo(timeColumn.ParameterizedDataType.Parameter));
         }
     }
 }
