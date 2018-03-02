@@ -197,9 +197,8 @@ namespace HardHorn.ViewModels
             finally
             {
                 BrowseReady = true;
-                BrowseRows.Clear();
-                foreach (var row in browseRows)
-                    BrowseRows.Add(row);
+                _browseRows.Clear();
+                foreach (var row in browseRows) _browseRows.Add(row);
             }
         }
     }
