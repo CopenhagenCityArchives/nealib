@@ -14,8 +14,6 @@ namespace HardHorn.Views
         public MainView()
         {
             InitializeComponent();
-            //DataTypeListBox.ItemsSource = Enum.GetValues(typeof(DataType)).Cast<DataType>();
-            //AnalysisErrorTypeListBox.ItemsSource = Enum.GetValues(typeof(AnalysisErrorType)).Cast<DataType>();
         }
     }
 }
