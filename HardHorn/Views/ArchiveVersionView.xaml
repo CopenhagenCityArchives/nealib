@@ -181,7 +181,7 @@
                             </TextBlock>
                         </Canvas>
                     </Grid>
-                    <ListBox ItemsSource="{Binding FilteredTableViewModels}" SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource TableListContainerStyle}"/>
+                    <ListBox ItemsSource="{Binding FilteredTableViewModels}" SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource AnalysisTableListContainerStyle}"/>
                 </DockPanel>
 
                 <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
@@ -711,14 +711,8 @@
                             </TextBlock>
                         </Canvas>
                     </Grid>
-                    
-                    <ListBox x:Name="KeyTestTableList" ItemsSource="{Binding KeyTestTableView}" SelectionMode="Extended">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Table.Name}" />
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+
+                    <ListBox x:Name="KeyTestTableList" ItemsSource="{Binding KeyTestTableView}" SelectionMode="Extended" ItemContainerStyle="{StaticResource KeyTestTableListContainerStyle}" />
                 </DockPanel>
                 
                 <ListView DockPanel.Dock="Right" Width="250" ItemsSource="{Binding SelectedItem.Item4, ElementName=KeyTestResultList}">

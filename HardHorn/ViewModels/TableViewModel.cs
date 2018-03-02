@@ -33,9 +33,27 @@ namespace HardHorn.ViewModels
         public Table Table { get; set; }
 
         uint _browseOffset;
-        public uint BrowseOffset { get { return _browseOffset; } set { if (value > Table.Rows) return; _browseOffset = value; NotifyOfPropertyChange("BrowseOffset"); } }
+        public uint BrowseOffset
+        {
+            get { return _browseOffset; }
+            set
+            {
+                if (value > Table.Rows) return;
+                _browseOffset = value;
+                NotifyOfPropertyChange("BrowseOffset");
+            }
+        }
+
         uint _browseCount;
-        public uint BrowseCount { get { return _browseCount; } set { _browseCount = value; NotifyOfPropertyChange("BrowseCount"); } }
+        public uint BrowseCount
+        {
+            get { return _browseCount; }
+            set
+            {
+                _browseCount = value;
+                NotifyOfPropertyChange("BrowseCount");
+            }
+        }
 
         public ColumnViewModel _selectedColumnViewModel;
         public ColumnViewModel SelectedColumnViewModel
@@ -45,31 +63,60 @@ namespace HardHorn.ViewModels
         }
         public ObservableCollection<ColumnViewModel> ColumnViewModels { get; private set; }
 
-        public ObservableCollection<BrowseRow> BrowseRows { get; set; }
-        BackgroundWorker browseRowsWorker;
-
-        public bool Errors
+        ObservableCollection<BrowseRow> _browseRows;
+        public ObservableCollection<BrowseRow> BrowseRows
         {
-            get { return _errors; }
-            set { _errors = value; NotifyOfPropertyChange("Errors"); }
+            get
+            {
+                if (_browseRows.Count == 0)
+                {
+                    UpdateBrowseRows();
+                }
+                return _browseRows;
+            }
         }
 
-        public bool Done
+        bool _keyTestErrors = false;
+        public bool KeyTestErrors
         {
-            get { return _done; }
-            set { _done = value; NotifyOfPropertyChange("Done"); }
+            get { return _keyTestErrors; }
+            set { _keyTestErrors = value; NotifyOfPropertyChange("KeyTestErrors"); }
         }
 
-        public bool Busy
+        private bool _keyTestDone = false;
+        public bool KeyTestDone
         {
-            get { return _busy; }
-
-            set { _busy = value; NotifyOfPropertyChange("Busy"); }
+            get { return _keyTestDone; }
+            set { _keyTestDone = value; NotifyOfPropertyChange("KeyTestDone"); }
         }
 
-        bool _busy = false;
-        bool _errors = false;
-        private bool _done = false;
+        bool _keyTestBusy = false;
+        public bool KeyTestBusy
+        {
+            get { return _keyTestBusy; }
+            set { _keyTestBusy = value; NotifyOfPropertyChange("KeyTestBusy"); }
+        }
+
+        bool _analysisErrors = false;
+        public bool AnalysisErrors
+        {
+            get { return _analysisErrors; }
+            set { _analysisErrors = value; NotifyOfPropertyChange("AnalysisErrors"); }
+        }
+
+        private bool _analysisDone = false;
+        public bool AnalysisDone
+        {
+            get { return _analysisDone; }
+            set { _analysisDone = value; NotifyOfPropertyChange("AnalysisDone"); }
+        }
+
+        bool _analysisBusy = false;
+        public bool AnalysisBusy
+        {
+            get { return _analysisBusy; }
+            set { _analysisBusy = value; NotifyOfPropertyChange("AnalysisBusy"); }
+        }
 
         int _browseReadProgress = 0;
         public int BrowseReadProgress {  get { return _browseReadProgress; } set { _browseReadProgress = value;  NotifyOfPropertyChange("BrowseReadProgress"); } }
@@ -80,89 +127,80 @@ namespace HardHorn.ViewModels
         {
             Table = table;
             ColumnViewModels = new ObservableCollection<ColumnViewModel>(table.Columns.Select(c => new ColumnViewModel(c)));
-            Errors = ColumnViewModels.Any(cvm => cvm.Column.ParameterizedDataType.DataType == DataType.UNDEFINED);
-            BrowseRows = new ObservableCollection<BrowseRow>();
+            AnalysisErrors = ColumnViewModels.Any(cvm => cvm.Column.ParameterizedDataType.DataType == DataType.UNDEFINED);
             BrowseOffset = 0;
             BrowseCount = 20;
-            browseRowsWorker = new BackgroundWorker();
-            browseRowsWorker.DoWork += BrowseRowsWorker_DoWork;
-            browseRowsWorker.RunWorkerCompleted += BrowseRowsWorker_RunWorkerCompleted;
-            browseRowsWorker.WorkerReportsProgress = true;
-            browseRowsWorker.ProgressChanged += BrowseRowsWorker_ProgressChanged;
-            UpdateBrowseRows();
+            _browseRows = new ObservableCollection<BrowseRow>();
         }
 
-        private void BrowseRowsWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        public async void UpdateBrowseRows()
         {
-            BrowseReadProgress = e.ProgressPercentage;
-        }
-
-        private void BrowseRowsWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            BrowseReady = true;
-            BrowseRows.Clear();
-            foreach (var row in e.Result as List<BrowseRow>)
-                BrowseRows.Add(row);
-        }
-
-        private void BrowseRowsWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var worker = sender as BackgroundWorker;
-
-            if (Table == null || BrowseOffset < 0 || BrowseCount < 0)
-                return;
-
-            // Local copies
-            uint browseOffset = BrowseOffset;
-            uint browseCount = BrowseCount;
-            var browseRows = new List<BrowseRow>();
-
-            int currentOffset = 0;
-            int rowsRead = 0;
-            Post[,] posts;
-            using (var reader = Table.GetReader())
-            {
-                if (browseOffset > 0)
-                {
-                    uint chunkSize = 50000;
-                    uint chunks = browseOffset / chunkSize;
-                    uint chunkExtra = browseOffset % chunkSize;
-
-                    for (int c = 0; c < chunks; c++)
-                    {
-                        rowsRead = reader.Read(out posts, (int)chunkSize);
-                        currentOffset += rowsRead;
-                        worker.ReportProgress((int)((currentOffset * 100) / browseOffset));
-                    }
-                    rowsRead = reader.Read(out posts, (int)chunkExtra);
-                    currentOffset += rowsRead;
-                    worker.ReportProgress((int)((currentOffset * 100) / browseOffset));
-                }
-                rowsRead = reader.Read(out posts, (int)browseCount);
-                currentOffset += rowsRead;
-            }
-
-            for (int i = 0; i < rowsRead; i++)
-            {
-                var rowPosts = new Post[Table.Columns.Count];
-                for (int j = 0; j < Table.Columns.Count; j++)
-                {
-                    rowPosts[j] = posts[i, j];
-                }
-                browseRows.Add(new BrowseRow(rowPosts));
-            }
-
-            e.Result = browseRows;
-        }
-
-        public void UpdateBrowseRows()
-        {
-            if (!BrowseReady)
+            if (!BrowseReady || Table == null || BrowseOffset < 0 || BrowseCount < 0)
                 return;
 
             BrowseReady = false;
             BrowseReadProgress = 0;
-            browseRowsWorker.RunWorkerAsync();
+            var browseReadProgress = new Progress<int>(p => { BrowseReadProgress = p; }) as IProgress<int>;
+
+            IEnumerable<BrowseRow> browseRows = Enumerable.Empty<BrowseRow>();
+            try
+            {
+                browseRows = await Task.Run(() =>
+                {
+                    // Local copies
+                    uint browseOffset = BrowseOffset;
+                    uint browseCount = BrowseCount;
+                    var result = new List<BrowseRow>();
+
+                    int currentOffset = 0;
+                    int rowsRead = 0;
+                    Post[,] posts;
+                    using (var reader = Table.GetReader())
+                    {
+                        if (browseOffset > 0)
+                        {
+                            uint chunkSize = 50000;
+                            uint chunks = browseOffset / chunkSize;
+                            uint chunkExtra = browseOffset % chunkSize;
+
+                            for (int c = 0; c < chunks; c++)
+                            {
+                                rowsRead = reader.Read(out posts, (int)chunkSize);
+                                currentOffset += rowsRead;
+                                browseReadProgress.Report((int)((currentOffset * 100) / browseOffset));
+                            }
+                            rowsRead = reader.Read(out posts, (int)chunkExtra);
+                            currentOffset += rowsRead;
+                            browseReadProgress.Report((int)((currentOffset * 100) / browseOffset));
+                        }
+                        rowsRead = reader.Read(out posts, (int)browseCount);
+                        currentOffset += rowsRead;
+                    }
+
+                    for (int i = 0; i < rowsRead; i++)
+                    {
+                        var rowPosts = new Post[Table.Columns.Count];
+                        for (int j = 0; j < Table.Columns.Count; j++)
+                        {
+                            rowPosts[j] = posts[i, j];
+                        }
+                        result.Add(new BrowseRow(rowPosts));
+                    }
+
+                    return result;
+                });
+            }
+            catch (Exception)
+            {
+                // ignore failure
+            }
+            finally
+            {
+                BrowseReady = true;
+                BrowseRows.Clear();
+                foreach (var row in browseRows)
+                    BrowseRows.Add(row);
+            }
         }
     }
 }

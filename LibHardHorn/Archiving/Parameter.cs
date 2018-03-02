@@ -38,10 +38,22 @@ namespace HardHorn.Archiving
                 return string.Empty;
             }
 
-            var repr = "(";
+            var repr = string.Empty;
             for (int i = 0; i < Count; i++)
             {
-                if (i == 1 && (dataType == DataType.NUMERIC || dataType == DataType.DECIMAL) && this[i].Value == 0)
+                if (i == 0 && (dataType == DataType.TIMESTAMP || dataType == DataType.TIMESTAMP_WITH_TIME_ZONE) && this[i].Value == 6)
+                {
+                    continue;
+                }
+                else if (i == 0 && (dataType == DataType.TIME || dataType == DataType.TIME_WITH_TIME_ZONE) && this[i].Value == 0)
+                {
+                    continue;
+                }
+                else if (i == 0 && (dataType == DataType.CHARACTER || dataType == DataType.CHARACTER_VARYING || dataType == DataType.NATIONAL_CHARACTER_VARYING || dataType == DataType.NATIONAL_CHARACTER) && this[i].Value == 1)
+                {
+                    continue;
+                }
+                else if (i == 1 && (dataType == DataType.NUMERIC || dataType == DataType.DECIMAL) && this[i].Value == 0)
                 {
                     continue;
                 }
@@ -54,7 +66,7 @@ namespace HardHorn.Archiving
                     repr += this[i].Value;
                 }
             }
-            return repr + ")";
+            return string.IsNullOrEmpty(repr) ? null : string.Format("({0})", repr);
         }
 
         public int CompareTo(object obj)

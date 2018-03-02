@@ -401,40 +401,79 @@
         </StackPanel>
     </HierarchicalDataTemplate>
 
-    <DataTemplate x:Key="TableListItemTemplate">
+    <DataTemplate x:Key="KeyTestTableListItemTemplate">
         <StackPanel x:Name="ListTable" Orientation="Horizontal">
             <Control x:Name="Spinner" Visibility="Collapsed" Style="{StaticResource BusyAnimationStyle}" Margin="0 0 5 0"/>
             <Border x:Name="Checkmark" Visibility="Collapsed" Width="20" Height="20" Margin="0 0 5 0">
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">✔</TextBlock>
             </Border>
-            <TextBlock x:Name="ListTableName" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding Errors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}"
+            <TextBlock x:Name="ListTableName" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding KeyTestErrors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}"
                        VerticalAlignment="Center" />
             <TextBlock x:Name="ListTableFolder" Margin="5 5 0 5" Text="{Binding Table.Folder}" VerticalAlignment="Center" />
         </StackPanel>
         <DataTemplate.Triggers>
-            <DataTrigger Binding="{Binding Busy}" Value="True">
+            <DataTrigger Binding="{Binding KeyTestBusy}" Value="True">
                 <Setter TargetName="Spinner" Property="Visibility" Value="Visible" />
             </DataTrigger>
-            <DataTrigger Binding="{Binding Done}" Value="True">
+            <DataTrigger Binding="{Binding KeyTestDone}" Value="True">
                 <Setter TargetName="Checkmark" Property="Visibility" Value="Visible" />
             </DataTrigger>
         </DataTemplate.Triggers>
     </DataTemplate>
 
-    <DataTemplate x:Key="TableListSelectedTemplate">
+    <DataTemplate x:Key="KeyTestTableListSelectedTemplate">
         <StackPanel Orientation="Horizontal">
             <Control x:Name="Spinner" Visibility="Collapsed" Style="{StaticResource BusyAnimationStyle}" Margin="0 0 5 0"/>
             <Border x:Name="Checkmark" Visibility="Collapsed" Width="20" Height="20" Margin="0 0 5 0">
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20">✔</TextBlock>
             </Border>
-            <TextBlock x:Name="ListTable" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding Errors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}" VerticalAlignment="Center" />
+            <TextBlock x:Name="ListTable" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding KeyTestErrors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}" VerticalAlignment="Center" />
             <TextBlock Margin="5 5 0 5" Text="{Binding Table.Folder}" VerticalAlignment="Center" />
         </StackPanel>
         <DataTemplate.Triggers>
-            <DataTrigger Binding="{Binding Busy}" Value="True">
+            <DataTrigger Binding="{Binding KeyTestBusy}" Value="True">
                 <Setter TargetName="Spinner" Property="Visibility" Value="Visible" />
             </DataTrigger>
-            <DataTrigger Binding="{Binding Done}" Value="True">
+            <DataTrigger Binding="{Binding KeyTestDone}" Value="True">
+                <Setter TargetName="Checkmark" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate x:Key="AnalysisTableListItemTemplate">
+        <StackPanel x:Name="ListTable" Orientation="Horizontal">
+            <Control x:Name="Spinner" Visibility="Collapsed" Style="{StaticResource BusyAnimationStyle}" Margin="0 0 5 0"/>
+            <Border x:Name="Checkmark" Visibility="Collapsed" Width="20" Height="20" Margin="0 0 5 0">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16">✔</TextBlock>
+            </Border>
+            <TextBlock x:Name="ListTableName" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding AnalysisErrors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.ControlTextBrush}}"
+                       VerticalAlignment="Center" />
+            <TextBlock x:Name="ListTableFolder" Margin="5 5 0 5" Text="{Binding Table.Folder}" VerticalAlignment="Center" />
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding AnalysisBusy}" Value="True">
+                <Setter TargetName="Spinner" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AnalysisDone}" Value="True">
+                <Setter TargetName="Checkmark" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate x:Key="AnalysisTableListSelectedTemplate">
+        <StackPanel Orientation="Horizontal">
+            <Control x:Name="Spinner" Visibility="Collapsed" Style="{StaticResource BusyAnimationStyle}" Margin="0 0 5 0"/>
+            <Border x:Name="Checkmark" Visibility="Collapsed" Width="20" Height="20" Margin="0 0 5 0">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20">✔</TextBlock>
+            </Border>
+            <TextBlock x:Name="ListTable" Text="{Binding Table.Name}" Margin="0 5 0 5" FontWeight="Bold" Foreground="{Binding AnalysisErrors, Converter={StaticResource HasErrorsColorConverter}, ConverterParameter={x:Static SystemColors.HighlightTextBrush}}" VerticalAlignment="Center" />
+            <TextBlock Margin="5 5 0 5" Text="{Binding Table.Folder}" VerticalAlignment="Center" />
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding AnalysisBusy}" Value="True">
+                <Setter TargetName="Spinner" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AnalysisDone}" Value="True">
                 <Setter TargetName="Checkmark" Property="Visibility" Value="Visible" />
             </DataTrigger>
         </DataTemplate.Triggers>

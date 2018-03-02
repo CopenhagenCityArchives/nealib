@@ -35,11 +35,20 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="ListBoxItem" x:Key="TableListContainerStyle">
-        <Setter Property="ContentTemplate" Value="{DynamicResource TableListItemTemplate}" />
+    <Style TargetType="ListBoxItem" x:Key="AnalysisTableListContainerStyle">
+        <Setter Property="ContentTemplate" Value="{DynamicResource AnalysisTableListItemTemplate}" />
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="true">
-                <Setter Property="ContentTemplate" Value="{DynamicResource TableListSelectedTemplate}" />
+                <Setter Property="ContentTemplate" Value="{DynamicResource AnalysisTableListSelectedTemplate}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="ListBoxItem" x:Key="KeyTestTableListContainerStyle">
+        <Setter Property="ContentTemplate" Value="{DynamicResource KeyTestTableListItemTemplate}" />
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="true">
+                <Setter Property="ContentTemplate" Value="{DynamicResource KeyTestTableListSelectedTemplate}" />
             </Trigger>
         </Style.Triggers>
     </Style>

@@ -17,7 +17,7 @@ namespace HardHorn.ViewModels
 
         public IEnumerable<Test> Tests
         {
-            get { return Analysis.Tests; }
+            get { return Analysis == null ? Enumerable.Empty<Test>() : Analysis.Tests; }
         }
 
         public Test SelectedTest
@@ -25,7 +25,9 @@ namespace HardHorn.ViewModels
             get; set;
         }
 
-        public int ErrorCount { get { return Analysis.ErrorCount; } }
+        public int? ErrorCount
+        { get { return Analysis == null ? null : new int?(Analysis.ErrorCount); }
+        }
 
         public ParameterizedDataType ParameterizedDataType
         {
@@ -42,7 +44,15 @@ namespace HardHorn.ViewModels
         public Archiving.Parameter Parameter
         {
             get { return ParameterizedDataType.Parameter; }
-            set { ParameterizedDataType.Parameter = value; NotifyOfPropertyChange("Parameter"); NotifyOfPropertyChange("ParameterString"); if (Parameter != null) foreach (var paramValue in Parameter) paramValue.PropertyChanged += (s, a) => NotifyOfPropertyChange("ParameterString"); }
+            set
+            {
+                ParameterizedDataType.Parameter = value;
+                NotifyOfPropertyChange("Parameter");
+                NotifyOfPropertyChange("ParameterizedDataType");
+                if (Parameter != null)
+                    foreach (var paramValue in Parameter)
+                        paramValue.PropertyChanged += OnParameterValueChanged;
+            }
         }
 
         public string ParameterString
@@ -65,7 +75,13 @@ namespace HardHorn.ViewModels
             Column = column;
             Analysis = analysis;
             if (Parameter != null)
-            foreach (var paramValue in Parameter) paramValue.PropertyChanged += (s, a) => NotifyOfPropertyChange("ParameterString");
+                foreach (var paramValue in Parameter)
+                        paramValue.PropertyChanged += OnParameterValueChanged;
+        }
+
+        public void OnParameterValueChanged(object sender, System.ComponentModel.PropertyChangedEventArgs args)
+        {
+            NotifyOfPropertyChange("ParameterizedDataType");
         }
     }
 }

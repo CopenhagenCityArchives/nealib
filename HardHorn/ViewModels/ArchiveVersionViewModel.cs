@@ -417,8 +417,8 @@ namespace HardHorn.ViewModels
             // Reset table view model states
             foreach (var tableViewModel in TableViewModels)
             {
-                tableViewModel.Busy = false;
-                tableViewModel.Done = false;
+                tableViewModel.AnalysisBusy = false;
+                tableViewModel.AnalysisDone = false;
             }
 
             // Clear test error view models from list and index
@@ -439,7 +439,7 @@ namespace HardHorn.ViewModels
             }
             foreach (var tableViewModel in TableViewModels)
             {
-                tableViewModel.Errors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
+                tableViewModel.AnalysisErrors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
             }
 
             // Progress handlers
@@ -448,7 +448,7 @@ namespace HardHorn.ViewModels
                 // Update table view model error flag
                 var tableViewModel = TableViewModelIndex[table.Name];
                 if (Analyzer.TestHierachy[table].Values.Any(rep => rep.ErrorCount > 0))
-                    tableViewModel.Errors = true;
+                    tableViewModel.AnalysisErrors = true;
 
                 // Update error information
                 if (ColumnsView != null)
@@ -555,7 +555,7 @@ namespace HardHorn.ViewModels
                     bool readNext = false;
                     while (Analyzer.MoveNextTable())
                     {
-                        TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = true;
+                        TableViewModelIndex[Analyzer.CurrentTable.Name].AnalysisBusy = true;
 
                         // Print information of chosen tests for this table
                         logger.Log(string.Format("Tester {0}.", Analyzer.CurrentTable.ToString()), LogLevel.SECTION);
@@ -636,8 +636,8 @@ namespace HardHorn.ViewModels
 
                         showReportProgress.Report(Analyzer.CurrentTable);
 
-                        TableViewModelIndex[Analyzer.CurrentTable.Name].Busy = false;
-                        TableViewModelIndex[Analyzer.CurrentTable.Name].Done = true;
+                        TableViewModelIndex[Analyzer.CurrentTable.Name].AnalysisBusy = false;
+                        TableViewModelIndex[Analyzer.CurrentTable.Name].AnalysisDone = true;
                     }
                 });
             }
@@ -657,7 +657,7 @@ namespace HardHorn.ViewModels
                 TestRunning = false;
                 foreach (var tableViewModel in TableViewModels)
                 {
-                    tableViewModel.Busy = false;
+                    tableViewModel.AnalysisBusy = false;
                 }
             }
         }
@@ -687,12 +687,28 @@ namespace HardHorn.ViewModels
             var totalDoneRowsProgress = new Progress<int>(value => { KeyTestTotalDoneRows = value; }) as IProgress<int>;
             var tableRowCountProgress = new Progress<int>(value => { KeyTestTableRowCount = value; }) as IProgress<int>;
             var tableDoneRowsProgress = new Progress<int>(value => { KeyTestTableDoneRows = value; }) as IProgress<int>;
-
-            var addResultProgress = new Progress<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>(tuple => ForeignKeyTestResults.Add(tuple)) as IProgress<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>;
+            var addResultProgress = new Progress<Tuple<Table, Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>>(tuple =>
+            {
+                TableViewModelIndex[tuple.Item1.Name].KeyTestErrors |= tuple.Item2.Item2 > 0; // error count greater than 0
+                ForeignKeyTestResults.Add(tuple.Item2);
+            }) as IProgress<Tuple<Table, Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>>;
+            var tableBusyProgress = new Progress<Table>(table => TableViewModelIndex[table.Name].KeyTestBusy = true) as IProgress<Table>;
+            var tableDoneProgress = new Progress<Table>(table =>
+            {
+                TableViewModelIndex[table.Name].KeyTestDone = true;
+                TableViewModelIndex[table.Name].KeyTestBusy = false;
+            }) as IProgress<Table>;
 
             totalRowCountProgress.Report(keyTest.TotalRowCount);
 
             _keyTestCts = new CancellationTokenSource();
+
+            foreach (var table in tables)
+            {
+                TableViewModelIndex[table.Name].KeyTestErrors = false;
+                TableViewModelIndex[table.Name].KeyTestDone = false;
+                TableViewModelIndex[table.Name].KeyTestBusy = false;
+            }
 
             try
             {
@@ -701,6 +717,8 @@ namespace HardHorn.ViewModels
 
                     while (keyTest.MoveNextTable())
                     {
+                        tableBusyProgress.Report(keyTest.CurrentTable);
+
                         tableRowCountProgress.Report(keyTest.TableRowCount);
                         keyTest.InitializeReferencedValueLoading();
                         while (keyTest.MoveNextForeignKey())
@@ -731,8 +749,10 @@ namespace HardHorn.ViewModels
 
                         foreach (var foreignKey in keyTest.CurrentTable.ForeignKeys)
                         {
-                            addResultProgress.Report(new Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>(foreignKey, keyTest.GetErrorCount(foreignKey), keyTest.GetErrorTypeCount(foreignKey), keyTest.GetOrderedErrorCounts(foreignKey)));
+                            addResultProgress.Report(new Tuple<Table, Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>(keyTest.CurrentTable, new Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>(foreignKey, keyTest.GetErrorCount(foreignKey), keyTest.GetErrorTypeCount(foreignKey), keyTest.GetOrderedErrorCounts(foreignKey))));
                         }
+
+                        tableDoneProgress.Report(keyTest.CurrentTable);
                     }
                 });
             }
@@ -742,6 +762,10 @@ namespace HardHorn.ViewModels
             }
             finally
             {
+                foreach (var tableViewModel in TableViewModels)
+                {
+                    tableViewModel.KeyTestBusy = false;
+                }
                 KeyTestRunning = false;
                 keyTest.Dispose();
             }
