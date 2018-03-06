@@ -136,13 +136,30 @@ namespace HardHorn.Analysis
                     break;
                 case DataType.TIME_WITH_TIME_ZONE:
                 case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                    if (FirstRowAnalyzed)
                     {
+                        // Remove time zone info
+                        var components = data.Split('+');
+                        if (components.Length == 1)
+                        {
+                            components = data.Split('Z');
+                        }
 
-                    }
-                    else
-                    {
-
+                        // isolate fractional part
+                        components = components[0].Split('.');
+                        if (components.Length == 1)
+                        {
+                            components = new string[] { components[0], "" };
+                        }
+                        if (FirstRowAnalyzed)
+                        {
+                            MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
+                            MaxParam[0].Value = Math.Max(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
+                        }
+                        else
+                        {
+                            MinParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
+                            MaxParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
+                        }
                     }
                     break;
             }
