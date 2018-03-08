@@ -9,7 +9,7 @@ namespace HardHorn.Archiving
 {
     public class ParameterizedDataType : IComparable
     {
-        static Regex regex = new Regex(@"^(?<datatype>[a-zA-Z]+( *[a-zA-Z]+)*) *(\((?<params>\d+(, *\d+)*)\))?$");
+        static Regex regex = new Regex(@"^(?<datatype>[a-zA-Z]+( *[a-zA-Z]+)*) *(\((?<params>\d+(, *\d+)*)\))?$", RegexOptions.Compiled);
 
         DataType _dataType;
         public DataType DataType
@@ -68,15 +68,15 @@ namespace HardHorn.Archiving
                 }
 
                 var parameterGroup = match.Groups["params"];
-                int[] parameters = null;
+                uint[] parameters = null;
                 if (parameterGroup.Success)
                 {
-                    parameters = new List<string>(parameterGroup.Value.Split(',')).Select(n => int.Parse(n)).ToArray<int>();
+                    parameters = new List<string>(parameterGroup.Value.Split(',')).Select(n => uint.Parse(n)).ToArray<uint>();
                 }
 
                 try
                 {
-                    Parameter parameter = new Parameter(dataType, parameters);
+                    Parameter parameter = Parameter.Parse(dataType, parameters);
                     return new ParameterizedDataType(dataType, parameter, element.Value);
                 }
                 catch (InvalidOperationException)
@@ -123,9 +123,9 @@ namespace HardHorn.Archiving
 
                 repr += DataTypeUtility.ToString(DataType);
 
-                if (Parameter != null && Parameter.Count > 0)
+                if (Parameter != null)
                 {
-                    repr += " " + Parameter.ToString(DataType);
+                    repr += " " + Parameter.ToString();
                 }
 
                 return repr;
@@ -147,7 +147,7 @@ namespace HardHorn.Archiving
 
             repr += DataTypeUtility.ToString(DataType);
 
-            if (Parameter != null && Parameter.Count > 0)
+            if (Parameter != null)
             {
                 repr += " " + Parameter.ToString();
             }

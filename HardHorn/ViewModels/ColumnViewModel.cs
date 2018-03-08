@@ -41,47 +41,16 @@ namespace HardHorn.ViewModels
             set { ParameterizedDataType.DataType = value;  NotifyOfPropertyChange("DataType"); }
         }
 
-        public Archiving.Parameter Parameter
+        public ParameterViewModel ParameterViewModel
         {
-            get { return ParameterizedDataType.Parameter; }
-            set
-            {
-                ParameterizedDataType.Parameter = value;
-                NotifyOfPropertyChange("Parameter");
-                NotifyOfPropertyChange("ParameterizedDataType");
-                if (Parameter != null)
-                    foreach (var paramValue in Parameter)
-                        paramValue.PropertyChanged += OnParameterValueChanged;
-            }
-        }
-
-        public string ParameterString
-        {
-            get
-            {
-                if (Parameter != null && Parameter.Count > 0)
-                {
-                    return "(" + string.Join(", ", Parameter.Select(pItem => pItem.Value.ToString())) + ")";
-                }
-                else
-                {
-                    return string.Empty;
-                }
-            }
+            get; set;
         }
 
         public ColumnViewModel(Column column, ColumnAnalysis analysis = null)
         {
             Column = column;
             Analysis = analysis;
-            if (Parameter != null)
-                foreach (var paramValue in Parameter)
-                        paramValue.PropertyChanged += OnParameterValueChanged;
-        }
-
-        public void OnParameterValueChanged(object sender, System.ComponentModel.PropertyChangedEventArgs args)
-        {
-            NotifyOfPropertyChange("ParameterizedDataType");
+            ParameterViewModel = new ParameterViewModel(column.ParameterizedDataType.Parameter);
         }
     }
 }

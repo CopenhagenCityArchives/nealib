@@ -57,8 +57,7 @@
                         </MenuItem>
                         <Separator />
                         <CollectionContainer Collection="{Binding Source={StaticResource RecentLocationsMenuItems}}"></CollectionContainer>
-                        <Separator />
-                        <MenuItem Header="Afslut" cal:Message.Attach="Exit()"></MenuItem>
+                        <MenuItem Header="Afslut" cal:Message.Attach="Exit()" TextBlock.FontWeight="Bold"></MenuItem>
                     </CompositeCollection>
                 </MenuItem.ItemsSource>
             </MenuItem>

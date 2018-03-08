@@ -203,7 +203,7 @@ namespace HardHorn.Analysis
                     case DataType.CHARACTER:
                     case DataType.NATIONAL_CHARACTER_VARYING:
                     case DataType.CHARACTER_VARYING:
-                        overflow = post.Data.Length > column.ParameterizedDataType.Parameter[0].Value;
+                        overflow = post.Data.Length > column.ParameterizedDataType.Parameter.Length;
                         break;
                     case DataType.DECIMAL:
                         var components = post.Data.Split('.');
@@ -214,37 +214,37 @@ namespace HardHorn.Analysis
                         }
                         // No separator
                         if (components.Length == 1)
-                            overflow = components[0].Length > column.ParameterizedDataType.Parameter[0].Value;
+                            overflow = components[0].Length > column.ParameterizedDataType.Parameter.Precision;
                         // With separator
                         if (components.Length == 2)
-                            overflow = components[0].Length + components[1].Length > column.ParameterizedDataType.Parameter[0].Value || components[1].Length > column.ParameterizedDataType.Parameter[1].Value;
+                            overflow = components[0].Length + components[1].Length > column.ParameterizedDataType.Parameter.Precision || components[1].Length > column.ParameterizedDataType.Parameter.Scale;
                         break;
                     case DataType.TIME:
                         match = time_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter[0].Value;
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter.Precision;
                         }
                         break;
                     case DataType.TIME_WITH_TIME_ZONE:
                         match = time_timezone_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter[0].Value;
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[4].Length > column.ParameterizedDataType.Parameter.Precision;
                         }
                         break;
                     case DataType.TIMESTAMP:
                         match = timestamp_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter[0].Value;
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter.Precision;
                         }
                         break;
                     case DataType.TIMESTAMP_WITH_TIME_ZONE:
                         match = timestamp_timezone_regex.Match(post.Data);
                         if (match.Success)
                         {
-                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter[0].Value;
+                            overflow = column.ParameterizedDataType.Parameter != null && match.Groups.Count == 8 && match.Groups[7].Length > column.ParameterizedDataType.Parameter.Precision;
                         }
                         break;
                 }
@@ -264,7 +264,7 @@ namespace HardHorn.Analysis
                 {
                     case DataType.NATIONAL_CHARACTER:
                     case DataType.CHARACTER:
-                        underflow = post.Data.Length < column.ParameterizedDataType.Parameter[0].Value;
+                        underflow = post.Data.Length < column.ParameterizedDataType.Parameter.Length;
                         break;
                 }
                 return underflow ? Result.ERROR : Result.OKAY;

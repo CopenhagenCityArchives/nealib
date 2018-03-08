@@ -22,8 +22,8 @@ namespace HardHorn.Analysis
             FirstRowAnalyzed = false;
             Column = column;
             ErrorCount = 0;
-            MinParam = new Parameter(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Count : 1]);
-            MaxParam = new Parameter(new int[column.ParameterizedDataType.Parameter != null ? column.ParameterizedDataType.Parameter.Count : 1]);
+            MinParam = null;
+            MaxParam = null;
             Tests = new List<Test>();
         }
 
@@ -63,28 +63,17 @@ namespace HardHorn.Analysis
             {
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.CHARACTER:
-                    if (FirstRowAnalyzed)
-                    {
-                        MinParam[0].Value = Math.Min(MinParam[0].Value, data.Length);
-                        MaxParam[0].Value = Math.Max(MaxParam[0].Value, data.Length);
-                    }
-                    else
-                    {
-                        MinParam[0].Value = data.Length;
-                        MaxParam[0].Value = data.Length;
-                    }
-                    break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
                 case DataType.CHARACTER_VARYING:
                     if (FirstRowAnalyzed)
                     {
-                        MinParam[0].Value = Math.Min(MinParam[0].Value, data.Length);
-                        MaxParam[0].Value = Math.Max(MaxParam[0].Value, data.Length);
+                        MinParam.Length = (uint)Math.Min(MinParam.Length, data.Length);
+                        MaxParam.Length = (uint)Math.Max(MaxParam.Length, data.Length);
                     }
                     else
                     {
-                        MinParam[0].Value = data.Length;
-                        MaxParam[0].Value = data.Length;
+                        MinParam = Parameter.WithLength((uint)data.Length);
+                        MaxParam = Parameter.WithLength((uint)data.Length);
                     }
                     break;
                 case DataType.DECIMAL:
@@ -100,17 +89,15 @@ namespace HardHorn.Analysis
                         }
                         if (FirstRowAnalyzed)
                         {
-                            MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                            MaxParam[0].Value = Math.Max(MaxParam[0].Value, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
-                            MinParam[1].Value = Math.Min(MinParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
-                            MaxParam[1].Value = Math.Max(MaxParam[1].Value, components.Length == 1 ? 0 : components[1].Length);
+                            MinParam.Precision = (uint)Math.Min(MinParam.Precision, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                            MinParam.Scale = (uint)Math.Min(MinParam.Scale, components.Length == 1 ? 0 : components[1].Length);
+                            MaxParam.Precision = (uint)Math.Max(MaxParam.Precision, components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length);
+                            MaxParam.Scale = (uint)Math.Max(MaxParam.Scale, components.Length == 1 ? 0 : components[1].Length);
                         }
                         else
                         {
-                            MinParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                            MaxParam[0].Value = components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length;
-                            MinParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
-                            MaxParam[1].Value = components.Length == 1 ? 0 : components[1].Length;
+                            MinParam = Parameter.WithPrecisionAndScale((uint)(components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length), (uint)(components.Length == 1 ? 0 : components[1].Length));
+                            MaxParam = Parameter.WithPrecisionAndScale((uint)(components.Length == 1 ? components[0].Length : components[0].Length + components[1].Length), (uint)(components.Length == 1 ? 0 : components[1].Length));
                         }
                     }
                     break;
@@ -124,13 +111,13 @@ namespace HardHorn.Analysis
                         }
                         if (FirstRowAnalyzed)
                         {
-                            MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
-                            MaxParam[0].Value = Math.Max(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
+                            MinParam.Precision = (uint)Math.Min(MinParam.Precision, components.Length == 1 ? 0 : components[1].Length);
+                            MaxParam.Precision = (uint)Math.Max(MinParam.Precision, components.Length == 1 ? 0 : components[1].Length);
                         }
                         else
                         {
-                            MinParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
-                            MaxParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
+                            MinParam = Parameter.WithPrecision((uint)(components.Length == 1 ? 0 : components[1].Length));
+                            MaxParam = Parameter.WithPrecision((uint)(components.Length == 1 ? 0 : components[1].Length));
                         }
                     }
                     break;
@@ -152,13 +139,13 @@ namespace HardHorn.Analysis
                         }
                         if (FirstRowAnalyzed)
                         {
-                            MinParam[0].Value = Math.Min(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
-                            MaxParam[0].Value = Math.Max(MinParam[0].Value, components.Length == 1 ? 0 : components[1].Length);
+                            MinParam.Precision = (uint)Math.Min(MinParam.Precision, components.Length == 1 ? 0 : components[1].Length);
+                            MaxParam.Precision = (uint)Math.Max(MinParam.Precision, components.Length == 1 ? 0 : components[1].Length);
                         }
                         else
                         {
-                            MinParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
-                            MaxParam[0].Value = components.Length == 1 ? 0 : components[1].Length;
+                            MinParam = Parameter.WithPrecision((uint)(components.Length == 1 ? 0 : components[1].Length));
+                            MaxParam = Parameter.WithPrecision((uint)(components.Length == 1 ? 0 : components[1].Length));
                         }
                     }
                     break;
@@ -170,80 +157,62 @@ namespace HardHorn.Analysis
             switch (Column.ParameterizedDataType.DataType)
             {
                 case DataType.CHARACTER:
-                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
+                case DataType.CHARACTER_VARYING:
+                    if (MinParam.Length == MaxParam.Length && Column.ParameterizedDataType.Parameter.Length != MaxParam.Length)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, Parameter.WithLength(MaxParam.Length));
                     }
-                    else if (MinParam[0].Value != MaxParam[0].Value)
+                    else if (MinParam.Length != MaxParam.Length)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(MaxParam.Length));
                     }
                     break;
                 case DataType.NATIONAL_CHARACTER:
-                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
-                    {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
-                    }
-                    else if (MinParam[0].Value != MaxParam[0].Value)
-                    {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
-                    }
-                    break;
-                case DataType.CHARACTER_VARYING:
-                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
-                    {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER, new Parameter(MaxParam[0].Value));
-                    }
-                    else if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
-                    {
-                        SuggestedType = new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
-                    }
-                    break;
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    if (MinParam[0].Value == MaxParam[0].Value && Column.ParameterizedDataType.Parameter[0].Value != MaxParam[0].Value)
+                    if (MinParam.Length == MaxParam.Length && Column.ParameterizedDataType.Parameter.Length != MaxParam.Length)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER, Parameter.WithLength(MaxParam.Length));
                     }
-                    else if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    else if (MinParam.Length != MaxParam.Length)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, Parameter.WithLength(MaxParam.Length));
                     }
                     break;
                 case DataType.DECIMAL:
-                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value || MaxParam[1].Value != Column.ParameterizedDataType.Parameter[1].Value)
+                    if (MaxParam.Precision != Column.ParameterizedDataType.Parameter.Precision || MaxParam.Scale != Column.ParameterizedDataType.Parameter.Scale)
                     {
-                        if (MaxParam[1].Value == 0)
+                        if (MaxParam.Scale == 0)
                         {
                             SuggestedType = new ParameterizedDataType(DataType.INTEGER, null);
                         }
                         else
                         {
-                            SuggestedType = new ParameterizedDataType(DataType.DECIMAL, new Parameter(MaxParam[0].Value, MaxParam[1].Value));
+                            SuggestedType = new ParameterizedDataType(DataType.DECIMAL, Parameter.WithPrecisionAndScale(MaxParam.Precision, MaxParam.Scale));
                         }
                     }
                     break;
                 case DataType.TIME:
-                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    if (MaxParam.Precision != Column.ParameterizedDataType.Parameter.Precision)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.TIME, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.TIME, Parameter.WithPrecision(MaxParam.Precision));
                     }
                     break;
                 case DataType.TIMESTAMP:
-                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    if (MaxParam.Precision != Column.ParameterizedDataType.Parameter.Precision)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.TIMESTAMP, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.TIMESTAMP, Parameter.WithPrecision(MaxParam.Precision));
                     }
                     break;
                 case DataType.TIME_WITH_TIME_ZONE:
-                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    if (MaxParam.Precision != Column.ParameterizedDataType.Parameter.Precision)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, Parameter.WithPrecision(MaxParam.Precision));
                     }
                     break;
                 case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                    if (MaxParam[0].Value != Column.ParameterizedDataType.Parameter[0].Value)
+                    if (MaxParam.Precision != Column.ParameterizedDataType.Parameter.Precision)
                     {
-                        SuggestedType = new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, new Parameter(MaxParam[0].Value));
+                        SuggestedType = new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, Parameter.WithPrecision(MaxParam.Precision));
                     }
                     break;
             }

@@ -20,13 +20,13 @@ namespace LibHardHornTest
                     new Table("TABLE1", "table1", 10, "desc", new List<Column>(new Column[] {
                         new Column(null, "ID", new ParameterizedDataType(DataType.INTEGER, null), "INTEGER", false, "The ID.", "c1", 1, null, null),
                         new Column(null, "DATE", new ParameterizedDataType(DataType.DATE, null), "DATE", false, "", "c2", 2, null, null),
-                        new Column(null, "NAME", new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(10)), "VARCHAR(10)", false, "", "c3", 3, null, null),
-                        new Column(null, "UUID", new ParameterizedDataType(DataType.CHARACTER, new Parameter(10)), "CHAR(10)", false, "", "c4", 4, null, null)
+                        new Column(null, "NAME", new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(10)), "VARCHAR(10)", false, "", "c3", 3, null, null),
+                        new Column(null, "UUID", new ParameterizedDataType(DataType.CHARACTER,  Parameter.WithLength(10)), "CHAR(10)", false, "", "c4", 4, null, null)
                     }), new PrimaryKey("PK1", new List<string>(new string[] {"ID" })), new List<ForeignKey>()),
                     new Table("TABLE2", "table2", 10, "desc", new List<Column>(new Column[] {
                         new Column(null, "FOREIGN_ID", new ParameterizedDataType(DataType.INTEGER, null), "INTEGER", false, "", "c1", 1, null, null),
-                        new Column(null, "DATA", new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(10)), "VARCHAR (10)", false, "", "c2", 2, null, null),
-                        new Column(null, "TIMECOL", new ParameterizedDataType(DataType.TIMESTAMP, new Parameter(6)), "TIMESTAMP (6)", false, "", "c3", 3, null, null)
+                        new Column(null, "DATA", new ParameterizedDataType(DataType.CHARACTER_VARYING,  Parameter.WithLength(10)), "VARCHAR (10)", false, "", "c2", 2, null, null),
+                        new Column(null, "TIMECOL", new ParameterizedDataType(DataType.TIMESTAMP, Parameter.WithPrecision(6)), "TIMESTAMP (6)", false, "", "c3", 3, null, null)
                     }), new PrimaryKey("PK2", new List<string>(new string[] {"ID" })), new List<ForeignKey>())
                 });
 
@@ -76,7 +76,7 @@ namespace LibHardHornTest
         public void TestAnalyzeTimeFormatTest()
         {
             var test = Test.TimeFormatTest();
-            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIME, new Parameter(10)), "TIME (10)", false, "desc", "c1", 1, null, null);
+            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIME, Parameter.WithPrecision(10)), "TIME (10)", false, "desc", "c1", 1, null, null);
 
             AssertOkay(column, test, "14:15:20");
             AssertOkay(column, test, "00:00:00"); // minimum
@@ -100,7 +100,7 @@ namespace LibHardHornTest
         public void TestAnalyzeTimeWithTimezoneFormatTest()
         {
             var test = Test.TimeWithTimeZoneTest();
-            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, new Parameter(10)), "TIME WITH TIME ZONE (10)", false, "desc", "c1", 1, null, null);
+            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, Parameter.WithPrecision(10)), "TIME WITH TIME ZONE (10)", false, "desc", "c1", 1, null, null);
 
             AssertOkay(column, test, "14:15:20Z");
             AssertOkay(column, test, "14:15:20+12:00");
@@ -140,7 +140,7 @@ namespace LibHardHornTest
         public void TestAnalyzeTimestampFormatTest()
         {
             var test = Test.TimestampFormatTest();
-            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIMESTAMP, new Parameter(10)), "TIMESTAMP (10)", false, "desc", "c1", 1, null, null);
+            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIMESTAMP, Parameter.WithPrecision(10)), "TIMESTAMP (10)", false, "desc", "c1", 1, null, null);
 
             AssertOkay(column, test, "2000-01-01T14:15:20");
             AssertOkay(column, test, "1899-12-31T10:30:00");
@@ -213,7 +213,7 @@ namespace LibHardHornTest
         public void TestAnalyzeTimestampWithTimezoneFormatTest()
         {
             var test = Test.TimestampWithTimeZoneFormatTest();
-            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, new Parameter(10)), "TIMESTAMP WITH TIME ZONE (10)", false, "desc", "c1", 1, null, null);
+            var column = new Column(null, "name", new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, Parameter.WithPrecision(10)), "TIMESTAMP WITH TIME ZONE (10)", false, "desc", "c1", 1, null, null);
 
             AssertOkay(column, test, "2000-08-10T14:15:20Z");
             AssertOkay(column, test, "2000-08-10T14:15:20+12:00");
@@ -307,7 +307,7 @@ namespace LibHardHornTest
 
                 return Test.Result.ERROR;
             });
-            var column = new Column(null, "name", new ParameterizedDataType(DataType.CHARACTER_VARYING, new Parameter(100)), "VARCHAR (100)", false, "desc", "c1", 1, null, null);
+            var column = new Column(null, "name", new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(100)), "VARCHAR (100)", false, "desc", "c1", 1, null, null);
             AssertOkay(column, test, "a1");
             AssertError(column, test, "12");
         }

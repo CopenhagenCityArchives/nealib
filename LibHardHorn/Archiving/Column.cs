@@ -79,22 +79,10 @@ namespace HardHorn.Archiving
             }
             else if (ParameterizedDataType.Parameter == null && oldColumn.ParameterizedDataType.Parameter == null)
             { }
-            else if (ParameterizedDataType.Parameter.Count != oldColumn.ParameterizedDataType.Parameter.Count)
+            else if (ParameterizedDataType.Parameter.CompareTo(oldColumn.ParameterizedDataType.Parameter) != 0)
             {
                 comparison.Modified = true;
                 comparison.DataTypeModified = true;
-            }
-            else
-            {
-                for (int i = 0; i < ParameterizedDataType.Parameter.Count; i++)
-                {
-                    if (ParameterizedDataType.Parameter[i].Value != oldColumn.ParameterizedDataType.Parameter[i].Value)
-                    {
-                        comparison.Modified = true;
-                        comparison.DataTypeModified = true;
-                        break;
-                    }
-                }
             }
 
             if (Nullable != oldColumn.Nullable)

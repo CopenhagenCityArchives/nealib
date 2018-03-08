@@ -25,14 +25,19 @@ namespace HardHorn.Utilities
                 return Enumerable.Empty<MenuItem>();
             }
 
-            var menuItems = new List<MenuItem>();
+            var menuItems = new List<Control>();
             int i = 1;
             foreach (var location in locations)
             {
                 var menuItem = new MenuItem();
-                menuItem.Header = i++ + ". " + location;
+                menuItem.Header = i++ + ": " + location;
                 Message.SetAttach(menuItem, "LoadLocation('" + location + "')");
                 menuItems.Add(menuItem);
+            }
+
+            if (menuItems.Count > 0)
+            {
+                menuItems.Add(new Separator());
             }
 
             return menuItems;
@@ -49,12 +54,12 @@ namespace HardHorn.Utilities
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var paramDataType = value as ParameterizedDataType;
-            if (paramDataType == null)
+            if (paramDataType == null || paramDataType.Parameter == null)
             {
                 return null;
             }
 
-            return paramDataType.Parameter.ToString(paramDataType.DataType);
+            return paramDataType.Parameter.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -69,7 +74,7 @@ namespace HardHorn.Utilities
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var param = value as Archiving.Parameter;
-            return param == null || param.Count == 0 ? "" : param.ToString();
+            return param == null ? "" : param.ToString();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

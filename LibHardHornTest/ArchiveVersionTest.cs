@@ -36,7 +36,7 @@ namespace LibHardHornTest
             var testTables = new List<Table>();
             var table1 = new Table("TABLE1", "table1", 10, "A table.", new List<Column>(), new PrimaryKey("PK1", new List<string>(new string[] { "COLUMN1" })), new List<ForeignKey>());
             table1.Columns.Add(new Column(table1, "COLUMN1", new ParameterizedDataType(DataType.INTEGER, null), "INT", false, "A column.", "c1", 1, null, null));
-            table1.Columns.Add(new Column(table1, "COLUMN2", new ParameterizedDataType(DataType.DECIMAL, new Parameter(5, 10)), "DEC(5,10)", true, "A column.", "c2", 2, null, null));
+            table1.Columns.Add(new Column(table1, "COLUMN2", new ParameterizedDataType(DataType.DECIMAL, Parameter.WithPrecisionAndScale(5, 10)), "DEC(5,10)", true, "A column.", "c2", 2, null, null));
             var table2 = new Table("TABLE2", "table2", 5, "Another table.", new List<Column>(), new PrimaryKey("PK2", new List<string>(new string[] { "COLUMN1" })), new List<ForeignKey>());
             table2.Columns.Add(new Column(table2, "COLUMN1", new ParameterizedDataType(DataType.INTEGER, null), "INT", false, "A column", "c1", 1, null, null));
             testTables.Add(table1);
@@ -164,38 +164,44 @@ namespace LibHardHornTest
         [TestMethod]
         public void TestParameterCompareTo()
         {
-            Assert.AreEqual(-1, new Parameter(1).CompareTo(new Parameter(2)));
-            Assert.AreEqual(1, new Parameter(2).CompareTo(new Parameter(1)));
+            Assert.AreEqual(-1, Parameter.WithPrecision(1).CompareTo(Parameter.WithPrecision(2)));
+            Assert.AreEqual(1, Parameter.WithPrecision(2).CompareTo(Parameter.WithPrecision(1)));
+
+            Assert.AreEqual(-1, Parameter.WithLength(1).CompareTo(Parameter.WithLength(2)));
+            Assert.AreEqual(1, Parameter.WithLength(2).CompareTo(Parameter.WithLength(1)));
+
 
             // Compare same Parameter
-            for (int i = 0; i < 10; i++)
+            for (uint i = 0; i < 10; i++)
             {
-                var param1 = new Parameter(i);
-                var param2 = new Parameter(i);
-                Assert.AreEqual(0, param1.CompareTo(param1));
-                Assert.AreEqual(0, param2.CompareTo(param1));
-                Assert.AreEqual(0, param1.CompareTo(param2));
+                var length1 = Parameter.WithLength(i);
+                var length2 = Parameter.WithLength(i);
+                Assert.AreEqual(0, length1.CompareTo(length1));
+                Assert.AreEqual(0, length2.CompareTo(length1));
+                Assert.AreEqual(0, length1.CompareTo(length2));
+                Assert.AreEqual(0, length2.CompareTo(length2));
+
+                var prec1 = Parameter.WithPrecision(i);
+                var prec2 = Parameter.WithPrecision(i);
+                Assert.AreEqual(0, prec1.CompareTo(prec1));
+                Assert.AreEqual(0, prec2.CompareTo(prec1));
+                Assert.AreEqual(0, prec1.CompareTo(prec2));
+                Assert.AreEqual(0, prec2.CompareTo(prec2));
             }
 
-            for (int i = 0; i < 10; i++)
+            for (uint i = 0; i < 10; i++)
             {
-                for (int j = 0; j < 10; j++)
+                for (uint j = 0; j < 10; j++)
                 {
-                    // single parameter
-                    var parami = new Parameter(i);
-                    var paramj = new Parameter(j);
-                    Assert.AreEqual(i.CompareTo(j), parami.CompareTo(paramj));
-                    Assert.AreEqual(j.CompareTo(i), paramj.CompareTo(parami));
-
-                    // same first parameter item
-                    parami = new Parameter(10, i);
-                    paramj = new Parameter(10, j);
+                    // same precision, possible different scale
+                    var parami = Parameter.WithPrecisionAndScale(10, i);
+                    var paramj = Parameter.WithPrecisionAndScale(10, j);
                     Assert.AreEqual(i.CompareTo(j), parami.CompareTo(paramj));
                     Assert.AreEqual(j.CompareTo(i), paramj.CompareTo(parami));
 
                     // compare with different first parameter items
-                    var param1 = new Parameter(1, i);
-                    var param2 = new Parameter(2, j);
+                    var param1 = Parameter.WithPrecisionAndScale(1, i);
+                    var param2 = Parameter.WithPrecisionAndScale(2, j);
                     Assert.AreEqual(-1, param1.CompareTo(param2));
                     Assert.AreEqual(1, param2.CompareTo(param1));
                 }

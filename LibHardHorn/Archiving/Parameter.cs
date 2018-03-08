@@ -10,185 +10,233 @@ using System.Threading.Tasks;
 
 namespace HardHorn.Archiving
 {
-    /// <summary>
-    /// A parameter list.
-    /// </summary>
-    public class Parameter : ObservableCollection<ParameterItem>, IComparable
+    public class Parameter : IComparable
     {
-        /// <summary>
-        /// Get the string representation.
-        /// </summary>
-        /// <returns>The string representation of the parameter list.</returns>
-        public override string ToString()
+        uint? _scale = null;
+        public bool HasScale { get { return _scale.HasValue; } }
+        public uint Scale
         {
-            if (Count > 0)
+            get { return _scale.Value; }
+            set
             {
-                return "(" + string.Join(", ", this.Select(p => p.Value)) + ")";
-            }
-            else
-            {
-                return "";
-            }
-        }
-
-        public string ToString(DataType dataType)
-        {
-            if (Count == 0)
-            {
-                return string.Empty;
-            }
-
-            var repr = string.Empty;
-            for (int i = 0; i < Count; i++)
-            {
-                if (i == 0 && (dataType == DataType.TIMESTAMP || dataType == DataType.TIMESTAMP_WITH_TIME_ZONE) && this[i].Value == 6)
+                if (HasScale)
                 {
-                    continue;
-                }
-                else if (i == 0 && (dataType == DataType.TIME || dataType == DataType.TIME_WITH_TIME_ZONE) && this[i].Value == 0)
-                {
-                    continue;
-                }
-                else if (i == 0 && (dataType == DataType.CHARACTER || dataType == DataType.CHARACTER_VARYING || dataType == DataType.NATIONAL_CHARACTER_VARYING || dataType == DataType.NATIONAL_CHARACTER) && this[i].Value == 1)
-                {
-                    continue;
-                }
-                else if (i == 1 && (dataType == DataType.NUMERIC || dataType == DataType.DECIMAL) && this[i].Value == 0)
-                {
-                    continue;
-                }
-                else if (i > 0)
-                {
-                    repr += ", " + this[i].Value;
+                    _scale = value;
                 }
                 else
                 {
-                    repr += this[i].Value;
+                    throw new InvalidOperationException("Parameter does not have a scale.");
                 }
-            }
-            return string.IsNullOrEmpty(repr) ? null : string.Format("({0})", repr);
-        }
-
-        public int CompareTo(object obj)
-        {
-            var other = obj as Parameter;
-            if (other != null)
-            {
-                if (Count == other.Count)
-                {
-                    for (int i = 0; i < Count; ++i)
-                    {
-                        var comp = this[i].CompareTo(other[i]);
-                        if (comp != 0)
-                        {
-                            return comp;
-                        }
-                    }
-                    return 0;
-                }
-                else if (Count > other.Count)
-                {
-                    for (int i = 0; i < other.Count; ++i)
-                    {
-                        var comp = this[i].CompareTo(other[i]);
-                        if (comp != 0)
-                        {
-                            return comp;
-                        }
-                    }
-                    return 1;
-                }
-                else // Length < other.Length
-                {
-                    for (int i = 0; i < Count; ++i)
-                    {
-                        var comp = this[i].CompareTo(other[i]);
-                        if (comp != 0)
-                        {
-                            return comp;
-                        }
-                    }
-                    return -1;
-                }
-            }
-            else
-            {
-                return -1;
             }
         }
 
-        /// <summary>
-        /// Construct a parameter list.
-        /// </summary>
-        /// <param name="param">The integer parameters.</param>
-        public Parameter(params int[] param) : base(param.Select(i => new ParameterItem(i))) { }
-
-        /// <summary>
-        /// Construct a parameter list.
-        /// </summary>
-        /// <param name="param">The integer parameters.</param>
-        public Parameter(DataType dataType, params int[] param)
+        uint? _precision = null;
+        public bool HasPrecision { get { return _precision.HasValue; } }
+        public uint Precision
         {
-            if (!DataTypeUtility.ValidateParameters(dataType, param))
+            get { return _precision.Value; }
+            set
             {
-                throw new InvalidOperationException();
+                if (HasPrecision)
+                {
+                    _precision = value;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Parameter does not have a precision.");
+                }
             }
+        }
 
+        uint? _length = null;
+        public bool HasLength { get { return _length.HasValue; } }
+        public uint Length
+        {
+            get { return _length.Value; }
+            set
+            {
+                if (HasLength)
+                {
+                    _length = value;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Parameter does not have a length.");
+                }
+            }
+        }
+
+        private Parameter() { }
+
+        public static Parameter WithPrecisionAndScale(uint precision, uint scale)
+        {
+            var param = new Parameter();
+            param._precision = precision;
+            param._scale = scale;
+            return param;
+        }
+
+        public static Parameter WithLength(uint length)
+        {
+            var param = new Parameter();
+            param._length = length;
+            return param;
+        }
+
+        public static Parameter WithPrecision(uint precision)
+        {
+            var param = new Parameter();
+            param._precision = precision;
+            return param;
+        }
+
+        /// <summary>
+        /// Parses a list of parameters in relation to a data type, to construct a parameter object.
+        /// </summary>
+        /// <param name="dataType">The data type.</param>
+        /// <param name="parameters">The parameters to parse.</param>
+        /// <returns>The parameter object.</returns>
+        /// <exception cref="System.InvalidOperationException">When the parameters are invalid for the data type.</exception>
+        public static Parameter Parse(DataType dataType, uint[] parameters)
+        {
+            // TODO: Handle default precision value (implementation defined)
             switch (dataType)
             {
                 case DataType.CHARACTER:
                 case DataType.CHARACTER_VARYING:
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    if (param == null || param.Length == 0)
+                    if (parameters.Length == 1)
                     {
-                        Add(new ParameterItem(1));
+                        return WithLength(parameters[0]);
+                    }
+                    else if (parameters == null || parameters.Length == 0)
+                    {
+                        return WithLength(1);
                     }
                     else
                     {
-                        foreach (var p in param) Add(new ParameterItem(p));
+                        throw new InvalidOperationException("Invalid parameters.");
                     }
-                    break;
-                case DataType.TIME:
-                case DataType.TIME_WITH_TIME_ZONE:
-                    if (param == null || param.Length == 0)
+                case DataType.NUMERIC:
+                case DataType.DECIMAL:
+                    if (parameters.Length == 2)
                     {
-                        Add(new ParameterItem(0));
+                        return WithPrecisionAndScale(parameters[0], parameters[1]);
+                    }
+                    else if (parameters.Length == 1)
+                    {
+                        return WithPrecisionAndScale(parameters[0], 0);
                     }
                     else
                     {
-                        foreach (var p in param) Add(new ParameterItem(p));
+                        throw new InvalidOperationException("Invalid parameters.");
                     }
-                    break;
+                case DataType.FLOAT:
+                    if (parameters.Length == 1)
+                    {
+                        return WithPrecision(parameters[0]);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Invalid parameters.");
+                    }
                 case DataType.TIMESTAMP:
                 case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                    if (param == null || param.Length == 0)
+                    if (parameters == null || parameters.Length == 0)
                     {
-                        Add(new ParameterItem(6));
+                        return WithPrecision(6);
+                    }
+                    else if (parameters.Length == 1)
+                    {
+                        return WithPrecision(parameters[0]);
                     }
                     else
                     {
-                        foreach (var p in param) Add(new ParameterItem(p));
+                        throw new InvalidOperationException("Invalid parameters.");
                     }
-                    break;
-                case DataType.DECIMAL:
-                case DataType.NUMERIC:
-                    if (param.Length == 1)
+                case DataType.TIME:
+                case DataType.TIME_WITH_TIME_ZONE:
+                    if (parameters == null || parameters.Length == 0)
                     {
-                        Add(new ParameterItem(param[0]));
-                        Add(new ParameterItem(0));
+                        return WithPrecision(0);
+                    }
+                    else if (parameters.Length == 1)
+                    {
+                        return WithPrecision(parameters[0]);
                     }
                     else
                     {
-                        foreach (var p in param) Add(new ParameterItem(p));
+                        throw new InvalidOperationException("Invalid parameters");
                     }
-                    break;
                 default:
-                    if (param != null)
-                        foreach (var p in param)
-                            Add(new ParameterItem(p));
-                    break;
+                    return null;
             }
+        }
+
+        public override string ToString()
+        {
+            var parameters = new List<uint>();
+
+            if (HasLength)
+            {
+                return "(" + Length + ")";
+            } // TODO: Default CHAR parameter hidden?
+            else if (HasPrecision && !HasScale)
+            {
+                return "(" + Precision + ")";
+            }
+            else if (HasPrecision && HasScale && Scale == 0)
+            {
+                return "(" + Precision + ")";
+            }
+            else if (HasPrecision && HasScale && Scale != 0)
+            {
+                return "(" + Precision + ", " + Scale + ")";
+            }
+
+            throw new InvalidOperationException("Invalid parameter");
+        }
+
+        public int CompareTo(object obj)
+        {
+            var otherParam = obj as Parameter;
+
+            if (otherParam == null)
+            {
+                return 1;
+            }
+            else
+            {
+                return CompareTo(otherParam);
+            }
+        }
+
+        public int CompareTo(Parameter other)
+        {
+            if (HasLength && other.HasLength)
+            {
+                return Length.CompareTo(other.Length);
+            }
+            else if (HasPrecision && other.HasPrecision && !HasScale && !other.HasScale)
+            {
+                return Precision.CompareTo(other.Precision);
+            }
+            else if (HasPrecision && other.HasPrecision && HasScale && other.HasScale)
+            {
+                var precisionComparison = Precision.CompareTo(other.Precision);
+
+                if (precisionComparison == 0)
+                {
+                    return Scale.CompareTo(other.Scale);
+                }
+                else
+                {
+                    return precisionComparison;
+                }
+            }
+
+            return 0;
         }
     }
 }

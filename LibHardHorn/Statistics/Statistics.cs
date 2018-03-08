@@ -9,9 +9,9 @@ namespace HardHorn.Statistics
     public class BarChartConfiguration
     {
         public int BucketCount { get; set; }
-        public IList<int> Values { get; set; }
+        public IList<uint> Values { get; set; }
 
-        public BarChartConfiguration(int bCount, IList<int> values)
+        public BarChartConfiguration(int bCount, IList<uint> values)
         {
             BucketCount = bCount;
             Values = values;
@@ -21,44 +21,43 @@ namespace HardHorn.Statistics
     public class DataTypeStatistic
     {
         public int Count { get; set; }
-        public Parameter MinParams { get; set; }
-        public Parameter MaxParams { get; set; }
-        public IList<int>[] ParamValues { get; set; }
-        public IList<BarChartConfiguration> BarCharts { get; set; }
+        public Parameter MinParam { get; set; }
+        public Parameter MaxParam { get; set; }
+        public IList<Parameter> ParamValues { get; set; }
+
+        public IEnumerable<BarChartConfiguration> BarCharts
+        {
+            get
+            {
+                var scales = new List<uint>();
+                var precisions = new List<uint>();
+                var length = new List<uint>();
+
+                foreach (var pvalue in ParamValues)
+                {
+                    if (pvalue.HasScale)
+                        scales.Add(pvalue.Scale);
+                    if (pvalue.HasPrecision)
+                        scales.Add(pvalue.Precision);
+                    if (pvalue.HasLength)
+                        scales.Add(pvalue.Length);
+                }
+
+                if (scales.Count > 0)
+                    yield return new BarChartConfiguration(10, scales);
+
+                if (scales.Count > 0)
+                    yield return new BarChartConfiguration(10, precisions);
+
+                if (scales.Count > 0)
+                    yield return new BarChartConfiguration(10, length);
+            }
+        }
 
         public DataTypeStatistic(DataType dataType)
         {
             Count = 0;
-
-            int paramCount = 0;
-            switch (dataType)
-            {
-                case DataType.CHARACTER:
-                case DataType.CHARACTER_VARYING:
-                case DataType.NATIONAL_CHARACTER:
-                case DataType.NATIONAL_CHARACTER_VARYING:
-                case DataType.TIME:
-                case DataType.TIME_WITH_TIME_ZONE:
-                case DataType.TIMESTAMP:
-                case DataType.TIMESTAMP_WITH_TIME_ZONE:
-                case DataType.REAL:
-                case DataType.FLOAT:
-                    paramCount = 1;
-                    break;
-                case DataType.DECIMAL:
-                case DataType.NUMERIC:
-                    paramCount = 2;
-                    break;
-            }
-            MinParams = new Parameter(new int[paramCount]);
-            MaxParams = new Parameter(new int[paramCount]);
-            ParamValues = new IList<int>[paramCount];
-            BarCharts = new List<BarChartConfiguration>();
-            for (int i = 0; i < paramCount; i++)
-            {
-                ParamValues[i] = new List<int>();
-                BarCharts.Add(new BarChartConfiguration(10, ParamValues[i]));
-            }
+            ParamValues = new List<Parameter>();
         }
     }
 
@@ -77,30 +76,54 @@ namespace HardHorn.Statistics
                 {
                     if (DataTypeStatistics.ContainsKey(column.ParameterizedDataType.DataType))
                     {
-                        DataTypeStatistics[column.ParameterizedDataType.DataType].Count++;
-                        for (int i = 0; column.ParameterizedDataType.Parameter != null && i < column.ParameterizedDataType.Parameter.Count; i++)
+                        var dataTypeStat = DataTypeStatistics[column.ParameterizedDataType.DataType];
+                        if (column.ParameterizedDataType.Parameter == null) { }
+                        else if (column.ParameterizedDataType.Parameter.HasLength)
                         {
-                            if (DataTypeStatistics[column.ParameterizedDataType.DataType].MinParams[i].Value > column.ParameterizedDataType.Parameter[i].Value)
-                            {
-                                DataTypeStatistics[column.ParameterizedDataType.DataType].MinParams[i].Value = column.ParameterizedDataType.Parameter[i].Value;
-                            }
-                            if (DataTypeStatistics[column.ParameterizedDataType.DataType].MaxParams[i].Value < column.ParameterizedDataType.Parameter[i].Value)
-                            {
-                                DataTypeStatistics[column.ParameterizedDataType.DataType].MaxParams[i].Value = column.ParameterizedDataType.Parameter[i].Value;
-                            }
-                            DataTypeStatistics[column.ParameterizedDataType.DataType].ParamValues[i].Add(column.ParameterizedDataType.Parameter[i].Value);
+                            dataTypeStat.MinParam.Length = Math.Min(dataTypeStat.MinParam.Length, column.ParameterizedDataType.Parameter.Length);
+                            dataTypeStat.MaxParam.Length = Math.Max(dataTypeStat.MinParam.Length, column.ParameterizedDataType.Parameter.Length);
                         }
+                        else if (column.ParameterizedDataType.Parameter.HasPrecision && column.ParameterizedDataType.Parameter.HasScale)
+                        {
+                            dataTypeStat.MinParam = Parameter.WithPrecisionAndScale(
+                                Math.Min(dataTypeStat.MinParam.Precision, column.ParameterizedDataType.Parameter.Precision),
+                                Math.Min(dataTypeStat.MinParam.Scale, column.ParameterizedDataType.Parameter.Scale));
+
+                            dataTypeStat.MaxParam = Parameter.WithPrecisionAndScale(
+                                 Math.Max(dataTypeStat.MinParam.Precision, column.ParameterizedDataType.Parameter.Precision),
+                                 Math.Max(dataTypeStat.MinParam.Scale, column.ParameterizedDataType.Parameter.Scale));
+                        }
+                        else if (column.ParameterizedDataType.Parameter.HasPrecision)
+                        {
+
+                            dataTypeStat.MinParam.Precision = Math.Min(dataTypeStat.MinParam.Precision, column.ParameterizedDataType.Parameter.Precision);
+                            dataTypeStat.MaxParam.Precision = Math.Max(dataTypeStat.MinParam.Precision, column.ParameterizedDataType.Parameter.Precision);
+                        }
+
+                        dataTypeStat.Count++;
                     }
                     else
                     {
-                        DataTypeStatistic dataTypeStat = new DataTypeStatistic(column.ParameterizedDataType.DataType);
+                        var dataTypeStat = new DataTypeStatistic(column.ParameterizedDataType.DataType);
                         dataTypeStat.Count = 1;
-                        for (int i = 0; i < (column.ParameterizedDataType.Parameter == null ? 0 : column.ParameterizedDataType.Parameter.Count); i++)
+
+                        if (column.ParameterizedDataType.Parameter == null) { }
+                        else if (column.ParameterizedDataType.Parameter.HasLength)
                         {
-                            dataTypeStat.MaxParams[i].Value = column.ParameterizedDataType.Parameter[i].Value;
-                            dataTypeStat.MinParams[i].Value = column.ParameterizedDataType.Parameter[i].Value;
-                            dataTypeStat.ParamValues[i].Add(column.ParameterizedDataType.Parameter[i].Value);
+                            dataTypeStat.MinParam = Parameter.WithLength(column.ParameterizedDataType.Parameter.Length);
+                            dataTypeStat.MaxParam = Parameter.WithLength(column.ParameterizedDataType.Parameter.Length);
                         }
+                        else if (column.ParameterizedDataType.Parameter.HasPrecision && column.ParameterizedDataType.Parameter.HasScale)
+                        {
+                            dataTypeStat.MinParam = Parameter.WithPrecisionAndScale(column.ParameterizedDataType.Parameter.Precision, column.ParameterizedDataType.Parameter.Scale);
+                            dataTypeStat.MaxParam = Parameter.WithPrecisionAndScale(column.ParameterizedDataType.Parameter.Precision, column.ParameterizedDataType.Parameter.Scale);
+                        }
+                        else if (column.ParameterizedDataType.Parameter.HasPrecision)
+                        {
+                            dataTypeStat.MinParam = Parameter.WithPrecision(column.ParameterizedDataType.Parameter.Precision);
+                            dataTypeStat.MaxParam = Parameter.WithPrecision(column.ParameterizedDataType.Parameter.Precision);
+                        }
+
                         DataTypeStatistics.Add(column.ParameterizedDataType.DataType, dataTypeStat);
                     }
                 }
