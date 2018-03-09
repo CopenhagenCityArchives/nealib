@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -123,6 +124,20 @@ namespace HardHorn.ViewModels
         bool _BrowseReady = true;
         public bool BrowseReady { get { return _BrowseReady; } set { _BrowseReady = value; NotifyOfPropertyChange("BrowseReady"); } }
 
+        DataTable _rowDataTable;
+        public DataTable RowDataTable
+        {
+            get
+            {
+                if (_rowDataTable.Rows.Count == 0)
+                {
+                    UpdateBrowseRows();
+                }
+                return _rowDataTable;
+            }
+            set { _rowDataTable = value; NotifyOfPropertyChange("RowDataTable"); }
+        }
+
         public TableViewModel(Table table)
         {
             Table = table;
@@ -130,7 +145,12 @@ namespace HardHorn.ViewModels
             AnalysisErrors = ColumnViewModels.Any(cvm => cvm.Column.ParameterizedDataType.DataType == DataType.UNDEFINED);
             BrowseOffset = 0;
             BrowseCount = 20;
+            RowDataTable = new DataTable();
             _browseRows = new ObservableCollection<BrowseRow>();
+            foreach (var column in table.Columns)
+            {
+                RowDataTable.Columns.Add(new DataColumn(column.Name.Replace("_", "__"), typeof(Post)));
+            }
         }
 
         public async void UpdateBrowseRows()
@@ -196,6 +216,19 @@ namespace HardHorn.ViewModels
             }
             finally
             {
+                RowDataTable.Clear();
+                foreach (var row in browseRows)
+                {
+                    try
+                    {
+                        RowDataTable.Rows.Add(row.Posts.ToArray());
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message, ex.StackTrace);
+                    }
+                }
+
                 BrowseReady = true;
                 _browseRows.Clear();
                 foreach (var row in browseRows) _browseRows.Add(row);

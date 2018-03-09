@@ -245,93 +245,6 @@
                     </ListView.View>
                 </ListView>
                 <TabControl Grid.Row="2" Grid.Column="2">
-                    <TabControl.Style>
-                        <Style TargetType="TabControl">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed"></Setter>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed"></Setter>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TabControl.Style>
-                    <TabItem Header="Modificér">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition MinWidth="100" Width="Auto"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Label>Datatype</Label>
-                            <ComboBox
-                                    Grid.Column="1"
-                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel.DataType}">
-                                <ComboBox.Resources>
-                                    <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
-                                        <ObjectDataProvider.MethodParameters>
-                                            <x:Type TypeName="av:DataType"></x:Type>
-                                        </ObjectDataProvider.MethodParameters>
-                                    </ObjectDataProvider>
-                                </ComboBox.Resources>
-                                <ComboBox.ItemsSource>
-                                    <CompositeCollection>
-                                        <CollectionContainer Collection="{Binding Source={StaticResource DataTypeEnumValues}}"></CollectionContainer>
-                                    </CompositeCollection>
-                                </ComboBox.ItemsSource>
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Converter={StaticResource DataTypeToStringConverter}}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <Label Grid.Row="1">Parameter</Label>
-                            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
-                                <TextBox Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.Length, UpdateSourceTrigger=PropertyChanged}">
-                                    <TextBox.Style>
-                                        <Style>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.HasLength}" Value="False">
-                                                    <Setter Property="TextBox.Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBox.Style>
-                                </TextBox>
-                                <TextBox Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.Precision, UpdateSourceTrigger=PropertyChanged}">
-                                    <TextBox.Style>
-                                        <Style>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.HasPrecision}" Value="False">
-                                                    <Setter Property="TextBox.Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBox.Style>
-                                </TextBox>
-                                <TextBox Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.Scale, UpdateSourceTrigger=PropertyChanged}">
-                                    <TextBox.Style>
-                                        <Style>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.HasScale}" Value="False">
-                                                    <Setter Property="TextBox.Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBox.Style>
-                                </TextBox>
-                            </StackPanel>
-                            <Label Grid.Row="2">Kan være null</Label>
-                            <CheckBox VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.Nullable}"></CheckBox>
-                            <Button Grid.Row="3" cal:Message.Attach="ApplySuggestion">Anvend datatypeforslag</Button>
-                        </Grid>
-                    </TabItem>
                     <TabItem Header="Postvisning">
                         <DockPanel>
                             <StackPanel Margin="5" Orientation="Horizontal" DockPanel.Dock="Top">
@@ -462,7 +375,10 @@
                                     </Button.Style>
                                 </Button>
                             </StackPanel>
-                            <ListView SelectionMode="Single" ItemsSource="{Binding SelectedTableViewModel.BrowseRows}">
+                            <DataGrid ItemsSource="{Binding SelectedTableViewModel.RowDataTable}" CellStyle="{StaticResource DataGridCellStyle}" IsReadOnly="True" SelectionUnit="Cell">
+                                
+                            </DataGrid>
+                            <!--<ListView SelectionMode="Single" ItemsSource="{Binding SelectedTableViewModel.BrowseRows}">
                                 <ListView.View>
                                     <GridView util:AttachedProperties.TableColumnsSource="{Binding SelectedTableViewModel.Table}">
                                     </GridView>
@@ -472,7 +388,7 @@
                                         <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"></Setter>
                                     </Style>
                                 </ListView.Resources>
-                            </ListView>
+                            </ListView>-->
                         </DockPanel>
                     </TabItem>
                     <TabItem Header="Fejlvisning">
@@ -524,6 +440,93 @@
                                 </DataTemplate>
                             </TabControl.ContentTemplate>
                         </TabControl>
+                    </TabItem>
+                    <TabItem Header="Modificér">
+                        <TabItem.Style>
+                            <Style TargetType="TabItem">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TabItem.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition MinWidth="100" Width="Auto"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Label>Datatype</Label>
+                            <ComboBox
+                                    Grid.Column="1"
+                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel.DataType}">
+                                <ComboBox.Resources>
+                                    <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+                                        <ObjectDataProvider.MethodParameters>
+                                            <x:Type TypeName="av:DataType"></x:Type>
+                                        </ObjectDataProvider.MethodParameters>
+                                    </ObjectDataProvider>
+                                </ComboBox.Resources>
+                                <ComboBox.ItemsSource>
+                                    <CompositeCollection>
+                                        <CollectionContainer Collection="{Binding Source={StaticResource DataTypeEnumValues}}"></CollectionContainer>
+                                    </CompositeCollection>
+                                </ComboBox.ItemsSource>
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource DataTypeToStringConverter}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Label Grid.Row="1">Parameter</Label>
+                            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
+                                <TextBox Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.Length, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.HasLength}" Value="False">
+                                                    <Setter Property="TextBox.Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <TextBox Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.Precision, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.HasPrecision}" Value="False">
+                                                    <Setter Property="TextBox.Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <TextBox Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.Scale, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.HasScale}" Value="False">
+                                                    <Setter Property="TextBox.Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                            </StackPanel>
+                            <Label Grid.Row="2">Kan være null</Label>
+                            <CheckBox VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.Nullable}"></CheckBox>
+                            <Button Grid.Row="3" cal:Message.Attach="ApplySuggestion">Anvend datatypeforslag</Button>
+                        </Grid>
                     </TabItem>
                 </TabControl>
             </Grid>

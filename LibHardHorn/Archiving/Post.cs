@@ -23,5 +23,10 @@ namespace HardHorn.Archiving
             IsNull = isNull;
             Data = data;
         }
+
+        public override string ToString()
+        {
+            return Data;
+        }
     }
 }

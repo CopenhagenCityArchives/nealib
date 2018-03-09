@@ -14,6 +14,56 @@ using Caliburn.Micro;
 
 namespace HardHorn.Utilities
 {
+    public class CellIsEmptyConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values[1] is System.Data.DataRow)
+            {
+                var cell = values[0] as System.Windows.Controls.DataGridCell;
+                var row = values[1] as System.Data.DataRow;
+                var columnName = cell.Column.SortMemberPath;
+
+                var post = row[columnName] as Post;
+                if (!post.IsNull && string.IsNullOrEmpty(post.Data))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class CellIsNullConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values[1] is System.Data.DataRow)
+            {
+                var cell = values[0] as System.Windows.Controls.DataGridCell;
+                var row = values[1] as System.Data.DataRow;
+                var columnName = cell.Column.SortMemberPath;
+
+                if ((row[columnName] as Post).IsNull)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+
     public class RecentLocationsMenuItemConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

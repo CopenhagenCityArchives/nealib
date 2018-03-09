@@ -1,6 +1,67 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                        xmlns:util="clr-namespace:HardHorn.Utilities;assembly=HardHorn"
                     xmlns:local="clr-namespace:HardHorn;assembly=HardHorn">
+
+    <util:CellIsNullConverter x:Key="CellIsNullConverter" />
+    <util:CellIsEmptyConverter x:Key="CellIsEmptyConverter" />
+
+    <!-- Display DB null values to disambiguate with empty strings -->
+    <Style x:Key="DataGridCellStyle" TargetType="DataGridCell">
+        <Style.Triggers>
+            <DataTrigger Value="True">
+                <DataTrigger.Binding>
+                    <MultiBinding Converter="{StaticResource CellIsNullConverter}">
+                        <Binding RelativeSource="{RelativeSource Self}" />
+                        <Binding Path="Row" Mode="OneWay" />
+                    </MultiBinding>
+                </DataTrigger.Binding>
+                <Setter Property="DataGridCell.Template">
+                    <Setter.Value>
+                        <ControlTemplate>
+                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                                <TextBlock Margin="1 0 1 0" x:Name="NullTextBlock" FontWeight="Bold" FontFamily="Consolas" Foreground="White" Background="DarkBlue" Text="null" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="DataGridCell.IsSelected" Value="True">
+                                    <Setter TargetName="NullTextBlock" Property="Background" Value="White" />
+                                    <Setter TargetName="NullTextBlock" Property="Foreground" Value="DarkBlue" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+            <DataTrigger Value="True">
+                <DataTrigger.Binding>
+                    <MultiBinding Converter="{StaticResource CellIsEmptyConverter}">
+                        <Binding RelativeSource="{RelativeSource Self}" />
+                        <Binding Path="Row" Mode="OneWay" />
+                    </MultiBinding>
+                </DataTrigger.Binding>
+                <Setter Property="DataGridCell.Template">
+                    <Setter.Value>
+                        <ControlTemplate>
+                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                                <TextBlock Margin="1 0 1 0" x:Name="EmptyTextBlock" FontWeight="Bold" FontFamily="Consolas" Foreground="White" Background="Brown" Text="tom" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="DataGridCell.IsSelected" Value="True">
+                                    <Setter TargetName="EmptyTextBlock" Property="Background" Value="White" />
+                                    <Setter TargetName="EmptyTextBlock" Property="Foreground" Value="Brown" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+            <Trigger Property="DataGridCell.IsSelected" Value="True">
+                <Setter Property="DataGridCell.Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                <Setter Property="DataGridCell.Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="HyperlinkButtonStyle" TargetType="Button">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Template">
