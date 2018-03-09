@@ -48,6 +48,46 @@ namespace HardHorn.Archiving
             }
         }
 
+        public static Parameter ChangeDataType(DataType dataType, Parameter parameter)
+        {
+            switch (dataType)
+            {
+                case DataType.CHARACTER:
+                case DataType.CHARACTER_VARYING:
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                    if (parameter != null && parameter.HasLength && !(parameter.HasPrecision || parameter.HasScale))
+                        return parameter;
+                    else
+                        return WithLength(1);
+                case DataType.NUMERIC:
+                case DataType.DECIMAL:
+                    if (parameter != null && !parameter.HasLength && parameter.HasPrecision && parameter.HasScale)
+                        return parameter;
+                    else
+                        return WithPrecisionAndScale(18, 2);
+                case DataType.FLOAT:
+                    if (parameter != null && !parameter.HasLength && parameter.HasPrecision && !parameter.HasScale)
+                        return parameter;
+                    else
+                        return WithPrecision(18);
+                case DataType.TIMESTAMP:
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                    if (parameter != null && !parameter.HasLength && parameter.HasPrecision && !parameter.HasScale)
+                        return parameter;
+                    else
+                        return WithPrecision(6);
+                case DataType.TIME:
+                case DataType.TIME_WITH_TIME_ZONE:
+                    if (parameter != null && !parameter.HasLength && parameter.HasPrecision && !parameter.HasScale)
+                        return parameter;
+                    else
+                        return WithPrecision(0);
+                default:
+                    return null;
+            }
+        }
+
         uint? _length = null;
         public bool HasLength { get { return _length.HasValue; } }
         public uint Length

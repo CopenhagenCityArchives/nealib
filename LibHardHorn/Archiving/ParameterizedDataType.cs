@@ -68,10 +68,10 @@ namespace HardHorn.Archiving
                 }
 
                 var parameterGroup = match.Groups["params"];
-                uint[] parameters = null;
+                uint[] parameters = new uint[0];
                 if (parameterGroup.Success)
                 {
-                    parameters = new List<string>(parameterGroup.Value.Split(',')).Select(n => uint.Parse(n)).ToArray<uint>();
+                    parameters = parameterGroup.Value.Split(',').Select(n => uint.Parse(n)).ToArray();
                 }
 
                 try

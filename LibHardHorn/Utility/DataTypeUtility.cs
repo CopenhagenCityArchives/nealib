@@ -75,6 +75,28 @@ namespace HardHorn.Utility
             throw exp;
         }
 
+        public static bool IsParameterValidFor(DataType dataType, Parameter parameter)
+        {
+            switch (dataType)
+            {
+                case DataType.CHARACTER:
+                case DataType.CHARACTER_VARYING:
+                case DataType.NATIONAL_CHARACTER:
+                case DataType.NATIONAL_CHARACTER_VARYING:
+                    return parameter.HasLength;
+                case DataType.TIMESTAMP:
+                case DataType.TIMESTAMP_WITH_TIME_ZONE:
+                case DataType.TIME:
+                case DataType.TIME_WITH_TIME_ZONE:
+                    return parameter.HasPrecision;
+                case DataType.NUMERIC:
+                case DataType.DECIMAL:
+                    return parameter.HasPrecision && parameter.HasScale;
+                default:
+                    return parameter == null || !(parameter.HasLength || parameter.HasPrecision || parameter.HasScale);
+            }
+        }
+
         public static bool ValidateParameters(DataType type, int[] parameters)
         {
             switch (type)

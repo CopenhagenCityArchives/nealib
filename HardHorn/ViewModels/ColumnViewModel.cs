@@ -38,7 +38,13 @@ namespace HardHorn.ViewModels
         public DataType DataType
         {
             get { return ParameterizedDataType.DataType; }
-            set { ParameterizedDataType.DataType = value;  NotifyOfPropertyChange("DataType"); }
+            set
+            {
+                ParameterizedDataType.DataType = value;
+                ParameterViewModel = new ParameterViewModel(Archiving.Parameter.ChangeDataType(value, ParameterViewModel.Parameter));
+                NotifyOfPropertyChange("ParameterViewModel");
+                NotifyOfPropertyChange("DataType");
+            }
         }
 
         public ParameterViewModel ParameterViewModel

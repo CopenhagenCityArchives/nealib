@@ -245,6 +245,18 @@
                     </ListView.View>
                 </ListView>
                 <TabControl Grid.Row="2" Grid.Column="2">
+                    <TabControl.Style>
+                        <Style TargetType="TabControl">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TabControl.Style>
                     <TabItem Header="Modificér">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -273,6 +285,11 @@
                                         <CollectionContainer Collection="{Binding Source={StaticResource DataTypeEnumValues}}"></CollectionContainer>
                                     </CompositeCollection>
                                 </ComboBox.ItemsSource>
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource DataTypeToStringConverter}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
                             </ComboBox>
                             <Label Grid.Row="1">Parameter</Label>
                             <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
