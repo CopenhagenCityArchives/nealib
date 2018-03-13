@@ -15,6 +15,7 @@
     <util:ParameterizedDataTypeToParameterStringConverter x:Key="ParameterizedDataTypeToParameterStringConverter" />
     <util:ParameterToStringConverter x:Key="ParameterToStringConverter" />
     <util:RecentLocationsMenuItemConverter x:Key="RecentLocationMenuItemConverter" />
+    <util:KeyTestResultListToDataTable x:Key="KeyTestResultListToDataTable" />
 
     <DataTemplate x:Key="ErrorViewTemplate">
         <StackPanel>
@@ -126,7 +127,7 @@
     <DataTemplate x:Key="StatisticsItemTemplate">
         <GroupBox Margin="5">
             <GroupBox.Header>
-                <TextBlock FontWeight="Bold" Text="{Binding Key}" />
+                <TextBlock FontWeight="Bold" Text="{Binding DataType}" />
             </GroupBox.Header>
             <Grid>
                 <Grid.RowDefinitions>
@@ -143,11 +144,11 @@
                 <Label>Antal kolonner:</Label>
                 <Label x:Name="MinParamLabel" Grid.Row="1">Minimumsparametre:</Label>
                 <Label x:Name="MaxParamLabel" Grid.Row="2">Maksimumsparametre:</Label>
-                <Label Grid.Column="1" Content="{Binding Value.Count}"/>
-                <Label Grid.Column="1" Grid.Row="1" Content="{Binding Value.MinParam, Converter={StaticResource ParameterToStringConverter}}"/>
-                <Label Grid.Column="1" Grid.Row="2" Content="{Binding Value.MaxParam, Converter={StaticResource ParameterToStringConverter}}"/>
+                <Label Grid.Column="1" Content="{Binding Count}"/>
+                <Label Grid.Column="1" Grid.Row="1" Content="{Binding MinParam, Converter={StaticResource ParameterToStringConverter}}"/>
+                <Label Grid.Column="1" Grid.Row="2" Content="{Binding MaxParam, Converter={StaticResource ParameterToStringConverter}}"/>
                 <Label x:Name="HistLabel" Grid.Row="3" Grid.ColumnSpan="2">Typeparameterhistogrammer:</Label>
-                <ItemsControl Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding Value.BarCharts}">
+                <ItemsControl Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding BarCharts}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Vertical"></StackPanel>
@@ -155,17 +156,20 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <ctl:BarChart Height="150" Margin="5" BucketCount="{Binding BucketCount}" Values="{Binding Values}"></ctl:BarChart>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" HorizontalAlignment="Center" FontWeight="Bold" />
+                                <ctl:BarChart Height="150" Margin="5" BucketCount="{Binding BucketCount}" Values="{Binding Values}"></ctl:BarChart>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </Grid>
         </GroupBox>
         <DataTemplate.Triggers>
-            <DataTrigger Binding="{Binding Value.MinParam}" Value="{x:Null}">
-                <Setter TargetName="MinParamLabel" Property="Visibility" Value="Hidden" />
-                <Setter TargetName="MaxParamLabel" Property="Visibility" Value="Hidden" />
-                <Setter TargetName="HistLabel" Property="Visibility" Value="Hidden" />
+            <DataTrigger Binding="{Binding MinParam}" Value="{x:Null}">
+                <Setter TargetName="MinParamLabel" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="MaxParamLabel" Property="Visibility" Value="Collapsed" />
+                <Setter TargetName="HistLabel" Property="Visibility" Value="Collapsed" />
             </DataTrigger>
         </DataTemplate.Triggers>
     </DataTemplate>

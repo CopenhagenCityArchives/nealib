@@ -216,7 +216,7 @@ namespace HardHorn.ViewModels
             }
             finally
             {
-                RowDataTable.Clear();
+                RowDataTable.Rows.Clear();
                 foreach (var row in browseRows)
                 {
                     try

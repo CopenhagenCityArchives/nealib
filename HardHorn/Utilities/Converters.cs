@@ -11,9 +11,50 @@ using System.Windows;
 using HardHorn.Analysis;
 using System.Windows.Controls;
 using Caliburn.Micro;
+using System.Data;
 
 namespace HardHorn.Utilities
 {
+    public class KeyTestResultListToDataTable : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var keyTestResults = value as Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>;
+            if (keyTestResults == null)
+            {
+                return null;
+            }
+            var resultsList = keyTestResults.Item4;
+            var foreignKey = keyTestResults.Item1;
+
+            if (foreignKey == null || keyTestResults == null)
+            {
+                return null;
+            }
+
+            var dataTable = new DataTable();
+            foreach (var reference in foreignKey.References)
+            {
+                dataTable.Columns.Add(reference.ColumnName.Replace("_", "__"), typeof(string));
+            }
+            dataTable.Columns.Add("Antal fejl", typeof(int));
+
+            foreach (var result in resultsList)
+            {
+                var objs = new List<object>(result.Key.Values);
+                objs.Add(result.Value);
+                dataTable.Rows.Add(objs.ToArray());
+            }
+
+            return dataTable;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class CellIsEmptyConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

@@ -238,17 +238,17 @@ namespace HardHorn.ViewModels
         public Analyzer Analyzer { get; private set; }
         DataStatistics _stats;
 
-        public IEnumerable<KeyValuePair<DataType, DataTypeStatistic>> DataTypeStatistics
+        public IEnumerable<DataTypeStatistic> DataTypeStatistics
         {
             get
             {
                 if (_stats != null && _stats.DataTypeStatistics != null)
                 {
-                    return _stats.DataTypeStatistics.Cast<KeyValuePair<DataType, DataTypeStatistic>>();
+                    return _stats.DataTypeStatistics.Values;
                 }
                 else
                 {
-                    return Enumerable.Empty<KeyValuePair<DataType, DataTypeStatistic>>();
+                    return Enumerable.Empty<DataTypeStatistic>();
                 }
 
             }

@@ -757,15 +757,8 @@
 
                     <ListBox x:Name="KeyTestTableList" ItemsSource="{Binding KeyTestTableView}" SelectionMode="Extended" ItemContainerStyle="{StaticResource KeyTestTableListContainerStyle}" />
                 </DockPanel>
-                
-                <ListView DockPanel.Dock="Right" Width="250" ItemsSource="{Binding SelectedItem.Item4, ElementName=KeyTestResultList}">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn DisplayMemberBinding="{Binding Key}" Header="Nøgleværdi"></GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Value}" Header="Antal fejl"></GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+
+                <DataGrid DockPanel.Dock="Right" Width="400" ItemsSource="{Binding SelectedItem, ElementName=KeyTestResultList, Converter={StaticResource KeyTestResultListToDataTable}}" />
 
                 <ListView x:Name="KeyTestResultList" ItemsSource="{Binding ForeignKeyTestResults}">
                     <ListView.View>

@@ -39,9 +39,25 @@ namespace HardHorn.Controls
     /// </summary>
     public class BarChart : Control
     {
+        public class Bucket
+        {
+            public int IntervalStart { get; set; }
+            public int IntervalEnd { get; set; }
+            public int Count { get; set; }
+            public double Height { get; set; }
+
+            public Bucket(int intervalStart, int intervalEnd, int count, double height = 0d)
+            {
+                IntervalStart = intervalStart;
+                IntervalEnd = intervalEnd;
+                Count = count;
+                Height = height;
+            }
+        }
+
         public static readonly DependencyProperty ValuesProperty =
-            DependencyProperty.Register("Values", typeof(IEnumerable<int>), typeof(BarChart),
-            new FrameworkPropertyMetadata(Enumerable.Empty<int>(), FrameworkPropertyMetadataOptions.None, new PropertyChangedCallback(ValuesPropertyChangedCallback)));
+            DependencyProperty.Register("Values", typeof(IEnumerable<uint>), typeof(BarChart),
+            new FrameworkPropertyMetadata(Enumerable.Empty<uint>(), FrameworkPropertyMetadataOptions.None, new PropertyChangedCallback(ValuesPropertyChangedCallback)));
 
         public static void ValuesPropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
@@ -50,9 +66,9 @@ namespace HardHorn.Controls
                 barChart.ConfigureBarChart();
         }
 
-        public IEnumerable<int> Values
+        public IEnumerable<uint> Values
         {
-            get { return (IEnumerable<int>)GetValue(ValuesProperty); }
+            get { return (IEnumerable<uint>)GetValue(ValuesProperty); }
             set { SetValue(ValuesProperty, value); }
         }
 
@@ -66,7 +82,7 @@ namespace HardHorn.Controls
             set { SetValue(BucketCountProperty, value); ConfigureBarChart(); }
         }
 
-        public ObservableCollection<ExpandoObject> Buckets { get; set; }
+        public ObservableCollection<Bucket> Buckets { get; set; }
 
         static BarChart()
         {
@@ -75,13 +91,13 @@ namespace HardHorn.Controls
 
         public BarChart()
         {
-            Buckets = new ObservableCollection<ExpandoObject>();
+            Buckets = new ObservableCollection<Bucket>();
             ConfigureBarChart();
         }
 
         public void ConfigureBarChart()
         {
-            if (Values.Count() == 0 || !BucketCount.HasValue)
+            if (Values == null || Values.Count() == 0 || !BucketCount.HasValue)
             {
                 return;
             }
@@ -93,11 +109,7 @@ namespace HardHorn.Controls
 
             for (int i = 0; i < bucketCount; i++)
             {
-                dynamic b = new ExpandoObject();
-                b.Count = 0;
-                b.IntervalStart = (int)Math.Ceiling(i * interval);
-                b.IntervalEnd = (int)Math.Ceiling((i + 1) * interval);
-                Buckets.Add(b);
+                Buckets.Add(new Bucket((int)Math.Ceiling(i * interval), (int)Math.Ceiling((i + 1) * interval), 0));
             }
 
             foreach (var val in Values)
@@ -105,17 +117,17 @@ namespace HardHorn.Controls
                 int i = (int)((val / interval) - 1.0f);
                 if (val == 0)
                     i = 0;
-                dynamic b = Buckets[i];
+                Bucket b = Buckets[i];
                 b.Count++;
             }
 
             int maxCount = 0;
-            foreach (dynamic b in Buckets)
+            foreach (var b in Buckets)
             {
                 maxCount = Math.Max(b.Count, maxCount);
             }
 
-            foreach (dynamic b in Buckets)
+            foreach (var b in Buckets)
             {
                 b.Height = (double)b.Count / (double)maxCount * (this as FrameworkElement).Height;
             }
