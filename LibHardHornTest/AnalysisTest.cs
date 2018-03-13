@@ -36,13 +36,85 @@ namespace LibHardHornTest
         public void AssertOkay(Column column, Test test, string data, int line = 0, int pos = 0, bool isNull = false)
         {
             var result = test.GetResult(new Post(data, line, pos, isNull), column);
-            Assert.AreEqual(Test.Result.OKAY, result);
+            Assert.AreEqual(Test.Result.OKAY, result, string.Format("Test {0} on column {1} failed on data '{2}', when expecting success.", test, column, data));
         }
 
         public void AssertError(Column column, Test test, string data)
         {
             var result = test.GetResult(new Post(data, 0, 0, false), column);
-            Assert.AreEqual(Test.Result.ERROR, result);
+            Assert.AreEqual(Test.Result.ERROR, result, string.Format("Test {0} on column {1} succeeded on data '{2}', when expecting failure.", test, column, data));
+        }
+
+        [TestMethod]
+        public void TestAnalyzeCharacterOverflowUnderflow()
+        {
+            var overflowTest = new Test.Overflow();
+            var underflowTest = new Test.Underflow();
+
+            uint length = 0;
+            var colchar = new Column(null, null, new ParameterizedDataType(DataType.CHARACTER, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+            var colvarchar = new Column(null, null, new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+            var colnatchar = new Column(null, null, new ParameterizedDataType(DataType.NATIONAL_CHARACTER, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+            var colnatvarchar = new Column(null, null, new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+
+            AssertOkay(colchar, overflowTest, "");
+            AssertOkay(colvarchar, overflowTest, "");
+            AssertOkay(colnatchar, overflowTest, "");
+            AssertOkay(colnatvarchar, overflowTest, "");
+            AssertError(colchar, overflowTest, "abc");
+            AssertError(colvarchar, overflowTest, "abc");
+            AssertError(colnatchar, overflowTest, "abc");
+            AssertError(colnatvarchar, overflowTest, "abc");
+            AssertOkay(colchar, underflowTest, "");
+            AssertOkay(colvarchar, underflowTest, "");
+            AssertOkay(colnatchar, underflowTest, "");
+            AssertOkay(colnatvarchar, underflowTest, "");
+
+            length = 8;
+            colchar = new Column(null, null, new ParameterizedDataType(DataType.CHARACTER, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+            colvarchar = new Column(null, null, new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+            colnatchar = new Column(null, null, new ParameterizedDataType(DataType.NATIONAL_CHARACTER, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+            colnatvarchar = new Column(null, null, new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, Parameter.WithLength(length)), null, false, null, "c1", 1, null, null);
+
+            AssertOkay(colchar, overflowTest, "abcdefg");
+            AssertOkay(colvarchar, overflowTest, "abcdefg");
+            AssertOkay(colnatchar, overflowTest, "abcdefg");
+            AssertOkay(colnatvarchar, overflowTest, "abcdefg");
+
+            AssertError(colchar, overflowTest, "abcdefghi");
+            AssertError(colvarchar, overflowTest, "abcdefghi");
+            AssertError(colnatchar, overflowTest, "abcdefghi");
+            AssertError(colnatvarchar, overflowTest, "abcdefghi");
+
+            AssertOkay(colchar, underflowTest, "abcdefgh");
+            AssertOkay(colvarchar, underflowTest, "abcdefgh");
+            AssertOkay(colnatchar, underflowTest, "abcdefgh");
+            AssertOkay(colnatvarchar, underflowTest, "abcdefgh");
+
+            AssertError(colchar, underflowTest, "abcd");
+            AssertOkay(colvarchar, underflowTest, "abcd");
+            AssertError(colnatchar, underflowTest, "abcd");
+            AssertOkay(colnatvarchar, underflowTest, "abcd");
+        }
+
+        [TestMethod]
+        public void TestAnalyzeBlankTest()
+        {
+            var test = new Test.Blank();
+
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                var column = new Column(null, null, new ParameterizedDataType(dataType, Parameter.ChangeDataType(dataType, null)), null, false, null, "c1", 1, null, null);
+                AssertOkay(column, test, "abcdefgh!");
+                AssertError(column, test, " abcdefgh!");
+                AssertError(column, test, "\nabcdefgh!");
+                AssertError(column, test, "\rabcdefgh!");
+                AssertError(column, test, "\tabcdefgh!");
+                AssertError(column, test, "abcdefgh! ");
+                AssertError(column, test, "abcdefgh!\t");
+                AssertError(column, test, "abcdefgh!\r");
+                AssertError(column, test, "abcdefgh!\n");
+            }
         }
 
         [TestMethod]
