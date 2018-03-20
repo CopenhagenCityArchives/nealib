@@ -8,6 +8,7 @@
              xmlns:vm="clr-namespace:HardHorn.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="800">
+    <ScrollViewer>
     <StackPanel Margin="5">
         <GroupBox Grid.Row="1" Padding="5">
             <GroupBox.Header>
@@ -73,4 +74,5 @@
         </DockPanel>
 
     </StackPanel>
+    </ScrollViewer>
 </UserControl>
