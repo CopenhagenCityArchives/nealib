@@ -16,6 +16,8 @@ namespace HardHorn.Analysis
         public static Regex time_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?$", RegexOptions.Compiled);
         public static Regex timestamp_timezone_regex = new Regex(@"^(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$", RegexOptions.Compiled);
         public static Regex time_timezone_regex = new Regex(@"^(\d\d):(\d\d):(\d\d)(?:.(\d+))?((?:\+|-)(\d\d):(\d\d)|Z)$", RegexOptions.Compiled);
+        public static Regex integer_regex = new Regex(@"^-?\d+$", RegexOptions.Compiled);
+        public static Regex numeric_regex = new Regex(@"^-?\d+(\.\d+)?$", RegexOptions.Compiled);
         public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
 
         public static readonly int MAX_ERROR_POSTS = 50;

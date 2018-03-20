@@ -56,6 +56,12 @@ namespace HardHorn.ViewModels
             }
         }
 
+        public string Description
+        {
+            get { return Table.Description; }
+            set { Table.Description = value; NotifyOfPropertyChange("Description"); }
+        }
+
         public ColumnViewModel _selectedColumnViewModel;
         public ColumnViewModel SelectedColumnViewModel
         {

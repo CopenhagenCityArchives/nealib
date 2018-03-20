@@ -13,7 +13,7 @@ namespace LibHardHornTest
     public class AnalysisTest
     {
         [TestMethod]
-        public void TestAnalyzeLengths()
+        public void AnalyzeLengths()
         {
             var av = new ArchiveVersion("AVID.TEST.1", "E:\\AVID.TEST.1",
                 new Table[] {
@@ -46,7 +46,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestAnalyzeCharacterOverflowUnderflow()
+        public void AnalyzeCharacterOverflowUnderflow()
         {
             var overflowTest = new Test.Overflow();
             var underflowTest = new Test.Underflow();
@@ -98,13 +98,13 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestAnalyzeBlankTest()
+        public void AnalyzeBlankTest()
         {
             var test = new Test.Blank();
 
             foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
             {
-                var column = new Column(null, null, new ParameterizedDataType(dataType, Parameter.ChangeDataType(dataType, null)), null, false, null, "c1", 1, null, null);
+                var column = new Column(null, null, new ParameterizedDataType(dataType, Parameter.Default(dataType)), null, false, null, "c1", 1, null, null);
                 AssertOkay(column, test, "abcdefgh!");
                 AssertError(column, test, " abcdefgh!");
                 AssertError(column, test, "\nabcdefgh!");
@@ -118,7 +118,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestAnalyzeDateFormatTest()
+        public void AnalyzeDateFormatTest()
         {
             var test = Test.DateFormatTest();
             var column = new Column(null, "name", new ParameterizedDataType(DataType.DATE, null), "DATE", false, "desc", "c1", 1, null, null);
@@ -145,7 +145,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestAnalyzeTimeFormatTest()
+        public void AnalyzeTimeFormatTest()
         {
             var test = Test.TimeFormatTest();
             var column = new Column(null, "name", new ParameterizedDataType(DataType.TIME, Parameter.WithPrecision(10)), "TIME (10)", false, "desc", "c1", 1, null, null);
@@ -169,7 +169,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestAnalyzeTimeWithTimezoneFormatTest()
+        public void AnalyzeTimeWithTimezoneFormatTest()
         {
             var test = Test.TimeWithTimeZoneTest();
             var column = new Column(null, "name", new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, Parameter.WithPrecision(10)), "TIME WITH TIME ZONE (10)", false, "desc", "c1", 1, null, null);
@@ -209,7 +209,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestAnalyzeTimestampFormatTest()
+        public void AnalyzeTimestampFormatTest()
         {
             var test = Test.TimestampFormatTest();
             var column = new Column(null, "name", new ParameterizedDataType(DataType.TIMESTAMP, Parameter.WithPrecision(10)), "TIMESTAMP (10)", false, "desc", "c1", 1, null, null);
@@ -282,7 +282,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestAnalyzeTimestampWithTimezoneFormatTest()
+        public void AnalyzeTimestampWithTimezoneFormatTest()
         {
             var test = Test.TimestampWithTimeZoneFormatTest();
             var column = new Column(null, "name", new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, Parameter.WithPrecision(10)), "TIMESTAMP WITH TIME ZONE (10)", false, "desc", "c1", 1, null, null);
@@ -365,7 +365,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void TestPatternTest()
+        public void PatternTest()
         {
             var test = new Test.Pattern(new Regex(@"[a-zA-Z][0-9]"), m =>
             {
@@ -386,7 +386,7 @@ namespace LibHardHornTest
 
         [TestMethod]
         [DeploymentItem(@"..\..\TestResources", @"TestResources")]
-        public void TestAnalyzer()
+        public void Analyzer()
         {
             var AV = ArchiveVersion.Load(@"TestResources\AVID.OVERFLOW.1.1", new TestLogger());
             var Analyzer = new Analyzer(AV, new TestLogger());
@@ -409,6 +409,8 @@ namespace LibHardHornTest
                 }
             }
 
+            Analyzer.TestHierachy[table1][phoneColumn].ForceCharacterType = true;
+
             Analyzer.MoveNextTable();
             Analyzer.InitializeTable();
             Analyzer.AnalyzeRows(3);
@@ -426,6 +428,179 @@ namespace LibHardHornTest
             Assert.AreEqual(1, Analyzer.TestHierachy[table1][nameColumn].SuggestedType.Parameter.CompareTo(nameColumn.ParameterizedDataType.Parameter));
             Assert.AreEqual(1, Analyzer.TestHierachy[table1][phoneColumn].SuggestedType.Parameter.CompareTo(phoneColumn.ParameterizedDataType.Parameter));
             Assert.AreEqual(1, Analyzer.TestHierachy[table1][timeColumn].SuggestedType.Parameter.CompareTo(timeColumn.ParameterizedDataType.Parameter));
+        }
+
+        public void AssertSuggestion(ParameterizedDataType before, ParameterizedDataType expected, params Post[] posts)
+        {
+            ColumnAnalysis columnAnalysis = new ColumnAnalysis(new Column(null, null, before, null, false, null, "c1", 1, null, null));
+            foreach (var post in posts)
+            {
+                columnAnalysis.UpdateLengthStatistics(post);
+                columnAnalysis.FirstRowAnalyzed |= true;
+            }
+            columnAnalysis.SuggestType();
+            if (expected == null)
+            {
+                Assert.AreEqual(null, columnAnalysis.SuggestedType);
+            }
+            else
+            {
+                Assert.AreEqual(expected.DataType, columnAnalysis.SuggestedType.DataType);
+                if (expected.Parameter == null)
+                {
+                    Assert.AreEqual(null, columnAnalysis.SuggestedType.Parameter);
+                }
+                else
+                {
+                    Assert.AreEqual(0, expected.Parameter.CompareTo(columnAnalysis.SuggestedType.Parameter));
+                }
+            }
+
+        }
+
+        [TestMethod]
+        public void SuggestTimestamp()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIMESTAMP, Parameter.WithPrecision(10)),
+                    new Post("2007-01-18T12:54:10.123", 0, 0, false),
+                    new Post("", 0, 0, true),
+                    new Post("2003-01-30T12:32:30", 0, 0, false),
+                    new Post("2007-01-18T12:54:36.123", 0, 0, false),
+                    new Post("2007-01-18T12:50:73.1231231234", 0, 0, false));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestTimestampWithTimeZone()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, Parameter.WithPrecision(10)),
+                    new Post("2007-01-18T12:54:10.123Z", 0, 0, false),
+                    new Post("", 0, 0, true),
+                    new Post("2003-01-30T12:32:30+03:00", 0, 0, false),
+                    new Post("2007-01-18T12:54:36.123-02:00", 0, 0, false),
+                    new Post("2007-01-18T12:50:73.1231231234Z", 0, 0, false),
+                    new Post("2010-11-20T12:54:63.123Z", 0, 0, false));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestTime()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIME, Parameter.WithPrecision(10)),
+                    new Post("12:54:10.123", 0, 0, false),
+                    new Post("12:32:30", 0, 0, false),
+                    new Post("12:54:36.123", 0, 0, false),
+                    new Post("12:50:73.1231231234", 0, 0, false));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestTimeWithTimeZone()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, Parameter.WithPrecision(10)),
+                    new Post("12:54:10.123Z", 0, 0, false),
+                    new Post("12:32:30+03:00", 0, 0, false),
+                    new Post("12:54:36.123-02:00", 0, 0, false),
+                    new Post("", 0, 0, true),
+                    new Post("12:50:73.1231231234Z", 0, 0, false),
+                    new Post("12:54:63.123Z", 0, 0, false));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestInteger()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                if (dataType == DataType.INTEGER)
+                    continue;
+
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.INTEGER, null),
+                    new Post("12", 0, 0, false),
+                    new Post("0", 0, 0, false),
+                    new Post("", 0, 0, true),
+                    new Post("-100009", 0, 0, false),
+                    new Post("342356", 0, 0, false),
+                    new Post("0010", 0, 0, false));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestNumeric()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
+                    new ParameterizedDataType(dataType == DataType.DECIMAL || dataType == DataType.NUMERIC ? dataType : DataType.DECIMAL, Parameter.WithPrecisionAndScale(9, 5)),
+                    new Post("12", 0, 0, false),
+                    new Post("0", 0, 0, false),
+                    new Post("0.134", 0, 0, false),
+                    new Post("-100009", 0, 0, false),
+                    new Post("342356", 0, 0, false),
+                    new Post("180001.12", 0, 0, false),
+                    new Post("0010", 0, 0, false),
+                    new Post("1200.01234", 0, 0, false),
+                    new Post("", 0, 0, true));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestDate()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                if (dataType == DataType.DATE)
+                    continue;
+
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
+                    new ParameterizedDataType(DataType.DATE, null),
+                    new Post("2002-01-31", 0, 0, false),
+                    new Post("1986-06-23", 0, 0, false),
+                    new Post("2005-10-01", 0, 0, false),
+                    new Post("2014-07-12", 0, 0, false),
+                    new Post("2020-12-03", 0, 0, false),
+                    new Post("", 0, 0, true));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestCharacter()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
+                    new ParameterizedDataType(dataType == DataType.NATIONAL_CHARACTER || dataType == DataType.NATIONAL_CHARACTER_VARYING ? DataType.NATIONAL_CHARACTER : DataType.CHARACTER, Parameter.WithLength(11)),
+                    new Post("110392-5050", 0, 0, false),
+                    new Post("020890-8505", 0, 0, false),
+                    new Post("100290-8724", 0, 0, false),
+                    new Post("031185-1157", 0, 0, false),
+                    new Post("120579-6933", 0, 0, false),
+                    new Post("", 0, 0, true));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestCharacterVarying()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
+                    new ParameterizedDataType(dataType == DataType.NATIONAL_CHARACTER || dataType == DataType.NATIONAL_CHARACTER_VARYING ? DataType.NATIONAL_CHARACTER_VARYING : DataType.CHARACTER_VARYING, Parameter.WithLength(10)),
+                    new Post("2002-01-31", 0, 0, false),
+                    new Post("12345", 0, 0, false),
+                    new Post("abcdf", 0, 0, false),
+                    new Post("a", 0, 0, false),
+                    new Post("test!", 0, 0, false),
+                    new Post("", 0, 0, true));
+            }
         }
     }
 }

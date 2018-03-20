@@ -48,7 +48,7 @@ namespace HardHorn.Archiving
             }
         }
 
-        public static Parameter ChangeDataType(DataType dataType, Parameter parameter)
+        public static Parameter Default(DataType dataType, Parameter parameter = null)
         {
             switch (dataType)
             {

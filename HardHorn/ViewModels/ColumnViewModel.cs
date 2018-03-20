@@ -29,6 +29,12 @@ namespace HardHorn.ViewModels
         { get { return Analysis == null ? null : new int?(Analysis.ErrorCount); }
         }
 
+        public string Description
+        {
+            get { return Column.Description; }
+            set { Column.Description = value; NotifyOfPropertyChange("Description"); }
+        }
+
         public ParameterizedDataType ParameterizedDataType
         {
             get { return Column.ParameterizedDataType; }
@@ -41,7 +47,8 @@ namespace HardHorn.ViewModels
             set
             {
                 ParameterizedDataType.DataType = value;
-                ParameterViewModel = new ParameterViewModel(Archiving.Parameter.ChangeDataType(value, ParameterViewModel.Parameter));
+                ParameterViewModel = new ParameterViewModel(Archiving.Parameter.Default(value, ParameterViewModel.Parameter));
+                ParameterizedDataType.Parameter = ParameterViewModel.Parameter;
                 NotifyOfPropertyChange("ParameterViewModel");
                 NotifyOfPropertyChange("DataType");
             }
@@ -51,6 +58,9 @@ namespace HardHorn.ViewModels
         {
             get; set;
         }
+
+        public uint? MinLength { get { return Analysis == null || Analysis.CharacterMinParameter == null ? null : (uint?)Analysis.CharacterMinParameter.Length; } }
+        public uint? MaxLength { get { return Analysis == null || Analysis.CharacterMaxParameter == null ? null : (uint?)Analysis.CharacterMaxParameter.Length; } }
 
         public ColumnViewModel(Column column, ColumnAnalysis analysis = null)
         {

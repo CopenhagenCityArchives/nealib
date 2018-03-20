@@ -46,7 +46,7 @@
                             </TextBlock.Text>
                         </TextBlock>
                     </StackPanel>
-                    <TextBox Height="35" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding SelectedTableViewModel.Table.Description, Mode=OneWay}" />
+                    <TextBox Height="35" TextWrapping="Wrap" Text="{Binding SelectedTableViewModel.Description, UpdateSourceTrigger=PropertyChanged}" />
                     <WrapPanel Grid.Row="2" Grid.Column="2" Margin="5" Grid.ColumnSpan="2">
                         <CheckBox IsChecked="{Binding ShowErrorReports}" Margin="0 0 10 0">Vis fejl</CheckBox>
                         <CheckBox IsChecked="{Binding ShowSuggestionReports}" Margin="0 0 10 0">Vis forslag</CheckBox>
@@ -239,12 +239,21 @@
                                     </MultiBinding>
                                 </GridViewColumn.DisplayMemberBinding>
                             </GridViewColumn>
-                            <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding Analysis.MinParam, Converter={StaticResource ParameterToStringConverter}}"  util:GridViewSort.PropertyName="Analysis.MinParam"></GridViewColumn>
-                            <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding Analysis.MaxParam, Converter={StaticResource ParameterToStringConverter}}" util:GridViewSort.PropertyName="Analysis.MaxParam"></GridViewColumn>
+                            <GridViewColumn Header="Minimumslængde" Width="70" DisplayMemberBinding="{Binding MinLength}"  util:GridViewSort.PropertyName="MinLength"></GridViewColumn>
+                            <GridViewColumn Header="Maksimumslængde" Width="70" DisplayMemberBinding="{Binding MaxLength}" util:GridViewSort.PropertyName="MaxLength"></GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
                 <TabControl Grid.Row="2" Grid.Column="2">
+                    <TabControl.Style>
+                        <Style TargetType="TabControl">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TabControl.Style>
                     <TabItem Header="Postvisning">
                         <DockPanel>
                             <StackPanel Margin="5" Orientation="Horizontal" DockPanel.Dock="Top">
@@ -391,7 +400,76 @@
                             </ListView>-->
                         </DockPanel>
                     </TabItem>
+                    <TabItem Header="Nøgler">
+                        <StackPanel>
+                            <GroupBox>
+                                <GroupBox.Header>
+                                    <TextBlock FontWeight="Bold" Text="{Binding SelectedTableViewModel.Table.PrimaryKey.Name}" />
+                                </GroupBox.Header>
+                                <ItemsControl ItemsSource="{Binding SelectedTableViewModel.Table.PrimaryKey.Columns}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}"></TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </GroupBox>
+                            <ItemsControl ItemsSource="{Binding SelectedTableViewModel.Table.ForeignKeys}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <GroupBox>
+                                            <GroupBox.Header>
+                                                <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                            </GroupBox.Header>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <ItemsControl ItemsSource="{Binding References}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Column.Name}"></TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding References}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Button Margin="0,0,0,2" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToReferencedColumn($dataContext)]">
+                                                                <TextBlock Margin="0,0,0,-2">
+                                                                    <TextBlock.Text>
+                                                                        <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
+                                                                            <Binding Path="ReferencedColumn.Table.Name"></Binding>
+                                                                            <Binding Path="ReferencedColumn.Name"></Binding>
+                                                                            <Binding Path="ReferencedColumn.ColumnId"></Binding>
+                                                                        </MultiBinding>
+                                                                    </TextBlock.Text>
+                                                                </TextBlock>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+                                        </GroupBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </TabItem>
                     <TabItem Header="Fejlvisning">
+                        <TabItem.Style>
+                            <Style TargetType="TabItem">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTableViewModel}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding SelectedTableViewModel.SelectedColumnViewModel}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TabItem.Style>
                         <TabControl SelectedItem="{Binding Path=SelectedItem.SelectedTest, ElementName=ColumnListView}" ItemsSource="{Binding Path=SelectedItem.Tests, ElementName=ColumnListView}">
                             <TabControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type ana:Test}">
@@ -464,11 +542,12 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <Label>Datatype</Label>
-                            <ComboBox
-                                    Grid.Column="1"
-                                    SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel.DataType}">
+                            <Label>Beskrivelse</Label>
+                            <TextBox Grid.Column="1" MaxLines="4" Height="35" TextWrapping="Wrap" Width="200" Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.Description, UpdateSourceTrigger=PropertyChanged}" />
+                            <Label Grid.Row="1">Datatype</Label>
+                            <ComboBox Grid.Row="1" Grid.Column="1" SelectedItem="{Binding SelectedTableViewModel.SelectedColumnViewModel.DataType}">
                                 <ComboBox.Resources>
                                     <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
                                         <ObjectDataProvider.MethodParameters>
@@ -487,8 +566,8 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            <Label Grid.Row="1">Parameter</Label>
-                            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
+                            <Label Grid.Row="2">Parameter</Label>
+                            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
                                 <TextBox Text="{Binding SelectedTableViewModel.SelectedColumnViewModel.ParameterViewModel.Length, UpdateSourceTrigger=PropertyChanged}">
                                     <TextBox.Style>
                                         <Style>
@@ -523,9 +602,9 @@
                                     </TextBox.Style>
                                 </TextBox>
                             </StackPanel>
-                            <Label Grid.Row="2">Kan være null</Label>
-                            <CheckBox VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.Nullable}"></CheckBox>
-                            <Button Grid.Row="3" cal:Message.Attach="ApplySuggestion">Anvend datatypeforslag</Button>
+                            <Label Grid.Row="3">Kan være null</Label>
+                            <CheckBox VerticalAlignment="Center" Grid.Row="3" Grid.Column="1" IsChecked="{Binding SelectedTableViewModel.SelectedColumnViewModel.Column.Nullable}"></CheckBox>
+                            <Button Grid.Row="4" cal:Message.Attach="ApplySuggestion">Anvend datatypeforslag</Button>
                         </Grid>
                     </TabItem>
                 </TabControl>
@@ -550,35 +629,98 @@
                 </ListView>
                 <ListView Grid.Column="1" ItemsSource="{Binding Path=SelectedItem.Subjects, ElementName=ErrorViewModelList}">
                     <ListView.Resources>
+                        <DataTemplate DataType="{x:Type vm:TestFailure}">
+                            <Grid Margin="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label>Undtagelsestype:</Label>
+                                <Label Grid.Column="1" Content="{Binding Exception}" />
+
+                                <Label Grid.Row="1">Besked:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Exception.Message}" />
+
+                                <Label Grid.Row="2">Data:</Label>
+                                <Label Grid.Row="2" Grid.Column="1" Content="{Binding Post.Data}" />
+                            </Grid>
+                        </DataTemplate>
                         <DataTemplate DataType="{x:Type vm:XmlValidationErrorViewModel}">
-                            <StackPanel Margin="5">
-                                <TextBlock Text="{Binding Message}"></TextBlock>
-                                <TextBlock Text="{Binding Element}"></TextBlock>
-                            </StackPanel>
+                            <Grid Margin="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label>Element:</Label>
+                                <Label Grid.Column="1" Content="{Binding Element}" />
+
+                                <Label Grid.Row="1">Besked:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Message}" />
+                            </Grid>
                         </DataTemplate>
                         <DataTemplate DataType="{x:Type vm:TableRowCountViewModel}">
-                            <StackPanel Margin="5">
-                                <Button Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToTable($dataContext)]">
-                                    <TextBlock Text="{Binding Table.Name}" />
+                            <Grid Margin="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label>Tabel:</Label>
+                                <Button Grid.Column="1" Margin="0,0,0,2" VerticalAlignment="Center" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToTable($dataContext)]">
+                                    <TextBlock Margin="0,0,0,-2" Text="{Binding Table.Name}" />
                                 </Button>
-                                <TextBlock Text="{Binding Count}"></TextBlock>
-                                <TextBlock Text="{Binding Table.Rows}"></TextBlock>
-                            </StackPanel>
+
+                                <Label Grid.Row="1">Antal:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Count}" />
+
+                                <Label Grid.Row="2">Rækker:</Label>
+                                <Label Grid.Row="2" Grid.Column="1" Content="{Binding Table.Rows}" />
+                            </Grid>
                         </DataTemplate>
                         <DataTemplate DataType="{x:Type av:ArchiveVersionColumnParsingException}">
-                            <StackPanel Margin="5">
-                                <TextBlock>
-                                        <Hyperlink>
-                                            <TextBlock cal:Message.Attach="GoToTable(Table)" Text="{Binding Table.Name}" />
-                                        </Hyperlink>
-                                    </TextBlock>
-                                <TextBlock Text="{Binding Element}"></TextBlock>
-                            </StackPanel>
+                            <Grid Margin="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label>Tabel:</Label>
+                                <Button Grid.Column="1" Margin="0,0,0,2" VerticalAlignment="Center" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToTable($dataContext)]">
+                                    <TextBlock Margin="0,0,0,-2" Text="{Binding Table.Name}" />
+                                </Button>
+
+                                <Label Grid.Row="1">Element:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Element}" />
+                            </Grid>
                         </DataTemplate>
                         <DataTemplate DataType="{x:Type av:ArchiveVersionColumnTypeParsingException}">
-                            <StackPanel Margin="5">
-                                <Button Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToUndefinedColumn($dataContext)]">
-                                    <TextBlock>
+                            <Grid Margin="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label>Tabel:</Label>
+                                <Button Grid.Column="1" Margin="0,0,0,2" VerticalAlignment="Center" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToUndefinedColumn($dataContext)]">
+                                    <TextBlock Margin="0,0,0,-2">
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
                                                 <Binding Path="Table.Name"></Binding>
@@ -588,13 +730,24 @@
                                         </TextBlock.Text>
                                     </TextBlock>
                                 </Button>
-                                <TextBlock Text="{Binding Type}"></TextBlock>
-                            </StackPanel>
+
+                                <Label Grid.Row="1">Type:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Type}" />
+                            </Grid>
                         </DataTemplate>
                         <DataTemplate DataType="{x:Type vm:ColumnCount}">
-                            <StackPanel Margin="5">
-                                <Button Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToColumn($dataContext)]">
-                                    <TextBlock>
+                            <Grid Margin="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label>Tabel:</Label>
+                                <Button Grid.Column="1" Margin="0,0,0,2" VerticalAlignment="Center" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToColumn($dataContext)]">
+                                    <TextBlock Margin="0,0,0,-2">
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
                                                 <Binding Path="Column.Table.Name"></Binding>
@@ -604,8 +757,10 @@
                                         </TextBlock.Text>
                                     </TextBlock>
                                 </Button>
-                                <TextBlock Text="{Binding Count}"></TextBlock>
-                            </StackPanel>
+
+                                <Label Grid.Row="1">Antal:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Count}" />
+                            </Grid>
                         </DataTemplate>
                     </ListView.Resources>
                 </ListView>

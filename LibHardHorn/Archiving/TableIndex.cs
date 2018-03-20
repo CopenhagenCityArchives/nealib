@@ -51,9 +51,18 @@ namespace HardHorn.Archiving
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
-            var version = element.Element(xmlns + "version").Value;
-            var dbName = element.Element(xmlns + "dbName").Value;
-            var databaseProduct = element.Element(xmlns + "databaseProduct").Value;
+            var versionElem = element.Element(xmlns + "version");
+            if (versionElem == null)
+            {
+                throw new ArchiveVersionRequiredFieldMissingException("version");
+            }
+            var version = versionElem.Value;
+
+            var dbNameElem = element.Element(xmlns + "dbName");
+            string dbName = dbNameElem == null ? null : dbNameElem.Value;
+
+            var databaseProductElem = element.Element(xmlns + "databaseProduct");
+            string databaseProduct = databaseProductElem == null ? null : databaseProductElem.Value;
 
             var tables = element.Element(xmlns + "tables").Elements().Select(xtable => Table.Parse(xtable, logger, callback));
 

@@ -41,4 +41,13 @@ namespace HardHorn.Archiving
             Element = element;
         }
     }
+
+    public class ArchiveVersionRequiredFieldMissingException : Exception
+    {
+        public string Field { get; private set; }
+        public ArchiveVersionRequiredFieldMissingException(string field) : base(string.Format("Feltet '{0}' findes ikke.", field))
+        {
+            Field = field;
+        }
+    }
 }

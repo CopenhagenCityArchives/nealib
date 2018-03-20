@@ -216,6 +216,7 @@ namespace HardHorn.ViewModels
         public TableRowCountErrorViewModel TableRowCountErrorViewModel { get; set; }
         Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
         Dictionary<AnalysisTestType, ErrorViewModelBase> TestErrorViewModelIndex { get; set; }
+        Dictionary<AnalysisTestType, ErrorViewModelBase> TestFailureViewModelIndex { get; set; }
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
 
         CancellationTokenSource _testCts;
@@ -311,6 +312,7 @@ namespace HardHorn.ViewModels
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
+            TestFailureViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             FilteredTableViewModels = new ObservableCollection<TableViewModel>();
             TableComparisons = new ObservableCollection<TableComparison>();
@@ -423,6 +425,7 @@ namespace HardHorn.ViewModels
 
             // Clear test error view models from list and index
             TestErrorViewModelIndex.Clear();
+            TestFailureViewModelIndex.Clear();
             var filteredErrorViewModels = new List<ErrorViewModelBase>();
             foreach (var errorViewModel in ErrorViewModels)
             {
@@ -473,6 +476,25 @@ namespace HardHorn.ViewModels
 
                             testErrorViewModel.Add(new ColumnCount() { Column = analysis.Column, Count = test.ErrorCount });
                             testErrorViewModel.NotifyOfPropertyChange("ErrorCount");
+                        }
+                    }
+
+                    if (analysis.TestFailures.Count > 0)
+                    {
+                        foreach (var test in analysis.TestFailures.Keys)
+                        {
+                            ErrorViewModelBase testFailureViewModel;
+                            if (!TestFailureViewModelIndex.TryGetValue(test.Type, out testFailureViewModel))
+                            {
+                                testFailureViewModel = new TestFailureViewModel(test.Type);
+                                TestFailureViewModelIndex[test.Type] = testFailureViewModel;
+                                ErrorViewModels.Add(testFailureViewModel);
+                            }
+
+                            foreach (var tuple in analysis.TestFailures[test])
+                            {
+                                testFailureViewModel.Add(tuple);
+                            }
                         }
                     }
                 }
@@ -865,6 +887,17 @@ namespace HardHorn.ViewModels
 
             TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
             SelectedTableViewModel = vm;
+        }
+
+        public void GoToReferencedColumn(Reference reference)
+        {
+            var vm = TableViewModelIndex[reference.ReferencedColumn.Table.Name];
+            if (vm == null)
+                return;
+
+            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
+            SelectedTableViewModel = vm;
+            SelectedTableViewModel.SelectedColumnViewModel = SelectedTableViewModel.ColumnViewModels.First(cvm => cvm.Column == reference.ReferencedColumn);
         }
 
         public void GoToColumn(ColumnCount c)

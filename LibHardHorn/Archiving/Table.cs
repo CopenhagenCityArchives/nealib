@@ -23,7 +23,7 @@ namespace HardHorn.Archiving
 
         public int Rows { get; private set; }
 
-        public string Description { get; private set; }
+        public string Description { get; set; }
 
         public PrimaryKey PrimaryKey { get; private set; }
         public List<ForeignKey> ForeignKeys {get;private set;}

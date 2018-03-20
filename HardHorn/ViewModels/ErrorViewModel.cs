@@ -31,6 +31,45 @@ namespace HardHorn.ViewModels
         public int Count { get { return _count; } set { _count = value; NotifyOfPropertyChange("Count"); } }
     }
 
+    public class TestFailure : PropertyChangedBase
+    {
+        public Post Post { get; private set; }
+        public Exception Exception { get; private set; }
+        public TestFailure(Post post, Exception exception)
+        {
+            Post = post;
+            Exception = exception;
+        }
+    }
+
+    public class TestFailureViewModel : ErrorViewModelBase
+    {
+        public override string Header
+        {
+            get { return "Undtagelser for " + TestType.ToString(); }
+        }
+
+        public AnalysisTestType TestType { get; private set; }
+
+        public TestFailureViewModel(AnalysisTestType testType)
+        {
+            TestType = testType;
+        }
+
+        public override void Add(object info)
+        {
+            var testFailure = info as Tuple<Post, Exception>;
+
+            if (testFailure == null)
+            {
+                throw new InvalidOperationException("Added invalid object to TestFailureViewModel.");
+            }
+
+            Subjects.Add(new TestFailure(testFailure.Item1, testFailure.Item2));
+            Count++;
+        }
+    }
+
     public class TestErrorViewModel : ErrorViewModelBase
     {
         Dictionary<Column, ColumnCount> _subjectIndex = new Dictionary<Column, ColumnCount>();

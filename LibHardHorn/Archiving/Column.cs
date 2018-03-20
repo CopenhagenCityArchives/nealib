@@ -15,7 +15,7 @@ namespace HardHorn.Archiving
         public string Name { get; private set; }
         public ParameterizedDataType ParameterizedDataType { get; set; }
         public string DataTypeOriginal { get; private set; }
-        public string Description { get; private set; }
+        public string Description { get; set; }
         public string ColumnId { get; private set; }
         public int ColumnIdNumber { get; private set; }
         public bool Nullable { get; set; }

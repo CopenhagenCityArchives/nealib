@@ -14,6 +14,18 @@ using HardHorn.Utility;
 
 namespace HardHorn.Analysis
 {
+    public class AnalysisTestException : Exception
+    {
+        public Post Post { get; private set; }
+        public Test Test { get; private set; }
+
+        public AnalysisTestException(Exception exception, Post post, Test test) : base(string.Format("An exception of type {0} occured, when testing {1} for {2}", exception.GetType(), post, test), exception)
+        {
+            Post = post;
+            Test = test;
+        }
+    }
+
     /// <summary>
     /// Encapsulates the analysis of the table data.
     /// </summary>
@@ -116,7 +128,7 @@ namespace HardHorn.Analysis
                 for (int j = 0; j < CurrentTable.Columns.Count; j++)
                 {
                     var post = rows[i,j];
-                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].UpdateLengthStatistics(post.Data);
+                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].UpdateLengthStatistics(post);
                     TestHierachy[CurrentTable][CurrentTable.Columns[j]].RunTests(post);
                 }
 
