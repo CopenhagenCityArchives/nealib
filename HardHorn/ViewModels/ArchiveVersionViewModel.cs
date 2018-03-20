@@ -908,6 +908,11 @@ namespace HardHorn.ViewModels
 
             TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
             SelectedTableViewModel = vm;
+            try
+            {
+                SelectedTableViewModel.SelectedColumnViewModel = SelectedTableViewModel.ColumnViewModels.First(cvm => cvm.Column == c.Column);
+            }
+            catch (Exception) { }
         }
 
         public void SaveLog()
