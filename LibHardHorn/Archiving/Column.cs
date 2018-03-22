@@ -177,18 +177,18 @@ namespace HardHorn.Archiving
                 throw new ArchiveVersionColumnParsingException("Could not read column ID.", xcolumn, table);
             }
             string defaultValue = null;
-            try
+            var defaultValueElement = xcolumn.Element(xmlns + "defaultValue");
+            if (defaultValueElement != null)
             {
-                defaultValue = xcolumn.Element(xmlns + "defaultValue").Value;
+                defaultValue = defaultValueElement.Value;
             }
-            catch (Exception) { }
 
             string functionalDescription = null;
-            try
+            var functionalDescriptionElement = xcolumn.Element(xmlns + "functionalDescription");
+            if (functionalDescriptionElement != null)
             {
-                functionalDescription = xcolumn.Element(xmlns + "functionalDescription").Value;
+                functionalDescription = functionalDescriptionElement.Value;
             }
-            catch (Exception) { }
 
             string name;
             if (xname.Value.Length > 0)

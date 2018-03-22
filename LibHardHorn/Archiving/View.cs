@@ -22,12 +22,12 @@ namespace HardHorn.Archiving
 
             var name = element.Element(xmlns + "name").Value;
             var queryOriginal = element.Element(xmlns + "queryOriginal").Value;
+            var descriptionElement = element.Element(xmlns + "description");
             string description = null;
-            try
+            if (descriptionElement != null)
             {
-                description = element.Element(xmlns + "description").Value;
+                description = descriptionElement.Value;
             }
-            catch (NullReferenceException) { }
 
             return new View(name, queryOriginal, description);
         }
