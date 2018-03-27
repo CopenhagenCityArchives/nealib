@@ -143,8 +143,10 @@
     <Compile Include="ViewModels\ArchiveVersionViewModel.cs" />
     <Compile Include="ViewModels\ColumnViewModel.cs" />
     <Compile Include="ViewModels\ErrorViewModel.cs" />
+    <Compile Include="ViewModels\ForeignKeyViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\ParameterViewModel.cs" />
+    <Compile Include="ViewModels\ReferenceViewModel.cs" />
     <Compile Include="ViewModels\StartTestViewModel.cs" />
     <Compile Include="ViewModels\TableViewModel.cs" />
     <Compile Include="Views\ArchiveVersionView.xaml.cs">

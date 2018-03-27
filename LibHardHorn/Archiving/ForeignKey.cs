@@ -8,7 +8,7 @@ namespace HardHorn.Archiving
 {
     public class ForeignKey
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
         public Table Table { get; private set; }
         public List<Reference> References { get; private set; }
         public string ReferencedTableName { get; private set; }

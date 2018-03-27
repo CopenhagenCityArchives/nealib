@@ -889,15 +889,15 @@ namespace HardHorn.ViewModels
             SelectedTableViewModel = vm;
         }
 
-        public void GoToReferencedColumn(Reference reference)
+        public void GoToReferencedColumn(ReferenceViewModel referenceViewModel)
         {
-            var vm = TableViewModelIndex[reference.ReferencedColumn.Table.Name];
+            var vm = TableViewModelIndex[referenceViewModel.Reference.ReferencedColumn.Table.Name];
             if (vm == null)
                 return;
 
             TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
             SelectedTableViewModel = vm;
-            SelectedTableViewModel.SelectedColumnViewModel = SelectedTableViewModel.ColumnViewModels.First(cvm => cvm.Column == reference.ReferencedColumn);
+            SelectedTableViewModel.SelectedColumnViewModel = SelectedTableViewModel.ColumnViewModels.First(cvm => cvm.Column == referenceViewModel.Reference.ReferencedColumn);
         }
 
         public void GoToColumn(ColumnCount c)

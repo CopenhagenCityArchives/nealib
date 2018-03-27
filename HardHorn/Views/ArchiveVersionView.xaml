@@ -414,7 +414,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </GroupBox>
-                            <ItemsControl ItemsSource="{Binding SelectedTableViewModel.Table.ForeignKeys}">
+                            <ItemsControl ItemsSource="{Binding SelectedTableViewModel.ForeignKeyViewModels}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <GroupBox>
@@ -426,23 +426,23 @@
                                                     <ColumnDefinition />
                                                     <ColumnDefinition />
                                                 </Grid.ColumnDefinitions>
-                                                <ItemsControl ItemsSource="{Binding References}">
+                                                <ItemsControl ItemsSource="{Binding ReferenceViewModels}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <TextBlock Text="{Binding Column.Name}"></TextBlock>
+                                                            <TextBlock Text="{Binding Reference.Column.Name}"></TextBlock>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
-                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding References}">
+                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding ReferenceViewModels}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <Button Margin="0,0,0,2" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToReferencedColumn($dataContext)]">
                                                                 <TextBlock Margin="0,0,0,-2">
                                                                     <TextBlock.Text>
                                                                         <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
-                                                                            <Binding Path="ReferencedColumn.Table.Name"></Binding>
-                                                                            <Binding Path="ReferencedColumn.Name"></Binding>
-                                                                            <Binding Path="ReferencedColumn.ColumnId"></Binding>
+                                                                            <Binding Path="Reference.ReferencedColumn.Table.Name"></Binding>
+                                                                            <Binding Path="Reference.ReferencedColumn.Name"></Binding>
+                                                                            <Binding Path="Reference.ReferencedColumn.ColumnId"></Binding>
                                                                         </MultiBinding>
                                                                     </TextBlock.Text>
                                                                 </TextBlock>

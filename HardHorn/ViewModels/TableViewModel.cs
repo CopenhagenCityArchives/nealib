@@ -33,6 +33,8 @@ namespace HardHorn.ViewModels
     {
         public Table Table { get; set; }
 
+        public ObservableCollection<ForeignKeyViewModel> ForeignKeyViewModels { get; private set; }
+
         uint _browseOffset;
         public uint BrowseOffset
         {
@@ -148,6 +150,7 @@ namespace HardHorn.ViewModels
         {
             Table = table;
             ColumnViewModels = new ObservableCollection<ColumnViewModel>(table.Columns.Select(c => new ColumnViewModel(c)));
+            ForeignKeyViewModels = new ObservableCollection<ForeignKeyViewModel>(table.ForeignKeys.Select(fkey => new ForeignKeyViewModel(this, fkey)));
             AnalysisErrors = ColumnViewModels.Any(cvm => cvm.Column.ParameterizedDataType.DataType == DataType.UNDEFINED);
             BrowseOffset = 0;
             BrowseCount = 20;
