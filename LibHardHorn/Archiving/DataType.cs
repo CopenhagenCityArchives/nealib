@@ -9,7 +9,7 @@
         NATIONAL_CHARACTER_VARYING,
         // Integer types
         INTEGER,
-        SMALL_INTEGER,
+        SMALLINT,
         // Decimal types
         NUMERIC,
         DECIMAL,

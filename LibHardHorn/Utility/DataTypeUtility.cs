@@ -36,8 +36,8 @@ namespace HardHorn.Utility
             // Integer types
             else if (upperDataType.StartsWith("INTEGER"))
                 return DataType.INTEGER;
-            else if (upperDataType.StartsWith("SMALL INTEGER"))
-                return DataType.SMALL_INTEGER;
+            else if (upperDataType.StartsWith("SMALLINT"))
+                return DataType.SMALLINT;
             // Decimal types
             else if (upperDataType.StartsWith("NUMERIC"))
                 return DataType.NUMERIC;
