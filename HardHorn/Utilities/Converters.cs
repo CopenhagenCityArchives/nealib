@@ -12,6 +12,7 @@ using HardHorn.Analysis;
 using System.Windows.Controls;
 using Caliburn.Micro;
 using System.Data;
+using System.Text.RegularExpressions;
 
 namespace HardHorn.Utilities
 {
@@ -35,7 +36,8 @@ namespace HardHorn.Utilities
             var dataTable = new DataTable();
             foreach (var reference in foreignKey.References)
             {
-                dataTable.Columns.Add(reference.ColumnName.Replace("_", "__"), typeof(string));
+                var dataColumn = new DataColumn(string.Format("<{0}: {1}>", reference.Column.ColumnId, reference.ColumnName.Replace("_", "__")), typeof(string));
+                dataTable.Columns.Add();
             }
             dataTable.Columns.Add("Antal fejl", typeof(int));
 
