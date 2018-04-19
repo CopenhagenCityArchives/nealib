@@ -9,6 +9,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace HardHorn.ViewModels
 {
@@ -146,6 +147,8 @@ namespace HardHorn.ViewModels
             set { _rowDataTable = value; NotifyOfPropertyChange("RowDataTable"); }
         }
 
+        public DataGridView RowDataGridView { get; private set; }
+
         public TableViewModel(Table table)
         {
             Table = table;
@@ -155,10 +158,13 @@ namespace HardHorn.ViewModels
             BrowseOffset = 0;
             BrowseCount = 20;
             RowDataTable = new DataTable();
+            RowDataGridView = new DataGridView();
             _browseRows = new ObservableCollection<BrowseRow>();
             foreach (var column in table.Columns)
             {
-                RowDataTable.Columns.Add(new DataColumn(column.Name.Replace("_", "__"), typeof(Post)));
+                var dataColumn = new DataColumn(string.Format("<{0}: {1}>", column.ColumnId, column.Name.Replace("_", "__")), typeof(Post));
+                dataColumn.Caption = column.ColumnIdNumber.ToString();
+                _rowDataTable.Columns.Add(dataColumn);
             }
         }
 
