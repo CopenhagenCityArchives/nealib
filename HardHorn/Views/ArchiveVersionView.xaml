@@ -385,19 +385,8 @@
                                 </Button>
                             </StackPanel>
                             <DataGrid ItemsSource="{Binding SelectedTableViewModel.RowDataTable}" CellStyle="{StaticResource DataGridCellStyle}" IsReadOnly="True" SelectionUnit="Cell">
-                                
+                                 
                             </DataGrid>
-                            <!--<ListView SelectionMode="Single" ItemsSource="{Binding SelectedTableViewModel.BrowseRows}">
-                                <ListView.View>
-                                    <GridView util:AttachedProperties.TableColumnsSource="{Binding SelectedTableViewModel.Table}">
-                                    </GridView>
-                                </ListView.View>
-                                <ListView.Resources>
-                                    <Style TargetType="{x:Type ListViewItem}">
-                                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"></Setter>
-                                    </Style>
-                                </ListView.Resources>
-                            </ListView>-->
                         </DockPanel>
                     </TabItem>
                     <TabItem Header="Nøgler">
