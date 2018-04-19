@@ -23,8 +23,15 @@ namespace HardHorn.Archiving
 
         public void Initialize(Table table, Table referencedTable)
         {
-            Column = table.Columns.First(c => c.Name.ToLower() == ColumnName.ToLower());
-            ReferencedColumn = referencedTable.Columns.First(c => c.Name.ToLower() == ReferencedColumnName.ToLower());
+            try
+            {
+                Column = table.Columns.First(c => c.Name.ToLower() == ColumnName.ToLower());
+                ReferencedColumn = referencedTable.Columns.First(c => c.Name.ToLower() == ReferencedColumnName.ToLower());
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new Exception(string.Format("Kunne ikke oprette en reference fra {0}.{1} til {2}.{3} - feltet kunne ikke findes.", Column.Table.Name, Column.Name, referencedTable.Name, ReferencedColumnName), ex);
+            }
         }
 
         public static Reference Parse(XElement element)
