@@ -147,8 +147,6 @@ namespace HardHorn.ViewModels
             set { _rowDataTable = value; NotifyOfPropertyChange("RowDataTable"); }
         }
 
-        public DataGridView RowDataGridView { get; private set; }
-
         public TableViewModel(Table table)
         {
             Table = table;
@@ -158,7 +156,6 @@ namespace HardHorn.ViewModels
             BrowseOffset = 0;
             BrowseCount = 20;
             RowDataTable = new DataTable();
-            RowDataGridView = new DataGridView();
             _browseRows = new ObservableCollection<BrowseRow>();
             foreach (var column in table.Columns)
             {

@@ -50,7 +50,7 @@ namespace HardHorn.Utility
         {
             for (int row = 0; row < rowCount; row++)
             {
-                _writer.WriteLine("\t<row>");
+                _writer.WriteLine("  <row>");
                 for (int col = 0; col < Table.Columns.Count(); col++)
                 {
                     var tag = Table.Columns[col].ColumnId;
@@ -60,9 +60,9 @@ namespace HardHorn.Utility
                         var operation = _operationMap[col];
                         post = post.ReplacePattern(operation.Pattern, operation.Replacement);
                     }
-                    _writer.WriteLine(string.Format("<{0}{2}>{1}</{0}>", tag, post.Data, post.IsNull ? " xsi:nil=\"true\"" : ""));
+                    _writer.WriteLine(string.Format("    <{0}{2}>{1}</{0}>", tag, post.Data, post.IsNull ? " xsi:nil=\"true\"" : ""));
                 }
-                _writer.WriteLine("\t</row>");
+                _writer.WriteLine("  </row>");
             }
         }
 

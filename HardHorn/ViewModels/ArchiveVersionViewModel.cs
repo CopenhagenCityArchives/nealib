@@ -44,7 +44,12 @@ namespace HardHorn.ViewModels
         public ObservableCollection<TableComparison> TableComparisons { get; set; }
         public ObservableCollection<TableComparison> RemovedTableComparisons { get; set; }
         public ObservableCollection<TableComparison> AddedTableComparisons { get; set; }
+        public ObservableCollection<ReplacementOperation> ReplacementOperations { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
+
+        System.Data.DataTable _replacedDataTable;
+        public System.Data.DataTable ReplacedDataTable
+        { get { return _replacedDataTable; } set { _replacedDataTable = value; NotifyOfPropertyChange("ReplacedDataTable"); } }
 
         ICollectionView _columnsView;
         ICollectionView _keyTestTableView;
@@ -318,6 +323,7 @@ namespace HardHorn.ViewModels
             TableComparisons = new ObservableCollection<TableComparison>();
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
+            ReplacementOperations = new ObservableCollection<ReplacementOperation>();
             CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
             ForeignKeyTestResults = new ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>();
             MainLogger = mainLogger;
@@ -325,6 +331,7 @@ namespace HardHorn.ViewModels
             ArchiveVersion = ArchiveVersion.Load(location, mainLogger, OnArchiveVersionException);
             TableViewModels = new ObservableCollection<TableViewModel>(ArchiveVersion.Tables.Select(t => new TableViewModel(t)));
             TableViewModelIndex = new Dictionary<string, TableViewModel>();
+            ReplacedDataTable = new System.Data.DataTable();
             foreach (var tableViewModel in TableViewModels) TableViewModelIndex[tableViewModel.Table.Name] = tableViewModel;
             PropertyChanged += (sender, arg) =>
             {
@@ -378,6 +385,92 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Actions
+        public void ReplaceTableToFile(TableViewModel tableViewModel)
+        {
+            var table = tableViewModel.Table;
+            Stream stream = null;
+
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    stream = dialog.OpenFile();
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            try
+            {
+                var replacer = new TableReplacer(table, ReplacementOperations, stream);
+                replacer.WriteHeader();
+                var reader = new TableReader(table);
+                Post[,] readPosts;
+                int readRows = 0;
+                do
+                {
+                    readRows = reader.Read(out readPosts);
+                    replacer.Write(readPosts, readRows);
+                } while (readRows > 0);
+                replacer.WriteFooter();
+            }
+            finally
+            {
+                stream.Close();
+            }
+        }
+
+        public void ShowReplaceTable(TableViewModel table)
+        {
+            var dataTable = new System.Data.DataTable();
+            foreach (var column in table.Table.Columns)
+            {
+                var dataColumn = new System.Data.DataColumn(string.Format("<{0}: {1}>", column.ColumnId, column.Name.Replace("_", "__")), typeof(Post));
+                dataColumn.Caption = column.ColumnIdNumber.ToString();
+                dataTable.Columns.Add(dataColumn);
+            }
+            ReplacedDataTable = dataTable;
+
+            var stream = new MemoryStream();
+            var originalTableReader = new TableReader(table.Table);
+            Post[,] posts;
+            int rowsRead = originalTableReader.Read(out posts, 10);
+            var replacer = new TableReplacer(table.Table, ReplacementOperations, stream);
+            replacer.WriteHeader();
+            replacer.Write(posts, rowsRead);
+            replacer.WriteFooter();
+            replacer.Flush();
+            stream.Seek(0, SeekOrigin.Begin);
+            var replacedTableReader = new TableReader(table.Table, stream);
+            Post[,] replacedPosts;
+            replacedTableReader.Read(out replacedPosts, rowsRead);
+
+            ReplacedDataTable.Rows.Clear();
+            for (int row = 0; row < rowsRead; row++)
+            {
+                var rowPosts = new Post[table.Table.Columns.Count];
+                for (int col = 0; col < table.Table.Columns.Count; col++)
+                {
+                    rowPosts[col] = replacedPosts[row, col];
+                }
+                ReplacedDataTable.Rows.Add(rowPosts);
+            }
+        }
+
+        public void RemoveReplacementOperation(ReplacementOperation replacement)
+        {
+            ReplacementOperations.Remove(replacement);
+        }
+
+        public void AddReplacementOperation(TableViewModel tableViewModel, ColumnViewModel columnViewModel, string pattern, string replacement)
+        {
+            var regex = new Regex(pattern, RegexOptions.Compiled);
+            ReplacementOperations.Add(new ReplacementOperation(columnViewModel.Column, regex, replacement));
+        }
+
         public void OpenSelectedTableViewModel()
         {
             if (SelectedTableViewModel == null)
