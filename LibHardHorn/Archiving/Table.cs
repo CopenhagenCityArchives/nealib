@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 
 using HardHorn.Utility;
+using System.IO;
 
 namespace HardHorn.Archiving
 {
@@ -230,6 +231,19 @@ namespace HardHorn.Archiving
             }
 
             return tableComparison;
+        }
+
+        public void WriteTableFileFromReplacements(List<ReplacementOperation> replacements, StreamWriter writer)
+        {
+
+            using (var reader = GetReader())
+            {
+                Post[,] rows;
+                while (reader.Read(out rows) > 0)
+                {
+
+                }
+            }
         }
 
         internal XElement ToXml(bool overwriteUnchangedDataTypes = false)

@@ -60,7 +60,6 @@
     <Compile Include="Archiving\Post.cs" />
     <Compile Include="Archiving\PrimaryKey.cs" />
     <Compile Include="Archiving\Reference.cs" />
-    <Compile Include="Archiving\Row.cs" />
     <Compile Include="Archiving\View.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Archiving\Column.cs" />
@@ -75,8 +74,10 @@
     <Compile Include="Utility\ForeignKeyComparison.cs" />
     <Compile Include="Utility\NotifyPropertyChangedBase.cs" />
     <Compile Include="Utility\ReferenceComparison.cs" />
+    <Compile Include="Utility\ReplacementOperation.cs" />
     <Compile Include="Utility\TableComparison.cs" />
     <Compile Include="Utility\TableReader.cs" />
+    <Compile Include="Utility\TableReplacer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

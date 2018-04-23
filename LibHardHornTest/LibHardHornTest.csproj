@@ -58,6 +58,7 @@
     <Compile Include="ArchiveVersionTest.cs" />
     <Compile Include="ColumnTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TableTest.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>

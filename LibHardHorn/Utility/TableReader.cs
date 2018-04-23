@@ -9,7 +9,7 @@ namespace HardHorn.Utility
 
     public class TableReader : IDisposable
     {
-        FileStream _fileStream;
+        Stream _stream;
         XmlReader _xmlReader;
         Table _table;
         XNamespace xmlnsxsi = "http://www.w3.org/2001/XMLSchema-instance";
@@ -17,8 +17,15 @@ namespace HardHorn.Utility
         public TableReader(Table table)
         {
             _table = table;
-            _fileStream = new FileStream(Path.Combine(table.ArchiveVersion.Path, "Tables", table.Folder, table.Folder + ".xml"), FileMode.Open, FileAccess.Read);
-            _xmlReader = XmlReader.Create(_fileStream);
+            _stream = new FileStream(Path.Combine(table.ArchiveVersion.Path, "Tables", table.Folder, table.Folder + ".xml"), FileMode.Open, FileAccess.Read);
+            _xmlReader = XmlReader.Create(_stream);
+        }
+
+        public TableReader(Table table, Stream stream)
+        {
+            _table = table;
+            _stream = stream;
+            _xmlReader = XmlReader.Create(stream);
         }
 
         /// <summary>
@@ -54,11 +61,7 @@ namespace HardHorn.Utility
                                     var xnull = xpost.Attribute(xmlnsxsi + "nil");
                                     bool.TryParse(xnull.Value, out isNull);
                                 }
-                                rows[row, col] = new Post();
-                                rows[row, col].Data = xpost.Value;
-                                rows[row, col].Line = xmlInfo.LineNumber;
-                                rows[row, col].Position = xmlInfo.LinePosition;
-                                rows[row, col].IsNull = isNull;
+                                rows[row, col] = new Post(xpost.Value, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition);
                                 col++;
                             }
                         }
@@ -81,8 +84,8 @@ namespace HardHorn.Utility
                 {
                     _xmlReader.Close();
                     _xmlReader.Dispose();
-                    _fileStream.Close();
-                    _fileStream.Dispose();
+                    _stream.Close();
+                    _stream.Dispose();
                     _table = null;
                 }
 

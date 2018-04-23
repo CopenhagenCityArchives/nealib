@@ -33,15 +33,15 @@ namespace LibHardHornTest
             var analyzer = new Analyzer(av, new TestLogger());
         }
 
-        public void AssertOkay(Column column, Test test, string data, int line = 0, int pos = 0, bool isNull = false)
+        public void AssertOkay(Column column, Test test, string data, bool isNull = false)
         {
-            var result = test.GetResult(new Post(data, line, pos, isNull), column);
+            var result = test.GetResult(new Post(data, isNull), column);
             Assert.AreEqual(Test.Result.OKAY, result, string.Format("Test {0} on column {1} failed on data '{2}', when expecting success.", test, column, data));
         }
 
         public void AssertError(Column column, Test test, string data)
         {
-            var result = test.GetResult(new Post(data, 0, 0, false), column);
+            var result = test.GetResult(new Post(data, false), column);
             Assert.AreEqual(Test.Result.ERROR, result, string.Format("Test {0} on column {1} succeeded on data '{2}', when expecting failure.", test, column, data));
         }
 
@@ -464,11 +464,11 @@ namespace LibHardHornTest
             foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
             {
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIMESTAMP, Parameter.WithPrecision(10)),
-                    new Post("2007-01-18T12:54:10.123", 0, 0, false),
-                    new Post("", 0, 0, true),
-                    new Post("2003-01-30T12:32:30", 0, 0, false),
-                    new Post("2007-01-18T12:54:36.123", 0, 0, false),
-                    new Post("2007-01-18T12:50:73.1231231234", 0, 0, false));
+                    new Post("2007-01-18T12:54:10.123", false),
+                    new Post("", true),
+                    new Post("2003-01-30T12:32:30", false),
+                    new Post("2007-01-18T12:54:36.123", false),
+                    new Post("2007-01-18T12:50:73.1231231234", false));
             }
         }
 
@@ -478,12 +478,12 @@ namespace LibHardHornTest
             foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
             {
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIMESTAMP_WITH_TIME_ZONE, Parameter.WithPrecision(10)),
-                    new Post("2007-01-18T12:54:10.123Z", 0, 0, false),
-                    new Post("", 0, 0, true),
-                    new Post("2003-01-30T12:32:30+03:00", 0, 0, false),
-                    new Post("2007-01-18T12:54:36.123-02:00", 0, 0, false),
-                    new Post("2007-01-18T12:50:73.1231231234Z", 0, 0, false),
-                    new Post("2010-11-20T12:54:63.123Z", 0, 0, false));
+                    new Post("2007-01-18T12:54:10.123Z", false),
+                    new Post("", true),
+                    new Post("2003-01-30T12:32:30+03:00", false),
+                    new Post("2007-01-18T12:54:36.123-02:00", false),
+                    new Post("2007-01-18T12:50:73.1231231234Z", false),
+                    new Post("2010-11-20T12:54:63.123Z", false));
             }
         }
 
@@ -493,10 +493,10 @@ namespace LibHardHornTest
             foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
             {
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIME, Parameter.WithPrecision(10)),
-                    new Post("12:54:10.123", 0, 0, false),
-                    new Post("12:32:30", 0, 0, false),
-                    new Post("12:54:36.123", 0, 0, false),
-                    new Post("12:50:73.1231231234", 0, 0, false));
+                    new Post("12:54:10.123", false),
+                    new Post("12:32:30", false),
+                    new Post("12:54:36.123", false),
+                    new Post("12:50:73.1231231234", false));
             }
         }
 
@@ -506,12 +506,12 @@ namespace LibHardHornTest
             foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
             {
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.TIME_WITH_TIME_ZONE, Parameter.WithPrecision(10)),
-                    new Post("12:54:10.123Z", 0, 0, false),
-                    new Post("12:32:30+03:00", 0, 0, false),
-                    new Post("12:54:36.123-02:00", 0, 0, false),
-                    new Post("", 0, 0, true),
-                    new Post("12:50:73.1231231234Z", 0, 0, false),
-                    new Post("12:54:63.123Z", 0, 0, false));
+                    new Post("12:54:10.123Z", false),
+                    new Post("12:32:30+03:00", false),
+                    new Post("12:54:36.123-02:00", false),
+                    new Post("", true),
+                    new Post("12:50:73.1231231234Z", false),
+                    new Post("12:54:63.123Z", false));
             }
         }
 
@@ -524,12 +524,12 @@ namespace LibHardHornTest
                     continue;
 
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), new ParameterizedDataType(DataType.INTEGER, null),
-                    new Post("12", 0, 0, false),
-                    new Post("0", 0, 0, false),
-                    new Post("", 0, 0, true),
-                    new Post("-100009", 0, 0, false),
-                    new Post("342356", 0, 0, false),
-                    new Post("0010", 0, 0, false));
+                    new Post("12", false),
+                    new Post("0", false),
+                    new Post("", true),
+                    new Post("-100009", false),
+                    new Post("342356", false),
+                    new Post("0010", false));
             }
         }
 
@@ -540,15 +540,15 @@ namespace LibHardHornTest
             {
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
                     new ParameterizedDataType(dataType == DataType.DECIMAL || dataType == DataType.NUMERIC ? dataType : DataType.DECIMAL, Parameter.WithPrecisionAndScale(9, 5)),
-                    new Post("12", 0, 0, false),
-                    new Post("0", 0, 0, false),
-                    new Post("0.134", 0, 0, false),
-                    new Post("-100009", 0, 0, false),
-                    new Post("342356", 0, 0, false),
-                    new Post("180001.12", 0, 0, false),
-                    new Post("0010", 0, 0, false),
-                    new Post("1200.01234", 0, 0, false),
-                    new Post("", 0, 0, true));
+                    new Post("12", false),
+                    new Post("0", false),
+                    new Post("0.134", false),
+                    new Post("-100009", false),
+                    new Post("342356", false),
+                    new Post("180001.12", false),
+                    new Post("0010", false),
+                    new Post("1200.01234", false),
+                    new Post("", true));
             }
         }
 
@@ -562,12 +562,12 @@ namespace LibHardHornTest
 
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
                     new ParameterizedDataType(DataType.DATE, null),
-                    new Post("2002-01-31", 0, 0, false),
-                    new Post("1986-06-23", 0, 0, false),
-                    new Post("2005-10-01", 0, 0, false),
-                    new Post("2014-07-12", 0, 0, false),
-                    new Post("2020-12-03", 0, 0, false),
-                    new Post("", 0, 0, true));
+                    new Post("2002-01-31", false),
+                    new Post("1986-06-23", false),
+                    new Post("2005-10-01", false),
+                    new Post("2014-07-12", false),
+                    new Post("2020-12-03", false),
+                    new Post("", true));
             }
         }
 
@@ -578,12 +578,12 @@ namespace LibHardHornTest
             {
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
                     new ParameterizedDataType(dataType == DataType.NATIONAL_CHARACTER || dataType == DataType.NATIONAL_CHARACTER_VARYING ? DataType.NATIONAL_CHARACTER : DataType.CHARACTER, Parameter.WithLength(11)),
-                    new Post("110392-5050", 0, 0, false),
-                    new Post("020890-8505", 0, 0, false),
-                    new Post("100290-8724", 0, 0, false),
-                    new Post("031185-1157", 0, 0, false),
-                    new Post("120579-6933", 0, 0, false),
-                    new Post("", 0, 0, true));
+                    new Post("110392-5050", false),
+                    new Post("020890-8505", false),
+                    new Post("100290-8724", false),
+                    new Post("031185-1157", false),
+                    new Post("120579-6933", false),
+                    new Post("", true));
             }
         }
 
@@ -594,12 +594,12 @@ namespace LibHardHornTest
             {
                 AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
                     new ParameterizedDataType(dataType == DataType.NATIONAL_CHARACTER || dataType == DataType.NATIONAL_CHARACTER_VARYING ? DataType.NATIONAL_CHARACTER_VARYING : DataType.CHARACTER_VARYING, Parameter.WithLength(10)),
-                    new Post("2002-01-31", 0, 0, false),
-                    new Post("12345", 0, 0, false),
-                    new Post("abcdf", 0, 0, false),
-                    new Post("a", 0, 0, false),
-                    new Post("test!", 0, 0, false),
-                    new Post("", 0, 0, true));
+                    new Post("2002-01-31", false),
+                    new Post("12345", false),
+                    new Post("abcdf", false),
+                    new Post("a", false),
+                    new Post("test!", false),
+                    new Post("", true));
             }
         }
     }
