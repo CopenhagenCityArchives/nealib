@@ -393,7 +393,7 @@ namespace HardHorn.ViewModels
             var table = tableViewModel.Table;
             Stream stream = null;
 
-            try // ^(\d\d\d\d)(\d\d)(\d\d)$
+            try
             {
                 using (var dialog = new System.Windows.Forms.SaveFileDialog())
                 {
@@ -429,6 +429,7 @@ namespace HardHorn.ViewModels
                         progress.Report(totalRows);
                     } while (readRows > 0);
                     replacer.WriteFooter();
+                    replacer.Flush();
                 });
             }
             catch (Exception ex)
