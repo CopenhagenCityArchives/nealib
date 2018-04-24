@@ -18,11 +18,15 @@
     <util:KeyTestResultListToDataTable x:Key="KeyTestResultListToDataTable" />
 
     <DataTemplate x:Key="ReplacementOperationItemTemplate">
-        <StackPanel>
-            <TextBlock Text="{Binding Column.Name}" />
-            <TextBlock Text="{Binding Pattern}" />
-            <TextBlock Text="{Binding Replacement}" />
-        </StackPanel>
+        <TextBlock>
+            <TextBlock.Text>
+                <MultiBinding StringFormat="{}{0}: '{1}' > '{2}'">
+                    <Binding Path="Column.Name" />
+                    <Binding Path="Pattern" />
+                    <Binding Path="Replacement" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
     </DataTemplate>
 
     <DataTemplate x:Key="ErrorViewTemplate">

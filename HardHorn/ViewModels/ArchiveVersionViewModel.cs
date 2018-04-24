@@ -437,7 +437,7 @@ namespace HardHorn.ViewModels
             var stream = new MemoryStream();
             var originalTableReader = new TableReader(table.Table);
             Post[,] posts;
-            int rowsRead = originalTableReader.Read(out posts, 10);
+            int rowsRead = originalTableReader.Read(out posts, 1000);
             var replacer = new TableReplacer(table.Table, ReplacementOperations, stream);
             replacer.WriteHeader();
             replacer.Write(posts, rowsRead);
@@ -467,8 +467,25 @@ namespace HardHorn.ViewModels
 
         public void AddReplacementOperation(TableViewModel tableViewModel, ColumnViewModel columnViewModel, string pattern, string replacement)
         {
-            var regex = new Regex(pattern, RegexOptions.Compiled);
-            ReplacementOperations.Add(new ReplacementOperation(columnViewModel.Column, regex, replacement));
+            Regex regex = null;
+            try
+            {
+                regex = new Regex(pattern, RegexOptions.Compiled);
+            }
+            catch (ArgumentException)
+            {
+                MessageBox.Show(string.Format("Matchudtrykket '{0}' er ikke et gyldigt regulært udtryk. Erstatningen kunne ikke tilføjes.", pattern), "Fejl i udtryk!");
+                return;
+            }
+
+            if (ReplacementOperations.Any(op => op.Column == columnViewModel.Column))
+            {
+                MessageBox.Show(string.Format("Der findes allerede en erstatning for kolonnen '{0}'.", columnViewModel.Column.Name), "Kolonne allerede erstattet!");
+            }
+            else
+            {
+                ReplacementOperations.Add(new ReplacementOperation(columnViewModel.Column, regex, replacement));
+            }
         }
 
         public void OpenSelectedTableViewModel()

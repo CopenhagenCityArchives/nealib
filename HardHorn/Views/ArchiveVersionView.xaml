@@ -1311,10 +1311,18 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
-                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="2*" />
                 </Grid.RowDefinitions>
 
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+
+                <Label>Tabel</Label>
                 <ComboBox
+                    Grid.Column="1"
                     x:Name="ReplacementTableComboBox"
                     ItemsSource="{Binding TableViewModels}">
                     <ComboBox.ItemTemplate>
@@ -1323,7 +1331,10 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+
+                <Label Grid.Row="1">Kolonne</Label>
                 <ComboBox
+                    Grid.Column="1"
                     Grid.Row="1"
                     x:Name="ReplacementColumnComboBox"
                     ItemsSource="{Binding Path=SelectedItem.ColumnViewModels, ElementName=ReplacementTableComboBox}">
@@ -1333,27 +1344,45 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+
+                <Label Grid.Row="2">Matchudtryk</Label>
                 <TextBox
+                    Grid.Column="1"
                     Grid.Row="2"
                     x:Name="ReplacementOperationPattern" />
+
+                <Label Grid.Row="3">Erstatningsudtryk</Label>
                 <TextBox
+                    Grid.Column="1"
                     Grid.Row="3"
                     x:Name="ReplacementOperationReplacement" />
+                
                 <StackPanel
+                    Grid.ColumnSpan="2"
                     Grid.Row="4"
                     Orientation="Horizontal">
                     <Button cal:Message.Attach="AddReplacementOperation(ReplacementTableComboBox, ReplacementColumnComboBox, ReplacementOperationPattern, ReplacementOperationReplacement)">Tilføj operation</Button>
                     <Button cal:Message.Attach="RemoveReplacementOperation(ReplacementOperationListBox)">Fjern valgte operation</Button>
-                    <Button cal:Message.Attach="ShowReplaceTable(ReplacementTableComboBox)">Vis erstatning</Button>
-                    <Button cal:Message.Attach="ReplaceTableToFile(ReplacementTableComboBox)">Erstat til fil</Button>
                 </StackPanel>
+                
                 <ListBox
+                    Grid.ColumnSpan="2"
                     Grid.Row="5"
                     x:Name="ReplacementOperationListBox"
                     ItemsSource="{Binding ReplacementOperations}"
                     ItemTemplate="{StaticResource ReplacementOperationItemTemplate}" />
-                <DataGrid
+
+                <StackPanel
+                    Grid.ColumnSpan="2"
                     Grid.Row="6"
+                    Orientation="Horizontal">
+                    <Button cal:Message.Attach="ShowReplaceTable(ReplacementTableComboBox)">Vis erstatning</Button>
+                    <Button cal:Message.Attach="ReplaceTableToFile(ReplacementTableComboBox)">Erstat til fil</Button>
+                </StackPanel>
+
+                <DataGrid
+                    Grid.ColumnSpan="2"
+                    Grid.Row="7"
                     ItemsSource="{Binding ReplacedDataTable}"
                     CellStyle="{StaticResource DataGridCellStyle}"
                     IsReadOnly="True"
