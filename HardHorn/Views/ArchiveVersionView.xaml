@@ -1372,13 +1372,13 @@
                     ItemsSource="{Binding ReplacementOperations}"
                     ItemTemplate="{StaticResource ReplacementOperationItemTemplate}" />
 
-                <StackPanel
+                <DockPanel
                     Grid.ColumnSpan="2"
-                    Grid.Row="6"
-                    Orientation="Horizontal">
-                    <Button cal:Message.Attach="ShowReplaceTable(ReplacementTableComboBox)">Vis erstatning</Button>
-                    <Button cal:Message.Attach="ReplaceTableToFile(ReplacementTableComboBox)">Erstat til fil</Button>
-                </StackPanel>
+                    Grid.Row="6">
+                    <Button DockPanel.Dock="Left" cal:Message.Attach="ShowReplaceTable(ReplacementTableComboBox)">Vis erstatning</Button>
+                    <Button DockPanel.Dock="Right" cal:Message.Attach="ReplaceTableToFile(ReplacementTableComboBox)">Erstat til fil</Button>
+                    <ProgressBar Value="{Binding TableReplacementProgressValue}" />
+                </DockPanel>
 
                 <DataGrid
                     Grid.ColumnSpan="2"

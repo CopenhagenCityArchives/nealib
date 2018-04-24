@@ -47,6 +47,9 @@ namespace HardHorn.ViewModels
         public ObservableCollection<ReplacementOperation> ReplacementOperations { get; set; }
         public ObservableCollection<Tuple<LogLevel, DateTime, string>> LogItems { get; set; }
 
+        int _tableReplacementProgressValue = 0;
+        public int TableReplacementProgressValue { get { return _tableReplacementProgressValue; } set { _tableReplacementProgressValue = value; NotifyOfPropertyChange("TableReplacementProgressValue"); } }
+
         System.Data.DataTable _replacedDataTable;
         public System.Data.DataTable ReplacedDataTable
         { get { return _replacedDataTable; } set { _replacedDataTable = value; NotifyOfPropertyChange("ReplacedDataTable"); } }
@@ -385,42 +388,61 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Actions
-        public void ReplaceTableToFile(TableViewModel tableViewModel)
+        public async void ReplaceTableToFile(TableViewModel tableViewModel)
         {
             var table = tableViewModel.Table;
             Stream stream = null;
 
-            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            try // ^(\d\d\d\d)(\d\d)(\d\d)$
             {
-                dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                using (var dialog = new System.Windows.Forms.SaveFileDialog())
                 {
-                    stream = dialog.OpenFile();
+                    dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
+                    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        stream = dialog.OpenFile();
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
-                else
-                {
-                    return;
-                }
-            }
 
-            try
-            {
-                var replacer = new TableReplacer(table, ReplacementOperations, stream);
-                replacer.WriteHeader();
-                var reader = new TableReader(table);
-                Post[,] readPosts;
-                int readRows = 0;
-                do
+                IProgress<int> progress = new Progress<int>(i =>
                 {
-                    readRows = reader.Read(out readPosts);
-                    replacer.Write(readPosts, readRows);
-                } while (readRows > 0);
-                replacer.WriteFooter();
+                    TableReplacementProgressValue = (i * 100) / table.Rows;
+                });
+            
+                await Task.Run(() =>
+                {
+                    var replacer = new TableReplacer(table, ReplacementOperations, stream);
+                    replacer.WriteHeader();
+                    var reader = new TableReader(table);
+                    Post[,] readPosts;
+                    int totalRows = 0;
+                    int readRows = 0;
+                    do
+                    {
+                        readRows = reader.Read(out readPosts);
+                        totalRows += readRows;
+                        replacer.Write(readPosts, readRows);
+                        progress.Report(totalRows);
+                    } while (readRows > 0);
+                    replacer.WriteFooter();
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(string.Format("En undtagelse af typen '{0}' forekom med beskeden:\n{1}\nStak:\n{2}", ex.GetType(), ex.Message, ex.StackTrace));
             }
             finally
             {
-                stream.Close();
+                if (stream != null)
+                {
+                    stream.Close();
+                }
             }
+
         }
 
         public void ShowReplaceTable(TableViewModel table)
