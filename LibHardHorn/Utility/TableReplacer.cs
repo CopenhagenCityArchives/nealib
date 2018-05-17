@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace HardHorn.Utility
 {
@@ -13,12 +14,19 @@ namespace HardHorn.Utility
         public Table Table { get; set; }
 
         Stream _stream;
-        TextWriter _writer;
+        XmlWriter _writer;
         Dictionary<int, ReplacementOperation> _operationMap = new Dictionary<int, ReplacementOperation>();
+
+        string _xmlns;
+        string _xsi;
+        string _schemaLocation;
 
         public TableReplacer(Table table, IEnumerable<ReplacementOperation> operations, Stream stream)
         {
             Table = table;
+            _xmlns = string.Format("http://www.sa.dk/xmlns/siard/1.0/schema0/{0}.xsd", Table.Folder);
+            _xsi = "http://www.w3.org/2001/XMLSchema-instance";
+            _schemaLocation = string.Format("http://www.sa.dk/xmlns/siard/1.0/schema0/{0}.xsd {0}.xsd", Table.Folder);
 
             foreach (var operation in operations)
             {
@@ -30,27 +38,30 @@ namespace HardHorn.Utility
             }
 
             _stream = stream;
-            _writer = new StreamWriter(stream);
+            var settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = "  ";
+            _writer = XmlWriter.Create(stream, settings);
         }
 
         public void WriteHeader()
         {
-            _writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            _writer.WriteLine(string.Format("<table xmlns=\"http://www.sa.dk/xmlns/siard/1.0/schema0/{0}.xsd\" "
-                + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                + "xsi:schemaLocation=\"http://www.sa.dk/xmlns/siard/1.0/schema0/{0}.xsd table{0}.xsd\">", Table.Folder));
+
+            _writer.WriteStartElement("table", _xmlns);
+            _writer.WriteAttributeString("xmlns", "xsi", null, _xsi);
+            _writer.WriteAttributeString("xsi", "schemaLocation", _xsi, _schemaLocation);
         }
 
         public void WriteFooter()
         {
-            _writer.WriteLine("</table>");
+            _writer.WriteEndElement();
         }
 
         public void Write(Post[,] posts, int rowCount)
         {
             for (int row = 0; row < rowCount; row++)
             {
-                _writer.WriteLine("  <row>");
+                _writer.WriteStartElement("row");
                 for (int col = 0; col < Table.Columns.Count(); col++)
                 {
                     var tag = Table.Columns[col].ColumnId;
@@ -60,9 +71,15 @@ namespace HardHorn.Utility
                         var operation = _operationMap[col];
                         post = post.ReplacePattern(operation.Pattern, operation.Replacement);
                     }
-                    _writer.WriteLine(string.Format("    <{0}{2}>{1}</{0}>", tag, post.Data, post.IsNull ? " xsi:nil=\"true\"" : ""));
+                    _writer.WriteStartElement(tag);
+                    _writer.WriteString(post.Data);
+                    if (post.IsNull)
+                    {
+                        _writer.WriteAttributeString("xsi", "nil", null, "true");
+                    }
+                    _writer.WriteEndElement();
                 }
-                _writer.WriteLine("  </row>");
+                _writer.WriteEndElement();
             }
         }
 
