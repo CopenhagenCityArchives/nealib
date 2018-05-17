@@ -400,6 +400,10 @@ namespace HardHorn.ViewModels
                     dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                     {
+                        if (Path.GetFullPath(dialog.FileName).ToLower().StartsWith(Path.GetFullPath(ArchiveVersion.Path).ToLower()))
+                        {
+                            MessageBox.Show("Du kan ikke gemme erstatningen i arkiveringsversionen.", "Sti valgt i arkiveringsversion", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
                         stream = dialog.OpenFile();
                     }
                     else
@@ -417,7 +421,7 @@ namespace HardHorn.ViewModels
                 {
                     var replacer = new TableReplacer(table, ReplacementOperations, stream);
                     replacer.WriteHeader();
-                    var reader = new TableReader(table);
+                    var reader = table.GetReader();
                     Post[,] readPosts;
                     int totalRows = 0;
                     int readRows = 0;
