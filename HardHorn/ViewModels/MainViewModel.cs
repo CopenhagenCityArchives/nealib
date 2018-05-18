@@ -179,11 +179,14 @@ namespace HardHorn.ViewModels
                 try
                 {
                     var logger = new ProgressLogger(this);
-                    ArchiveVersionViewModel vm = await Task.Run(() =>
+                    var vm = new ArchiveVersionViewModel(logger);
+                    ArchiveVersion av = await Task.Run(() =>
                     {
-                        return new ArchiveVersionViewModel(logger, location);
+                        return ArchiveVersion.Load(location, logger, vm.OnArchiveVersionException);
                     });
-
+                    vm.ArchiveVersion = av;
+                    vm.Log("Indlæsningen er fuldført.", LogLevel.SECTION);
+                    vm.RunStatistics();
                     ArchiveVersionViewModels.Add(vm);
                     if (SelectedArchiveVersionViewModel == null)
                         SelectedArchiveVersionViewModel = vm;

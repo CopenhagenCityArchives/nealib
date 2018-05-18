@@ -58,6 +58,7 @@ namespace HardHorn.ViewModels
         ICollectionView _keyTestTableView;
         public ICollectionView ColumnsView { get { return _columnsView; } set { _columnsView = value; NotifyOfPropertyChange("ColumnsView"); } }
         public ICollectionView KeyTestTableView { get { return _keyTestTableView; } set { _keyTestTableView = value;  NotifyOfPropertyChange("KeyTestTableView"); } }
+        public ICollectionView ReplacementOperationsView { get; set; }
         public TestSelection SelectedTests { get; set; }
         public ILogger MainLogger { get; private set; }
 
@@ -101,7 +102,30 @@ namespace HardHorn.ViewModels
             set { _analysisTableDoneRows = value; NotifyOfPropertyChange("AnalysisTableDoneRows"); NotifyOfPropertyChange("TableTestProgress"); }
         }
 
-        public ArchiveVersion ArchiveVersion { get; private set; }
+        ArchiveVersion _archiveVersion;
+        public ArchiveVersion ArchiveVersion
+        {
+            get
+            {
+                return _archiveVersion;
+            }
+            set
+            {
+                _archiveVersion = value;
+
+                // Setup table view models
+                TableViewModels.Clear();
+                TableViewModelIndex.Clear();
+                foreach (var table in _archiveVersion.Tables)
+                {
+                    var vm = new TableViewModel(table);
+                    TableViewModels.Add(vm);
+                    TableViewModelIndex[table.Name] = vm;
+                }
+
+                NotifyOfPropertyChange("ArchiveVersion");
+            }
+        }
 
         public ObservableCollection<string> RecentLocations { get { return Properties.Settings.Default.RecentLocations; } }
 
@@ -315,7 +339,7 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Constructors
-        public ArchiveVersionViewModel(ILogger mainLogger, string location)
+        public ArchiveVersionViewModel(ILogger mainLogger)
         {
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
@@ -331,11 +355,9 @@ namespace HardHorn.ViewModels
             ForeignKeyTestResults = new ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>();
             MainLogger = mainLogger;
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
-            ArchiveVersion = ArchiveVersion.Load(location, mainLogger, OnArchiveVersionException);
-            TableViewModels = new ObservableCollection<TableViewModel>(ArchiveVersion.Tables.Select(t => new TableViewModel(t)));
+            TableViewModels = new ObservableCollection<TableViewModel>();
             TableViewModelIndex = new Dictionary<string, TableViewModel>();
             ReplacedDataTable = new System.Data.DataTable();
-            foreach (var tableViewModel in TableViewModels) TableViewModelIndex[tableViewModel.Table.Name] = tableViewModel;
             PropertyChanged += (sender, arg) =>
             {
                 if (arg.PropertyName == "SelectedTableViewModel" && SelectedTableViewModel != null)
@@ -350,12 +372,17 @@ namespace HardHorn.ViewModels
                 var vm = o as TableViewModel;
                 return vm != null && vm.Table.ForeignKeys.Count > 0;
             };
-            Log("Indlæsningen er fuldført.", LogLevel.SECTION);
-            _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
+            ReplacementOperationsView = CollectionViewSource.GetDefaultView(ReplacementOperations);
+            ReplacementOperationsView.GroupDescriptions.Add(new PropertyGroupDescription("Table"));
         }
         #endregion
 
         #region Methods
+        public void RunStatistics()
+        {
+            _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
+        }
+
         public bool FilterColumnViewModels(object obj)
         {
             var columnViewModel = obj as ColumnViewModel;
@@ -419,7 +446,8 @@ namespace HardHorn.ViewModels
             
                 await Task.Run(() =>
                 {
-                    var replacer = new TableReplacer(table, ReplacementOperations, stream);
+                    var replacementOperations = ReplacementOperations.Where(op => op.Table == tableViewModel.Table);
+                    var replacer = new TableReplacer(table, replacementOperations, stream);
                     replacer.WriteHeader();
                     var reader = table.GetReader();
                     Post[,] readPosts;
@@ -447,7 +475,6 @@ namespace HardHorn.ViewModels
                     stream.Close();
                 }
             }
-
         }
 
         public void ShowReplaceTable(TableViewModel table)
@@ -461,11 +488,13 @@ namespace HardHorn.ViewModels
             }
             ReplacedDataTable = dataTable;
 
+            var replacementOperations = ReplacementOperations.Where(op => op.Table == table.Table);
+
             var stream = new MemoryStream();
             var originalTableReader = new TableReader(table.Table);
             Post[,] posts;
             int rowsRead = originalTableReader.Read(out posts, 1000);
-            var replacer = new TableReplacer(table.Table, ReplacementOperations, stream);
+            var replacer = new TableReplacer(table.Table, replacementOperations, stream);
             replacer.WriteHeader();
             replacer.Write(posts, rowsRead);
             replacer.WriteFooter();
@@ -494,6 +523,9 @@ namespace HardHorn.ViewModels
 
         public void AddReplacementOperation(TableViewModel tableViewModel, ColumnViewModel columnViewModel, string pattern, string replacement)
         {
+            if (tableViewModel == null || columnViewModel == null)
+                return;
+
             Regex regex = null;
             try
             {
@@ -511,7 +543,7 @@ namespace HardHorn.ViewModels
             }
             else
             {
-                ReplacementOperations.Add(new ReplacementOperation(columnViewModel.Column, regex, replacement));
+                ReplacementOperations.Add(new ReplacementOperation(tableViewModel.Table, columnViewModel.Column, regex, replacement));
             }
         }
 

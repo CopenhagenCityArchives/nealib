@@ -22,7 +22,7 @@ namespace LibHardHornTest
             var pattern = new Regex(@"^(\d\d\d\d-\d\d-\d\d)T\d\d:\d\d:\d\d(?:.\d+)?$");
             var replacement = "$1";
             var column4 = table1.Columns.ToList()[3];
-            var replacementOperation = new ReplacementOperation(column4, pattern, replacement);
+            var replacementOperation = new ReplacementOperation(table1, column4, pattern, replacement);
             var stream = new MemoryStream();
             var originalTableReader = new TableReader(table1);
             Post[,] posts;
