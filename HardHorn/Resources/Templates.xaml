@@ -17,18 +17,6 @@
     <util:RecentLocationsMenuItemConverter x:Key="RecentLocationMenuItemConverter" />
     <util:KeyTestResultListToDataTable x:Key="KeyTestResultListToDataTable" />
 
-    <DataTemplate x:Key="ReplacementOperationItemTemplate">
-        <TextBlock>
-            <TextBlock.Text>
-                <MultiBinding StringFormat="{}{0}: '{1}' > '{2}'">
-                    <Binding Path="Column.Name" />
-                    <Binding Path="Pattern" />
-                    <Binding Path="Replacement" />
-                </MultiBinding>
-            </TextBlock.Text>
-        </TextBlock>
-    </DataTemplate>
-
     <DataTemplate x:Key="ErrorViewTemplate">
         <StackPanel>
             <TextBlock Text="{Binding Header}"></TextBlock>
