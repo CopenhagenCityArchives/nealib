@@ -317,6 +317,13 @@ namespace HardHorn.ViewModels
             set { _keyTestRunning = value; NotifyOfPropertyChange("KeyTestRunning"); }
         }
 
+        string _tableColumnNameFilter = string.Empty;
+        public string TableColumnNameFilter
+        {
+            get { return _tableColumnNameFilter; }
+            set{ _tableColumnNameFilter = value; NotifyOfPropertyChange("TableColumnNameFilter"); InteractiveTablesView.Refresh(); }
+        }
+
         public ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>> ForeignKeyTestResults { get; set; }
         public ICollectionView ReplaceTablesView { get; private set; }
         #endregion
@@ -360,9 +367,10 @@ namespace HardHorn.ViewModels
             InteractiveTablesView.Filter += o =>
             {
                 var vm = o as TableViewModel;
-                var filterDataType = InteractiveFilterDataType as DataType?;
-                var doFilter = vm != null && (!filterDataType.HasValue || vm.Table.Columns.Any(c => c.ParameterizedDataType.DataType == filterDataType.Value));
-                return doFilter;
+                var dataTypeFilter = InteractiveFilterDataType as DataType?;
+                var includeDataType = !dataTypeFilter.HasValue || vm.Table.Columns.Any(c => c.ParameterizedDataType.DataType == dataTypeFilter.Value);
+                var includeNames = vm.Table.Name.ToLower().Contains(TableColumnNameFilter.ToLower()) || vm.Table.Columns.Any(c => c.Name.ToLower().Contains(TableColumnNameFilter.ToLower()));
+                return vm != null && includeDataType && includeNames;
             };
             ReplaceTablesView = new CollectionViewSource() { Source = TableViewModels }.View;
         }
