@@ -30,16 +30,17 @@ namespace HardHorn.Archiving
             return Data;
         }
 
-        public Post ReplacePattern(Regex pattern, string replacement)
+        public int ReplacePattern(Regex pattern, string replacement)
         {
-            if (IsNull)
+            int replaceCount = 0;
+            if (!IsNull)
             {
-                return null;
+                Data = pattern.Replace(Data, match => {
+                    replaceCount++;
+                    return match.Result(replacement);
+                });
             }
-            else
-            {
-                return new Post(pattern.Replace(Data, replacement), IsNull, Line, Position);
-            }
+            return replaceCount;
         }
     }
 }

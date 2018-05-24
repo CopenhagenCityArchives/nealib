@@ -326,6 +326,7 @@ namespace HardHorn.ViewModels
 
         public ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>> ForeignKeyTestResults { get; set; }
         public ICollectionView ReplaceTablesView { get; private set; }
+        public int TableReplacementTotalReplacements { get; private set; }
         #endregion
 
         #region Constructors
@@ -442,6 +443,13 @@ namespace HardHorn.ViewModels
                 {
                     TableReplacementProgressValue = (i * 100) / table.Rows;
                 });
+
+                IProgress<int> replacements = new Progress<int>(i =>
+                {
+                    TableReplacementTotalReplacements = i;
+                    NotifyOfPropertyChange("TableReplacementTotalReplacements");
+                    Log(string.Format("Erstatning fuldført med {0} post-erstatninger.", i), LogLevel.SECTION);
+                });
             
                 await Task.Run(() =>
                 {
@@ -452,20 +460,22 @@ namespace HardHorn.ViewModels
                     Post[,] readPosts;
                     int totalRows = 0;
                     int readRows = 0;
+                    int totalReplacements = 0;
                     do
                     {
                         readRows = reader.Read(out readPosts);
                         totalRows += readRows;
-                        replacer.Write(readPosts, readRows);
+                        totalReplacements += replacer.Write(readPosts, readRows);
                         progress.Report(totalRows);
                     } while (readRows > 0);
                     replacer.WriteFooter();
                     replacer.Flush();
+                    replacements.Report(totalReplacements);
                 });
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format("En undtagelse af typen '{0}' forekom med beskeden:\n{1}\nStak:\n{2}", ex.GetType(), ex.Message, ex.StackTrace));
+                Log(string.Format("En undtagelse af typen '{0}' forekom med beskeden:\n{1}", ex.GetType(), ex.Message, ex.StackTrace), LogLevel.ERROR);
             }
             finally
             {

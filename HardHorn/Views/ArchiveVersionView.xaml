@@ -1411,7 +1411,10 @@
                     Grid.Row="6">
                     <Button DockPanel.Dock="Left" cal:Message.Attach="ShowReplaceTable(ReplacementTableComboBox)">Vis erstatning</Button>
                     <Button DockPanel.Dock="Right" cal:Message.Attach="ReplaceTableToFile(ReplacementTableComboBox)">Erstat til fil</Button>
-                    <ProgressBar Value="{Binding TableReplacementProgressValue}" />
+                    <Grid>
+                        <ProgressBar Value="{Binding TableReplacementProgressValue}" />
+                        <Label Content="{Binding TableReplacementTotalReplacements}" Foreground="Wheat" />
+                    </Grid>
                 </DockPanel>
 
                 <DataGrid

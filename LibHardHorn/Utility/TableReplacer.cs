@@ -57,8 +57,10 @@ namespace HardHorn.Utility
             _writer.WriteEndElement();
         }
 
-        public void Write(Post[,] posts, int rowCount)
+        public int Write(Post[,] posts, int rowCount)
         {
+            int replaceCount = 0;
+
             for (int row = 0; row < rowCount; row++)
             {
                 _writer.WriteStartElement("row");
@@ -69,7 +71,7 @@ namespace HardHorn.Utility
                     if (_operationMap.ContainsKey(col))
                     {
                         var operation = _operationMap[col];
-                        post = post.ReplacePattern(operation.Pattern, operation.Replacement);
+                        replaceCount += post.ReplacePattern(operation.Pattern, operation.Replacement);
                     }
                     _writer.WriteStartElement(tag);
                     _writer.WriteString(post.Data);
@@ -81,6 +83,8 @@ namespace HardHorn.Utility
                 }
                 _writer.WriteEndElement();
             }
+
+            return replaceCount;
         }
 
         public void Flush()
