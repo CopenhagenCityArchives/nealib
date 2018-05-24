@@ -56,8 +56,9 @@ namespace HardHorn.ViewModels
 
         ICollectionView _columnsView;
         ICollectionView _keyTestTableView;
+        public ICollectionView InteractiveTablesView { get; set; }
         public ICollectionView ColumnsView { get { return _columnsView; } set { _columnsView = value; NotifyOfPropertyChange("ColumnsView"); } }
-        public ICollectionView KeyTestTableView { get { return _keyTestTableView; } set { _keyTestTableView = value;  NotifyOfPropertyChange("KeyTestTableView"); } }
+        public ICollectionView KeyTestTablesView { get { return _keyTestTableView; } set { _keyTestTableView = value;  NotifyOfPropertyChange("KeyTestTableView"); } }
         public ICollectionView ReplacementOperationsView { get; set; }
         public TestSelection SelectedTests { get; set; }
         public ILogger MainLogger { get; private set; }
@@ -171,35 +172,17 @@ namespace HardHorn.ViewModels
             set { _SelectedTableViewModel = value; NotifyOfPropertyChange("SelectedTableViewModel"); }
         }
 
-        object _selectedTableViewModelDataType;
-        public object SelectedTableViewModelDataType
+        object _interactiveFilterDataType;
+        public object InteractiveFilterDataType
         {
-            set
-            {
-                _selectedTableViewModelDataType = value;
-
-                var dataType = value as DataType?;
-                if (dataType != null)
-                {
-                    FilteredTableViewModels.Clear();
-                    foreach (var tableViewModel in TableViewModels)
-                    {
-                        if (tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == dataType))
-                            FilteredTableViewModels.Add(tableViewModel);
-                    }
-                }
-                else
-                {
-                    FilteredTableViewModels.Clear();
-                    foreach (var tableViewModel in TableViewModels)
-                        FilteredTableViewModels.Add(tableViewModel);
-                }
-
-            }
-
             get
             {
-                return _selectedTableViewModelDataType;
+                return _interactiveFilterDataType;
+            }
+            set
+            {
+                _interactiveFilterDataType = value;
+                InteractiveTablesView.Refresh();
             }
         }
 
@@ -243,7 +226,6 @@ namespace HardHorn.ViewModels
         public ObservableCollection<ColumnAnalysis> CurrentColumnAnalyses { get; set; }
 
         public ObservableCollection<TableViewModel> TableViewModels { get; set; }
-        public ObservableCollection<TableViewModel> FilteredTableViewModels { get; set; }
         public ObservableCollection<ErrorViewModelBase> ErrorViewModels { get; set; }
         public TableRowCountErrorViewModel TableRowCountErrorViewModel { get; set; }
         Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
@@ -336,6 +318,7 @@ namespace HardHorn.ViewModels
         }
 
         public ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>> ForeignKeyTestResults { get; set; }
+        public ICollectionView ReplaceTablesView { get; private set; }
         #endregion
 
         #region Constructors
@@ -346,7 +329,6 @@ namespace HardHorn.ViewModels
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
             TestFailureViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
-            FilteredTableViewModels = new ObservableCollection<TableViewModel>();
             TableComparisons = new ObservableCollection<TableComparison>();
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
@@ -366,14 +348,23 @@ namespace HardHorn.ViewModels
                     ColumnsView.Filter = FilterColumnViewModels;
                 }
             };
-            KeyTestTableView = CollectionViewSource.GetDefaultView(TableViewModels);
-            KeyTestTableView.Filter += o =>
+            KeyTestTablesView = new CollectionViewSource() { Source = TableViewModels }.View;
+            KeyTestTablesView.Filter += o =>
             {
                 var vm = o as TableViewModel;
                 return vm != null && vm.Table.ForeignKeys.Count > 0;
             };
             ReplacementOperationsView = CollectionViewSource.GetDefaultView(ReplacementOperations);
             ReplacementOperationsView.GroupDescriptions.Add(new PropertyGroupDescription("Table"));
+            InteractiveTablesView = new CollectionViewSource() { Source = TableViewModels }.View;
+            InteractiveTablesView.Filter += o =>
+            {
+                var vm = o as TableViewModel;
+                var filterDataType = InteractiveFilterDataType as DataType?;
+                var doFilter = vm != null && (!filterDataType.HasValue || vm.Table.Columns.Any(c => c.ParameterizedDataType.DataType == filterDataType.Value));
+                return doFilter;
+            };
+            ReplaceTablesView = new CollectionViewSource() { Source = TableViewModels }.View;
         }
         #endregion
 
@@ -490,29 +481,39 @@ namespace HardHorn.ViewModels
 
             var replacementOperations = ReplacementOperations.Where(op => op.Table == table.Table);
 
-            var stream = new MemoryStream();
-            var originalTableReader = new TableReader(table.Table);
-            Post[,] posts;
-            int rowsRead = originalTableReader.Read(out posts, 1000);
-            var replacer = new TableReplacer(table.Table, replacementOperations, stream);
-            replacer.WriteHeader();
-            replacer.Write(posts, rowsRead);
-            replacer.WriteFooter();
-            replacer.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
-            var replacedTableReader = new TableReader(table.Table, stream);
-            Post[,] replacedPosts;
-            replacedTableReader.Read(out replacedPosts, rowsRead);
-
-            ReplacedDataTable.Rows.Clear();
-            for (int row = 0; row < rowsRead; row++)
-            {
-                var rowPosts = new Post[table.Table.Columns.Count];
-                for (int col = 0; col < table.Table.Columns.Count; col++)
+            try {
+                using (Stream stream = new MemoryStream())
                 {
-                    rowPosts[col] = replacedPosts[row, col];
+                    using (var originalTableReader = new TableReader(table.Table))
+                    {
+                        Post[,] posts;
+                        int rowsRead = originalTableReader.Read(out posts, 1000);
+                        var replacer = new TableReplacer(table.Table, replacementOperations, stream);
+                        replacer.WriteHeader();
+                        replacer.Write(posts, rowsRead);
+                        replacer.WriteFooter();
+                        replacer.Flush();
+                        stream.Seek(0, SeekOrigin.Begin);
+                        var replacedTableReader = new TableReader(table.Table, stream);
+                        Post[,] replacedPosts;
+                        replacedTableReader.Read(out replacedPosts, rowsRead);
+
+                        ReplacedDataTable.Rows.Clear();
+                        for (int row = 0; row < rowsRead; row++)
+                        {
+                            var rowPosts = new Post[table.Table.Columns.Count];
+                            for (int col = 0; col < table.Table.Columns.Count; col++)
+                            {
+                                rowPosts[col] = replacedPosts[row, col];
+                            }
+                            ReplacedDataTable.Rows.Add(rowPosts);
+                        }
+                    }
                 }
-                ReplacedDataTable.Rows.Add(rowPosts);
+            }
+            catch (Exception ex)
+            {
+                Log(string.Format("En undtagelse resulterede i at erstatningsvisningen ikke kunne fuldføres. Undtagelse: {0}, besked: {1}", ex.GetType(), ex.Message), LogLevel.ERROR);
             }
         }
 

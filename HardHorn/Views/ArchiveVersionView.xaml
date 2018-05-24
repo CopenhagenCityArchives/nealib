@@ -65,7 +65,7 @@
                 </StackPanel>
 
                 <DockPanel Grid.RowSpan="3">
-                    <ComboBox SelectedIndex="0" DockPanel.Dock="Top" SelectedItem="{Binding SelectedTableViewModelDataType, Mode=OneWayToSource}">
+                    <ComboBox SelectedIndex="0" DockPanel.Dock="Top" SelectedItem="{Binding InteractiveFilterDataType, Mode=OneWayToSource}">
                         <ComboBox.Resources>
                             <ObjectDataProvider x:Key="DataTypeEnumValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
                                 <ObjectDataProvider.MethodParameters>
@@ -171,7 +171,7 @@
                             </TextBlock>
                         </Canvas>
                     </Grid>
-                    <ListBox ItemsSource="{Binding FilteredTableViewModels}" SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource AnalysisTableListContainerStyle}"/>
+                    <ListBox ItemsSource="{Binding InteractiveTablesView}" SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource AnalysisTableListContainerStyle}"/>
                 </DockPanel>
 
                 <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>
@@ -887,7 +887,7 @@
                         </Canvas>
                     </Grid>
 
-                    <ListBox x:Name="KeyTestTableList" ItemsSource="{Binding KeyTestTableView}" SelectionMode="Extended" ItemContainerStyle="{StaticResource KeyTestTableListContainerStyle}" />
+                    <ListBox x:Name="KeyTestTableList" ItemsSource="{Binding KeyTestTablesView}" SelectionMode="Extended" ItemContainerStyle="{StaticResource KeyTestTableListContainerStyle}" />
                 </DockPanel>
 
                 <DataGrid DockPanel.Dock="Right" Width="400" ItemsSource="{Binding SelectedItem, ElementName=KeyTestResultList, Converter={StaticResource KeyTestResultListToDataTable}}" />
@@ -1324,10 +1324,10 @@
                 <ComboBox
                     Grid.Column="1"
                     x:Name="ReplacementTableComboBox"
-                    ItemsSource="{Binding TableViewModels}">
+                    ItemsSource="{Binding ReplaceTablesView, Mode=OneWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Table.Name}" />
+                            <TextBlock Text="{Binding Table}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
@@ -1340,7 +1340,7 @@
                     ItemsSource="{Binding Path=SelectedItem.ColumnViewModels, ElementName=ReplacementTableComboBox}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Column.Name}" />
+                            <TextBlock Text="{Binding Column}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
