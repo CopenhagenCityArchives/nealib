@@ -12,7 +12,7 @@
         xmlns:vm="clr-namespace:HardHorn.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600">
     <TabControl SelectedIndex="{Binding TabSelectedIndex}">
-        <TabItem Header="Arkiveringsversion">
+        <TabItem Header="Tabel- og datavisning">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="300" />
@@ -606,6 +606,214 @@
             </Grid>
         </TabItem>
 
+        <TabItem Header="Metadata">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Grid ScrollViewer.CanContentScroll="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Label>Tidligere ID:</Label>
+                    <Label Grid.Column="1" Content="{Binding ArchiveVersion.PreviousId}" />
+
+                    <Label Grid.Row="1">Startdato:</Label>
+                    <Label Grid.Row="1" Grid.Column="1" Content="{Binding ArchiveVersion.PeriodStart}" />
+
+                    <Label Grid.Row="2">Slutdato:</Label>
+                    <Label Grid.Row="2" Grid.Column="1" Content="{Binding ArchiveVersion.PeriodEnd}" />
+
+                    <Label Grid.Row="3">Slutaflevering:</Label>
+                    <CheckBox Grid.Row="3" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.PacketType, Mode=OneWay}" />
+
+                    <Label Grid.Row="4">Arkivskabere:</Label>
+                    <ItemsControl Grid.Row="4" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.ArchiveCreators}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Label>Navn:</Label>
+                                    <Label Grid.Column="1" Content="{Binding Name}" />
+
+                                    <Label Grid.Row="1">Startdato:</Label>
+                                    <Label Grid.Row="1" Grid.Column="1" Content="{Binding PeriodStart}" />
+
+                                    <Label Grid.Row="2">Slutdato:</Label>
+                                    <Label Grid.Row="2" Grid.Column="1" Content="{Binding PeriodEnd}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Label Grid.Row="5">Afsluttet arkivperiode:</Label>
+                    <CheckBox Grid.Row="5" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.PeriodType, Mode=OneWay}" />
+
+                    <Label Grid.Row="6">Systemnavn:</Label>
+                    <Label Grid.Row="6" Grid.Column="1" Content="{Binding ArchiveVersion.SystemName}" />
+
+                    <Label Grid.Row="7">Alternative systemnavne:</Label>
+                    <ItemsControl Grid.Row="7" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.AlternativeNames}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Label Grid.Row="8">Systemformål:</Label>
+                    <Label Grid.Row="8" Grid.Column="1" Content="{Binding ArchiveVersion.SystemPurpose}" />
+
+                    <Label Grid.Row="9">Systemindhold:</Label>
+                    <Label Grid.Row="9" Grid.Column="1" Content="{Binding ArchiveVersion.SystemContent}" />
+
+                    <Label Grid.Row="10">Regionsnumre anvendt:</Label>
+                    <CheckBox Grid.Row="10" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.RegionNumbersUsed, Mode=OneWay}" />
+
+                    <Label Grid.Row="11">Kommunenumre anvendt:</Label>
+                    <CheckBox Grid.Row="11" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.KommuneNumbersUsed, Mode=OneWay}" />
+
+                    <Label Grid.Row="12">CPR-numre anvendt:</Label>
+                    <CheckBox Grid.Row="12" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.CPRNumbersUsed, Mode=OneWay}" />
+
+                    <Label Grid.Row="13">Matrikelnumre anvendt:</Label>
+                    <CheckBox Grid.Row="13" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.MatrikelNumbersUsed, Mode=OneWay}" />
+
+                    <Label Grid.Row="14">CVR-numre anvendt:</Label>
+                    <CheckBox Grid.Row="14" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.CVRNumbersUsed, Mode=OneWay}" />
+
+                    <Label Grid.Row="15">BBR-numre anvendt:</Label>
+                    <CheckBox Grid.Row="15" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.BBRNumbersUsed, Mode=OneWay}" />
+                    
+                    <Label Grid.Row="16">WHO sygdomskoder anvendt:</Label>
+                    <CheckBox Grid.Row="16" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.WHOCodesUsed, Mode=OneWay}" />
+
+                    <Label Grid.Row="17">Datakilder:</Label>
+                    <ItemsControl Grid.Row="17" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.SourceNames}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Label Grid.Row="18">Databrugere:</Label>
+                    <ItemsControl Grid.Row="18" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.UserNames}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Label Grid.Row="19">Forgængersystemer:</Label>
+                    <ItemsControl Grid.Row="19" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.PredecessorNames}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Label Grid.Row="20">FORM-version:</Label>
+                    <Label Grid.Row="20" Grid.Column="1" Content="{Binding ArchiveVersion.FORMVersion}" />
+
+                    <Label Grid.Row="21">FORM-klassificeringer:</Label>
+                    <ItemsControl Grid.Row="21" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.FORMClassifications}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Label>Klassificering:</Label>
+                                    <Label Grid.Column="1" Content="{Binding Classification}" />
+
+                                    <Label Grid.Row="1">Tekst:</Label>
+                                    <Label Grid.Row="1" Grid.Column="1" Content="{Binding Text}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    
+                    <Label Grid.Row="22">Digitale doukmenter indeholdt:</Label>
+                    <CheckBox Grid.Row="22" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.ContainsDigitalDocuments, Mode=OneWay}" />
+
+                    <Label Grid.Row="23">Søgemiddel til andre sager/dokumenter:</Label>
+                    <CheckBox Grid.Row="23" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.SearchRelatedOtherRecords, Mode=OneWay}" />
+
+                    <Label Grid.Row="24">Adresserede arkivvalier:</Label>
+                    <ItemsControl Grid.Row="24" Grid.Column="1" ItemsSource="{Binding ArchiveVersion.RelatedRecordsNames}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Label Grid.Row="25">Eksistens af sagsbegreb:</Label>
+                    <CheckBox Grid.Row="25" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.SystemFileConcept, Mode=OneWay}" />
+
+                    <Label Grid.Row="26">SOA arkitektur:</Label>
+                    <CheckBox Grid.Row="26" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.MultipleDataCollection, Mode=OneWay}" />
+
+                    <Label Grid.Row="27">Persondata:</Label>
+                    <CheckBox Grid.Row="27" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.PersonalDataRestrictedInfo, Mode=OneWay}" />
+                    
+                    <Label Grid.Row="28">Fristforlængende oplysninger:</Label>
+                    <CheckBox Grid.Row="28" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.OtherAccessTypeRestrictions, Mode=OneWay}" />
+
+                    <Label Grid.Row="29">Godkendelsesarkiv:</Label>
+                    <CheckBox Grid.Row="29" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.ArchiveApproval, Mode=OneWay}" />
+                </Grid>
+            </ScrollViewer>
+        </TabItem>
+        
         <TabItem Header="Fejlvisning">
             <Grid>
                 <Grid.ColumnDefinitions>

@@ -11,6 +11,7 @@ using System.Dynamic;
 using HardHorn.Logging;
 using System.Xml.Linq;
 using HardHorn.Utility;
+using System.Globalization;
 
 namespace HardHorn.Archiving
 {
@@ -108,12 +109,12 @@ namespace HardHorn.Archiving
         /// <summary>
         /// Required beginning date of the data contained in the ArchiveVersion.
         /// </summary>
-        public string PeriodStart { get; private set; }
+        public DateTime? PeriodStart { get; private set; }
 
         /// <summary>
         /// Required end date of the data contained in the ArchiveVersion.
         /// </summary>
-        public string PeriodEnd { get; private set; }
+        public DateTime? PeriodEnd { get; private set; }
 
         /// <summary>
         /// Required indicator for whether the ArchiveVersion is a final submission.
@@ -281,7 +282,7 @@ namespace HardHorn.Archiving
             var archiveIndexDocument = XDocument.Load(path);
             var archiveIndex = archiveIndexDocument.Element(xmlns + "archiveIndex");
 
-            var previousIdElement = archiveIndex.Element(xmlns + "archiveInformationPackageID");
+            var previousIdElement = archiveIndex.Element(xmlns + "archiveInformationPackageIDPrevious");
             if (previousIdElement != null)
             {
                 PreviousId = previousIdElement.Value;
@@ -291,19 +292,21 @@ namespace HardHorn.Archiving
                 PreviousId = null;
             }
 
-            PeriodStart = archiveIndex.Element(xmlns + "archivePeriodStart").Value;
-            PeriodEnd = archiveIndex.Element(xmlns + "archivePeriodEnd").Value;
+            PeriodStart = DateTime.Parse(archiveIndex.Element(xmlns + "archivePeriodStart").Value);
+            PeriodEnd = DateTime.Parse(archiveIndex.Element(xmlns + "archivePeriodEnd").Value);
+
             PacketType = bool.Parse(archiveIndex.Element(xmlns + "archiveInformationPacketType").Value);
 
-            var creatorNames = archiveIndex.Elements(xmlns + "creatorName").Select(el => el.Value).ToList();
-            var creatorPeriodStarts = archiveIndex.Elements(xmlns + "creatorPeriodStart").Select(el => el.Value).ToList();
-            var creatorPeriodEnds = archiveIndex.Elements(xmlns + "creatorPeriodEnd").Select(el => el.Value).ToList();
+            var creators = archiveIndex.Element(xmlns + "archiveCreatorList");
+            var creatorNames = creators.Elements(xmlns + "creatorName").Select(el => el.Value).ToList();
+            var creationPeriodStarts = creators.Elements(xmlns + "creationPeriodStart").Select(el => el.Value).ToList();
+            var creationPeriodEnds = creators.Elements(xmlns + "creationPeriodEnd").Select(el => el.Value).ToList();
             var archiveCreators = new List<ArchiveCreator>();
-            if (creatorNames.Count == creatorPeriodStarts.Count && creatorPeriodStarts.Count == creatorPeriodEnds.Count)
+            if (creatorNames.Count == creationPeriodStarts.Count && creationPeriodStarts.Count == creationPeriodEnds.Count)
             {
                 for (int i = 0; i < creatorNames.Count; i++)
                 {
-                    archiveCreators.Add(new ArchiveCreator(creatorNames[i], DateTime.Parse(creatorPeriodStarts[i]), DateTime.Parse(creatorPeriodEnds[i])));
+                    archiveCreators.Add(new ArchiveCreator(creatorNames[i], DateTime.Parse(creationPeriodStarts[i]), DateTime.Parse(creationPeriodEnds[i])));
                 }
             }
             else
@@ -366,7 +369,7 @@ namespace HardHorn.Archiving
             {
                 ArchiveRestrictions = null;
             }
-    }
+        }
 
         /// <summary>
         /// Load the tables from a table index XML file.
@@ -460,7 +463,6 @@ namespace HardHorn.Archiving
                 }
             }
         }
-
 
         public enum TableSpecStatus
         {
