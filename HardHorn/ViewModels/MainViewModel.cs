@@ -185,7 +185,10 @@ namespace HardHorn.ViewModels
                         return ArchiveVersion.Load(location, logger, vm.OnArchiveVersionException);
                     });
                     vm.ArchiveVersion = av;
-                    vm.Log("Indlæsningen er fuldført.", LogLevel.SECTION);
+                    if (vm.ErrorViewModels.Count == 0)
+                        vm.Log("Indlæsningen er fuldført.", LogLevel.SECTION);
+                    else
+                        vm.Log(string.Format("Indlæsning er fuldført, med fejl. Fejltyper: {0}, antal fejl: {1}", vm.ErrorViewModels.Count, vm.ErrorViewModels.Aggregate(0, (c, evm) => c + evm.Subjects.Count)), LogLevel.ERROR);
                     vm.RunStatistics();
                     ArchiveVersionViewModels.Add(vm);
                     if (SelectedArchiveVersionViewModel == null)
