@@ -179,7 +179,7 @@ namespace HardHorn.ViewModels
                 try
                 {
                     var logger = new ProgressLogger(this);
-                    var vm = new ArchiveVersionViewModel(logger);
+                    var vm = new ArchiveVersionViewModel(logger, Path.GetDirectoryName(location));
                     ArchiveVersion av = await Task.Run(() =>
                     {
                         return ArchiveVersion.Load(location, logger, vm.OnArchiveVersionException);

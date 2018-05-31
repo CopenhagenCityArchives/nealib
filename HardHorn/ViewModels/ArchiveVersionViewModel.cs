@@ -327,11 +327,13 @@ namespace HardHorn.ViewModels
         public ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>> ForeignKeyTestResults { get; set; }
         public ICollectionView ReplaceTablesView { get; private set; }
         public int TableReplacementTotalReplacements { get; private set; }
+        public string TempName { get; private set; }
         #endregion
 
         #region Constructors
-        public ArchiveVersionViewModel(ILogger mainLogger)
+        public ArchiveVersionViewModel(ILogger mainLogger, string tempName)
         {
+            TempName = tempName;
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
@@ -410,7 +412,14 @@ namespace HardHorn.ViewModels
         public void Log(string msg, LogLevel level = LogLevel.NORMAL)
         {
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
-            MainLogger.Log(ArchiveVersion.Id + " - " + msg, level);
+            if (ArchiveVersion == null)
+            {
+                MainLogger.Log("Loading " + TempName + " - " + msg, level);
+            }
+            else
+            {
+                MainLogger.Log(ArchiveVersion.Id + " - " + msg, level);
+            }
         }
         #endregion
 
@@ -985,15 +994,26 @@ namespace HardHorn.ViewModels
         {
             ErrorViewModelBase errorViewModel;
 
+            if (ex is ArchiveVersionColumnTypeParsingException)
+            {
+                var avctEx = ex as ArchiveVersionColumnTypeParsingException;
+                Log(string.Format("En fejl opstod under afkodningen af kolonnen '{0}' i tabellen '{1}': Typen '{2}' er ikke valid.", avctEx.Name, avctEx.Table.Name, avctEx.Type), LogLevel.ERROR);
+            }
+            else if (ex is ArchiveVersionColumnParsingException)
+            {
+                var avcEx = ex as ArchiveVersionColumnParsingException;
+                Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", avcEx.Table.Name, avcEx.Message), LogLevel.ERROR);
+            }
+
             if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
             {
-                if (ex is ArchiveVersionColumnParsingException)
-                {
-                    errorViewModel = new ColumnParsingErrorViewModel();
-                }
-                else if (ex is ArchiveVersionColumnTypeParsingException)
+                if (ex is ArchiveVersionColumnTypeParsingException)
                 {
                     errorViewModel = new ColumnTypeParsingErrorViewModel();
+                }
+                else if (ex is ArchiveVersionColumnParsingException)
+                {
+                    errorViewModel = new ColumnParsingErrorViewModel();
                 }
                 else
                 {
@@ -1002,7 +1022,6 @@ namespace HardHorn.ViewModels
 
                 LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
                 Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
-
             }
             else
             {
