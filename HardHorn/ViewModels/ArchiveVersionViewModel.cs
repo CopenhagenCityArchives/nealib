@@ -165,6 +165,8 @@ namespace HardHorn.ViewModels
             set { _loadingTableIndex = value; NotifyOfPropertyChange("LoadingTableIndex"); }
         }
 
+        public List<TableViewModel> SelectedTableViewModels { get; set; }
+
         TableViewModel _SelectedTableViewModel = null;
         public TableViewModel SelectedTableViewModel
         {
@@ -330,6 +332,14 @@ namespace HardHorn.ViewModels
         public string TempName { get; private set; }
         #endregion
 
+        public void UpdateSelection(SelectionChangedEventArgs ea)
+        {
+            var added = ea.AddedItems.Cast<TableViewModel>();
+            var removed = ea.RemovedItems.Cast<TableViewModel>(); ;
+            SelectedTableViewModels.RemoveAll(tvm => removed.Contains(tvm));
+            SelectedTableViewModels.AddRange(added);
+        }
+
         #region Constructors
         public ArchiveVersionViewModel(ILogger mainLogger, string tempName)
         {
@@ -346,6 +356,7 @@ namespace HardHorn.ViewModels
             CurrentColumnAnalyses = new ObservableCollection<ColumnAnalysis>();
             ForeignKeyTestResults = new ObservableCollection<Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>();
             MainLogger = mainLogger;
+            SelectedTableViewModels = new List<TableViewModel>();
             LogItems = new ObservableCollection<Tuple<LogLevel, DateTime, string>>();
             TableViewModels = new ObservableCollection<TableViewModel>();
             TableViewModelIndex = new Dictionary<string, TableViewModel>();
@@ -591,8 +602,14 @@ namespace HardHorn.ViewModels
 
         public async void StartTest()
         {
+            IEnumerable<TableViewModel> tableViewModelsToTest = SelectedTableViewModels;
+            if (tableViewModelsToTest.Count() == 0)
+            {
+                tableViewModelsToTest = TableViewModels;
+            }
+
             // Create the analyzer
-            var startTestViewModel = new StartTestViewModel(this, MainLogger);
+            var startTestViewModel = new StartTestViewModel(this, tableViewModelsToTest, MainLogger);
             var windowSettings = new Dictionary<string, object>();
             windowSettings.Add("Title", string.Format("Start test af {0}", ArchiveVersion.Id));
             bool? success = windowManager.ShowDialog(startTestViewModel, null, windowSettings);
@@ -607,14 +624,14 @@ namespace HardHorn.ViewModels
             var token = _testCts.Token;
 
             // Connect the column analysis objects to the corresponding column view models
-            foreach (var tableViewModel in TableViewModels)
+            foreach (var tableViewModel in tableViewModelsToTest)
                 foreach (var columnViewModel in tableViewModel.ColumnViewModels)
                     columnViewModel.Analysis = Analyzer.TestHierachy[tableViewModel.Table][columnViewModel.Column];
 
             Log("Påbegynder dataanalyse.", LogLevel.SECTION);
 
             // Reset table view model states
-            foreach (var tableViewModel in TableViewModels)
+            foreach (var tableViewModel in tableViewModelsToTest)
             {
                 tableViewModel.AnalysisBusy = false;
                 tableViewModel.AnalysisDone = false;
@@ -637,7 +654,7 @@ namespace HardHorn.ViewModels
             {
                 ErrorViewModels.Add(errorViewModel);
             }
-            foreach (var tableViewModel in TableViewModels)
+            foreach (var tableViewModel in tableViewModelsToTest)
             {
                 tableViewModel.AnalysisErrors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
             }

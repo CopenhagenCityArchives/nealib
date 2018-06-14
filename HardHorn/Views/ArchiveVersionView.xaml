@@ -189,7 +189,7 @@
                             </TextBlock>
                         </Canvas>
                     </Grid>
-                    <ListBox ItemsSource="{Binding InteractiveTablesView}" SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource AnalysisTableListContainerStyle}"/>
+                    <ListBox ItemsSource="{Binding InteractiveTablesView}" cal:Message.Attach="[Event SelectionChanged] = [Action UpdateSelection($eventArgs)]" SelectionMode="Extended"  SelectedItem="{Binding SelectedTableViewModel, Mode=OneWayToSource}" ItemContainerStyle="{StaticResource AnalysisTableListContainerStyle}"/>
                 </DockPanel>
 
                 <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Grid.RowSpan="2"></GridSplitter>

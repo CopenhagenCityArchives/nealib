@@ -76,13 +76,13 @@ namespace HardHorn.Analysis
         /// </summary>
         /// <param name="archiveVersion">The archive version whose data will be analyzed.</param>
         /// <param name="log">The logger, which will receive logging calls from the analyzer.</param>
-        public Analyzer(ArchiveVersion archiveVersion, ILogger log)
+        public Analyzer(ArchiveVersion archiveVersion, IEnumerable<Table> selectedTables, ILogger log)
         {
             _log = log;
             ArchiveVersion = archiveVersion;
 
             TestHierachy = new Dictionary<Table, Dictionary<Column, ColumnAnalysis>>();
-            foreach (var table in archiveVersion.Tables)
+            foreach (var table in selectedTables)
             {
                 TestHierachy.Add(table, new Dictionary<Column, ColumnAnalysis>());
                 foreach (var column in table.Columns)
@@ -92,8 +92,8 @@ namespace HardHorn.Analysis
             }
 
             TotalDoneRows = 0;
-            TotalRowCount = ArchiveVersion.Tables.Aggregate(0, (n, t) => n + t.Rows);
-            _tableEnumerator = ArchiveVersion.Tables.GetEnumerator();
+            TotalRowCount = selectedTables.Aggregate(0, (n, t) => n + t.Rows);
+            _tableEnumerator = selectedTables.GetEnumerator();
         }
 
         /// <summary>

@@ -173,6 +173,10 @@ namespace HardHorn.Archiving
                         throw new InvalidOperationException("Invalid parameters.");
                     }
                 case DataType.FLOAT:
+                    if (parameters == null || parameters.Length == 0)
+                    {
+                        return WithPrecision(18);
+                    }
                     if (parameters.Length == 1)
                     {
                         return WithPrecision(parameters[0]);

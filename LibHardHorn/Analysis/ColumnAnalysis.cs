@@ -44,6 +44,8 @@ namespace HardHorn.Analysis
         public Parameter NumericMinParameter { get; private set; }
         public Parameter NumericMaxParameter { get; private set; }
 
+        public bool FloatFormat { get; private set; }
+
         public bool IntegerFormat { get; private set; }
 
         public ColumnAnalysis(Column column)
@@ -59,6 +61,7 @@ namespace HardHorn.Analysis
             TimeTimeZoneFormat = true;
             DateFormat = true;
             NumericFormat = true;
+            FloatFormat = true;
             IntegerFormat = true;
 
             ErrorCount = 0;
@@ -207,6 +210,11 @@ namespace HardHorn.Analysis
             if (DateFormat)
                 DateFormat &= Test.date_regex.Match(data).Success;
 
+            if (FloatFormat && (FloatFormat &= Test.float_regex.Match(data).Success))
+            {
+                // TODO: Interpret precision
+            }
+
             if (NumericFormat && (NumericFormat &= Test.numeric_regex.Match(data).Success))
             {
                 var components = data.Split('.');
@@ -266,6 +274,10 @@ namespace HardHorn.Analysis
                 else if (NumericFormat)
                 {
                     SuggestedType = new ParameterizedDataType(DataType.DECIMAL, NumericMaxParameter);
+                }
+                else if (FloatFormat)
+                {
+                    SuggestedType = new ParameterizedDataType(DataType.FLOAT, Parameter.WithPrecision(18));
                 }
                 else if (DateFormat)
                 {

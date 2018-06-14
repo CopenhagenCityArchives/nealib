@@ -16,17 +16,19 @@ namespace HardHorn.ViewModels
     class StartTestViewModel : Screen
     {
         public ArchiveVersion ArchiveVersion { get; private set; }
+        public IEnumerable<TableViewModel> SelectedTableViewModels { get; private set; }
         public TestSelection SelectedTests { get; private set; }
         public ObservableCollection<RegexTestViewModel> Regexes { get; private set; }
         public Analyzer Analyzer { get; private set; }
         public ILogger Logger { get; private set; }
 
-        public StartTestViewModel(ArchiveVersionViewModel avvm, ILogger logger)
+        public StartTestViewModel(ArchiveVersionViewModel avvm, IEnumerable<TableViewModel> selectedTableViewModels, ILogger logger)
         {
+            SelectedTableViewModels = selectedTableViewModels;
             ArchiveVersion = avvm.ArchiveVersion;
             Regexes = new ObservableCollection<RegexTestViewModel>();
             Logger = logger;
-            Analyzer = new Analyzer(ArchiveVersion, Logger);
+            Analyzer = new Analyzer(ArchiveVersion, selectedTableViewModels.Select(tvm => tvm.Table), Logger);
 
             if (Properties.Settings.Default.SelectedTestsBase64 == null)
             {
@@ -56,7 +58,10 @@ namespace HardHorn.ViewModels
         {
             foreach (var regex in Regexes)
             {
-                Analyzer.AddTest(regex.Column, regex.RegexTest);
+                if (SelectedTableViewModels.Select(tvm => tvm.Table).Contains(regex.Column.Table))
+                {
+                    Analyzer.AddTest(regex.Column, regex.RegexTest);
+                }
             }
 
             foreach (var testSelectionCategory in SelectedTests)
@@ -66,7 +71,8 @@ namespace HardHorn.ViewModels
                         if (!dataTypeSelection.Selected.HasValue || !dataTypeSelection.Selected.Value)
                             continue;
 
-                        foreach (var column in ArchiveVersion.Columns)
+                        foreach (var table in SelectedTableViewModels.Select(tvm => tvm.Table))
+                        foreach (var column in table.Columns)
                         {
                             if (dataTypeSelection.DataType == column.ParameterizedDataType.DataType)
                             {
