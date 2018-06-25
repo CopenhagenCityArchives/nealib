@@ -43,15 +43,16 @@ namespace LibHardHornTest
             }
         }
 
-        public void AssertReplacePost(string data, bool isNull, Regex pattern, string replacement, string expected)
+        public void AssertReplacePost(string data, bool isNull, Regex pattern, string replacement, string expected, int expectedReplacements = 1)
         {
-            AssertReplacePost(new Post(data, isNull), pattern, replacement, expected);
+            AssertReplacePost(new Post(data, isNull), pattern, replacement, expected, expectedReplacements);
         }
 
-        public void AssertReplacePost(Post post, Regex pattern, string replacement, string expected)
+        public void AssertReplacePost(Post post, Regex pattern, string replacement, string expected, int expectedReplacements = 1)
         {
-            Post newPost = post.ReplacePattern(pattern, replacement);
-            Assert.AreEqual(expected, newPost.Data);
+            int count = post.ReplacePattern(pattern, replacement);
+            Assert.AreEqual(expected, post.Data);
+            Assert.AreEqual(expectedReplacements, count);
         }
 
         [TestMethod]
@@ -59,14 +60,18 @@ namespace LibHardHornTest
         {
             var pattern = new Regex(@"^(\d\d)-(\d\d)-(\d\d\d\d)$", RegexOptions.Compiled);
             var replacement = "$3-$2-$1";
-            AssertReplacePost("12-01-2000", false, pattern, replacement, "2000-01-12");
-            AssertReplacePost("12-1-2000", false, pattern, replacement, "12-1-2000"); // does not match
+            AssertReplacePost("12-01-2000", false, pattern, replacement, "2000-01-12", 1);
+            AssertReplacePost("12-1-2000", false, pattern, replacement, "12-1-2000", 0); // does not match
 
             pattern = new Regex(@"^([a-zA-Z]+)/([a-zA-Z0-9]+)/(\d+)$", RegexOptions.Compiled);
             replacement = "'$2'.'$1': $3";
             AssertReplacePost("ABC/aB01/123", false, pattern, replacement, "'aB01'.'ABC': 123");
             AssertReplacePost("qza/00000Z/9909", false, pattern, replacement, "'00000Z'.'qza': 9909");
-            AssertReplacePost("111/00000Z/9909", false, pattern, replacement, "111/00000Z/9909");
+            AssertReplacePost("111/00000Z/9909", false, pattern, replacement, "111/00000Z/9909", 0);
+
+            pattern = new Regex(@"AAA(\d)", RegexOptions.Compiled);
+            replacement = "BBB$1";
+            AssertReplacePost("AAA1/AAA2/AAA3", false, pattern, replacement, "BBB1/BBB2/BBB3", 4);
         }
     }
 }

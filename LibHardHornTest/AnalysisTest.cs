@@ -30,7 +30,7 @@ namespace LibHardHornTest
                     }), new PrimaryKey("PK2", new List<string>(new string[] {"ID" })), new List<ForeignKey>())
                 });
 
-            var analyzer = new Analyzer(av, new TestLogger());
+            var analyzer = new Analyzer(av, av.Tables, new TestLogger());
         }
 
         public void AssertOkay(Column column, Test test, string data, bool isNull = false)
@@ -389,7 +389,7 @@ namespace LibHardHornTest
         public void Analyzer()
         {
             var AV = ArchiveVersion.Load(@"TestResources\AVID.OVERFLOW.1.1", new TestLogger());
-            var Analyzer = new Analyzer(AV, new TestLogger());
+            var Analyzer = new Analyzer(AV, AV.Tables, new TestLogger());
 
             var table1 = AV.Tables.First();
             var idColumn = table1.Columns[0];
