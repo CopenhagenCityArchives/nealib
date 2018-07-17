@@ -383,7 +383,7 @@ namespace HardHorn.ViewModels
                 var vm = o as TableViewModel;
                 var dataTypeFilter = InteractiveFilterDataType as DataType?;
                 var includeDataType = !dataTypeFilter.HasValue || vm.Table.Columns.Any(c => c.ParameterizedDataType.DataType == dataTypeFilter.Value);
-                var includeNames = vm.Table.Name.ToLower().Contains(TableColumnNameFilter.ToLower()) || vm.Table.Columns.Any(c => c.Name.ToLower().Contains(TableColumnNameFilter.ToLower()));
+                var includeNames = vm.Table.Name.ToLower().Contains(TableColumnNameFilter.ToLower()) || vm.Table.Columns.Any(c => c.Name.ToLower().Contains(TableColumnNameFilter.ToLower())) || vm.Table.Folder.ToLower().Contains(TableColumnNameFilter.ToLower());
                 return vm != null && includeDataType && includeNames;
             };
             ReplaceTablesView = new CollectionViewSource() { Source = TableViewModels }.View;

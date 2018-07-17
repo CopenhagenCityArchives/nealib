@@ -82,7 +82,7 @@
                     </ComboBox>
                     <Grid DockPanel.Dock="Top" >
                         <TextBox Text="{Binding TableColumnNameFilter, UpdateSourceTrigger=PropertyChanged}" />
-                        <Label Foreground="Gray" IsHitTestVisible="False">Tabel- eller kolonnenavn
+                        <Label Foreground="Gray" IsHitTestVisible="False">Tabel eller kolonne
                             <Label.Style>
                                 <Style>
                                     <Setter Property="Label.Visibility" Value="Hidden" ></Setter>
