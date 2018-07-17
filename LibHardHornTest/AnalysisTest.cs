@@ -445,17 +445,23 @@ namespace LibHardHornTest
             }
             else
             {
-                Assert.AreEqual(expected.DataType, columnAnalysis.SuggestedType.DataType);
-                if (expected.Parameter == null)
+                if (columnAnalysis.SuggestedType == null)
                 {
-                    Assert.AreEqual(null, columnAnalysis.SuggestedType.Parameter);
+                    Assert.Fail("No type was suggested, but a suggestion was expected.");
                 }
                 else
                 {
-                    Assert.AreEqual(0, expected.Parameter.CompareTo(columnAnalysis.SuggestedType.Parameter));
+                    Assert.AreEqual(expected.DataType, columnAnalysis.SuggestedType.DataType);
+                    if (expected.Parameter == null)
+                    {
+                        Assert.AreEqual(null, columnAnalysis.SuggestedType.Parameter);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(0, expected.Parameter.CompareTo(columnAnalysis.SuggestedType.Parameter));
+                    }
                 }
             }
-
         }
 
         [TestMethod]
@@ -599,6 +605,20 @@ namespace LibHardHornTest
                     new Post("abcdf", false),
                     new Post("a", false),
                     new Post("test!", false),
+                    new Post("", true));
+            }
+        }
+        [TestMethod]
+        public void SuggestAllNull()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)), null,
+                    new Post("", true),
+                    new Post("", true),
+                    new Post("", true),
+                    new Post("", true),
+                    new Post("", true),
                     new Post("", true));
             }
         }

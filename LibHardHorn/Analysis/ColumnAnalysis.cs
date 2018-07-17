@@ -332,7 +332,7 @@ namespace HardHorn.Analysis
         /// </summary>
         public void SuggestType()
         {
-            if (!FirstRowAnalyzed)
+            if (!FirstRowAnalyzed || AllNullSoFar)
                 return;
 
             if (!ForceCharacterType)
