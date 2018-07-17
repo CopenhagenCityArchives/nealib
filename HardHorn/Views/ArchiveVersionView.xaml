@@ -892,7 +892,7 @@
                                 <Label Grid.Row="2" Grid.Column="1" Content="{Binding Table.Rows}" />
                             </Grid>
                         </DataTemplate>
-                        <DataTemplate DataType="{x:Type av:ArchiveVersionColumnParsingException}">
+                        <DataTemplate DataType="{x:Type av:ColumnParsingException}">
                             <Grid Margin="5">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
@@ -911,7 +911,7 @@
                                 <Label Grid.Row="1" Grid.Column="1" Content="{Binding Element}" />
                             </Grid>
                         </DataTemplate>
-                        <DataTemplate DataType="{x:Type av:ArchiveVersionColumnTypeParsingException}">
+                        <DataTemplate DataType="{x:Type av:ColumnTypeParsingException}">
                             <Grid Margin="5">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />

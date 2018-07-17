@@ -129,7 +129,7 @@ namespace HardHorn.ViewModels
 
         public override void Add(object info)
         {
-            var ex = info as ArchiveVersionColumnTypeParsingException;
+            var ex = info as ColumnTypeParsingException;
 
             if (ex == null)
             {
@@ -153,7 +153,7 @@ namespace HardHorn.ViewModels
 
         public override void Add(object error)
         {
-            var ex = error as ArchiveVersionColumnParsingException;
+            var ex = error as ColumnParsingException;
 
             if (ex == null)
             {

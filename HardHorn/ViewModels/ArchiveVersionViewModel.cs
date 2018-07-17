@@ -1011,24 +1011,24 @@ namespace HardHorn.ViewModels
         {
             ErrorViewModelBase errorViewModel;
 
-            if (ex is ArchiveVersionColumnTypeParsingException)
+            if (ex is ColumnTypeParsingException)
             {
-                var avctEx = ex as ArchiveVersionColumnTypeParsingException;
+                var avctEx = ex as ColumnTypeParsingException;
                 Log(string.Format("En fejl opstod under afkodningen af kolonnen '{0}' i tabellen '{1}': Typen '{2}' er ikke valid.", avctEx.Name, avctEx.Table.Name, avctEx.Type), LogLevel.ERROR);
             }
-            else if (ex is ArchiveVersionColumnParsingException)
+            else if (ex is ColumnParsingException)
             {
-                var avcEx = ex as ArchiveVersionColumnParsingException;
+                var avcEx = ex as ColumnParsingException;
                 Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", avcEx.Table.Name, avcEx.Message), LogLevel.ERROR);
             }
 
             if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
             {
-                if (ex is ArchiveVersionColumnTypeParsingException)
+                if (ex is ColumnTypeParsingException)
                 {
                     errorViewModel = new ColumnTypeParsingErrorViewModel();
                 }
-                else if (ex is ArchiveVersionColumnParsingException)
+                else if (ex is ColumnParsingException)
                 {
                     errorViewModel = new ColumnParsingErrorViewModel();
                 }
@@ -1103,7 +1103,7 @@ namespace HardHorn.ViewModels
             SelectedTableViewModel = vm;
         }
 
-        public void GoToUndefinedColumn(ArchiveVersionColumnTypeParsingException ex)
+        public void GoToUndefinedColumn(ColumnTypeParsingException ex)
         {
             var vm = TableViewModelIndex[ex.Table.Name];
             if (vm == null)

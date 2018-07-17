@@ -134,7 +134,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column name.", xcolumn, table);
+                throw new ColumnParsingException("Could not read column name.", xcolumn, table);
             }
             try
             {
@@ -142,7 +142,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column datatype.", xcolumn, table);
+                throw new ColumnParsingException("Could not read column datatype.", xcolumn, table);
             }
             try
             {
@@ -150,7 +150,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column original datatype", xcolumn, table);
+                throw new ColumnParsingException("Could not read column original datatype", xcolumn, table);
             }
             try
             {
@@ -158,7 +158,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column nullable value.", xcolumn, table);
+                throw new ColumnParsingException("Could not read column nullable value.", xcolumn, table);
             }
             try
             {
@@ -166,7 +166,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column description.", xcolumn, table);
+                throw new ColumnParsingException("Could not read column description.", xcolumn, table);
             }
             try
             {
@@ -174,7 +174,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
-                throw new ArchiveVersionColumnParsingException("Could not read column ID.", xcolumn, table);
+                throw new ColumnParsingException("Could not read column ID.", xcolumn, table);
             }
             string defaultValue = null;
             var defaultValueElement = xcolumn.Element(xmlns + "defaultValue");
@@ -194,7 +194,7 @@ namespace HardHorn.Archiving
             if (xname.Value.Length > 0)
                 name = xname.Value;
             else
-                throw new ArchiveVersionColumnParsingException("Column name has length 0.", xcolumn, table);
+                throw new ColumnParsingException("Column name has length 0.", xcolumn, table);
 
             bool nullable;
             // parse nullable
@@ -204,7 +204,7 @@ namespace HardHorn.Archiving
                 nullable = false;
             else
             {
-                throw new ArchiveVersionColumnParsingException("Column has invalid nullable value.", xnullable, table);
+                throw new ColumnParsingException("Column has invalid nullable value.", xnullable, table);
             }
 
             string desc = xdesc.Value;

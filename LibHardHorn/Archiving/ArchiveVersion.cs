@@ -85,9 +85,7 @@ namespace HardHorn.Archiving
         {
             get
             {
-                foreach (var table in Tables)
-                    foreach (var column in table.Columns)
-                        yield return column;
+                foreach (var table in Tables) foreach (var column in table.Columns) yield return column;
             }
         }
 
@@ -123,34 +121,140 @@ namespace HardHorn.Archiving
         /// </summary>
         public bool PacketType { get; private set; }
 
+        /// <summary>
+        /// Required list of one or more authorities, which created the archive material.
+        /// </summary>
         public IEnumerable<ArchiveCreator> ArchiveCreators { get; private set; }
 
+        /// <summary>
+        /// Required period type indicating whether this archive version is a completed
+        /// period (true), or a snapshot (false).
+        /// </summary>
         public bool PeriodType { get; private set; }
 
+        /// <summary>
+        /// Official name of the IT system, where all abbreviations have been expanded.
+        /// </summary>
         public string SystemName { get; private set; }
+
+        /// <summary>
+        /// Optional list of alternative names of the IT system.
+        /// </summary>
         public IEnumerable<string> AlternativeNames { get; private set; }
+
+        /// <summary>
+        /// Required description of the purpose of creating and running  the IT system.
+        /// </summary>
         public string SystemPurpose { get; private set; }
+
+        /// <summary>
+        /// Required description of the main population and variables of the IT system, eg. what is registered in the system.
+        /// </summary>
         public string SystemContent { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system systematically uses region numbers.
+        /// </summary>
         public bool RegionNumbersUsed { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system systematically uses municipality (kommune) numbers.
+        /// </summary>
         public bool KommuneNumbersUsed { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system systematically uses CPR numbers.
+        /// </summary>
         public bool CPRNumbersUsed { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system systematically uses matrikel numbers.
+        /// </summary>
         public bool MatrikelNumbersUsed { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system systematically uses CVR numbers.
+        /// </summary>
         public bool CVRNumbersUsed { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system systematically uses BBR numbers.
+        /// </summary>
         public bool BBRNumbersUsed { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system systematically uses WHO disease classification codes.
+        /// </summary>
         public bool WHOCodesUsed { get; private set; }
+
+        /// <summary>
+        /// Optional list of other indices, which have contributed data to this IT system.
+        /// </summary>
         public IEnumerable<string> SourceNames { get; private set; }
+
+        /// <summary>
+        /// Optional list of other IT systems, which have used data from this IT system.
+        /// </summary>
         public IEnumerable<string> UserNames { get; private set; }
+
+        /// <summary>
+        /// Optional list of IT systems which have previously performed the functions of this IT system.
+        /// </summary>
         public IEnumerable<string> PredecessorNames { get; private set; }
+
+        /// <summary>
+        /// Required (for public authorities) indication of the version of FORM the classifications have been collected from.
+        /// </summary>
         public string FORMVersion { get; private set; }
+
+        /// <summary>
+        /// Required (for public authorities) list of FORM classifications.
+        /// </summary>
         public IEnumerable<FORMClassification> FORMClassifications { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the archive version contains digital documents apart from context documentation.
+        /// </summary>
         public bool ContainsDigitalDocuments { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the archive version is a necessary means of search for paper cases or documents, or cases and documents in another IT system.
+        /// </summary>
         public bool SearchRelatedOtherRecords { get; private set; }
+
+        /// <summary>
+        /// Required (if SearchRelatedOtherRecords is true) reference to the archive materials, which the archive version is a search means of.
+        /// </summary>
         public IEnumerable<string> RelatedRecordsNames { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system has a case concept, ie. connections between related documents are registered.
+        /// </summary>
         public bool SystemFileConcept { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the IT system is composed of data and documents from multiple IT systems in a service-oriented architecture.
+        /// </summary>
         public bool MultipleDataCollection { get; private set; }
+
+        /// <summary>
+        /// Required indicator for whether the archive version contains sensitive personal information.
+        /// </summary>
         public bool PersonalDataRestrictedInfo { get; private set; }
+
+        /// <summary>
+        /// Reqired indicator for whether the archive version contains information, which can be the cause of a longer availability threshold.
+        /// </summary>
         public bool OtherAccessTypeRestrictions { get; private set; }
+
+        /// <summary>
+        /// Required identification of the public archive which approves the archive version.
+        /// </summary>
         public string ArchiveApproval { get; private set; }
+
+        /// <summary>
+        /// Optional description of decisions regarding access to the material.
+        /// </summary>
         public string ArchiveRestrictions { get; private set; }
 
         /// <summary>
@@ -506,7 +610,15 @@ namespace HardHorn.Archiving
                 PreviousId = null;
             }
 
-            PeriodStart = DateTime.Parse(archiveIndex.Element(xmlns + "archivePeriodStart").Value);
+            try
+            {
+                PeriodStart = DateTime.Parse(archiveIndex.Element(xmlns + "archivePeriodStart").Value);
+            }
+            catch (FormatException)
+            {
+                throw new ErrorFieldException("archivePeriodStart", archiveIndex.Element(xmlns + "archivePeriodStart").Value);
+            }
+            
             PeriodEnd = DateTime.Parse(archiveIndex.Element(xmlns + "archivePeriodEnd").Value);
 
             PacketType = bool.Parse(archiveIndex.Element(xmlns + "archiveInformationPacketType").Value);
@@ -520,12 +632,23 @@ namespace HardHorn.Archiving
             {
                 for (int i = 0; i < creatorNames.Count; i++)
                 {
-                    archiveCreators.Add(new ArchiveCreator(creatorNames[i], DateTime.Parse(creationPeriodStarts[i]), DateTime.Parse(creationPeriodEnds[i])));
+                    DateTime creationPeriodStart, creationPeriodEnd;
+                    if (!DateTime.TryParseExact(creationPeriodStarts[i], new string[] { "yyyy-MM-dd", "yyyy-MM", "yyyy" }, null, DateTimeStyles.None, out creationPeriodStart))
+                    {
+                        throw new ErrorFieldException("creationPeriodStart", creationPeriodStarts[i]);
+                    }
+
+                    if (!DateTime.TryParseExact(creationPeriodEnds[i], new string[] { "yyyy-MM-dd", "yyyy-MM", "yyyy" }, null, DateTimeStyles.None, out creationPeriodEnd))
+                    {
+                        throw new ErrorFieldException("creationPeriodEnd", creationPeriodEnds[i]);
+                    }
+                    
+                    archiveCreators.Add(new ArchiveCreator(creatorNames[i], creationPeriodStart, creationPeriodEnd));
                 }
             }
             else
             {
-                throw new Exception();
+                throw new Exception("Antallet af arkivskabere og tilhørende perioder stemmer ikke.");
             }
             ArchiveCreators = archiveCreators;
 
@@ -561,7 +684,7 @@ namespace HardHorn.Archiving
             }
             else
             {
-                throw new Exception();
+                throw new Exception("Antallet af FORM klassificeringer (formClass i index) og klassificeringstekster (formClassText i index) stemmer ikke.");
             }
             FORMClassifications = formClassifications;
 

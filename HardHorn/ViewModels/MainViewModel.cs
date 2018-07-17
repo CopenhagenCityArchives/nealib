@@ -101,11 +101,11 @@ namespace HardHorn.ViewModels
 
             if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
             {
-                if (ex is ArchiveVersionColumnParsingException)
+                if (ex is ColumnParsingException)
                 {
                     errorViewModel = new ColumnParsingErrorViewModel();
                 }
-                else if (ex is ArchiveVersionColumnTypeParsingException)
+                else if (ex is ColumnTypeParsingException)
                 {
                     errorViewModel = new ColumnTypeParsingErrorViewModel();
                 }

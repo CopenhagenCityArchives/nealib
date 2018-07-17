@@ -54,7 +54,7 @@ namespace HardHorn.Archiving
             var versionElem = element.Element(xmlns + "version");
             if (versionElem == null)
             {
-                throw new ArchiveVersionRequiredFieldMissingException("version");
+                throw new RequiredFieldMissingException("version");
             }
             var version = versionElem.Value;
 

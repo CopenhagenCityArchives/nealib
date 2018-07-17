@@ -88,13 +88,13 @@ namespace HardHorn.Archiving
                     var column = Column.Parse(table, xcolumn);
                     (table.Columns as List<Column>).Add(column);
                 }
-                catch (ArchiveVersionColumnTypeParsingException ex)
+                catch (ColumnTypeParsingException ex)
                 {
                     (table.Columns as List<Column>).Add(ex.Column);
                     if (callback != null)
                         callback(ex);
                 }
-                catch (ArchiveVersionColumnParsingException ex)
+                catch (ColumnParsingException ex)
                 {
                     (table.Columns as List<Column>).Add(new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", ParameterizedDataType.GetUndefined(), null, false, "", "", 0, null, null));
                     if (callback != null)

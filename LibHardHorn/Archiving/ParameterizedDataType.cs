@@ -64,7 +64,7 @@ namespace HardHorn.Archiving
                 }
                 catch (InvalidOperationException)
                 {
-                    throw new ArchiveVersionColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
+                    throw new ColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
                 }
 
                 var parameterGroup = match.Groups["params"];
@@ -81,12 +81,12 @@ namespace HardHorn.Archiving
                 }
                 catch (InvalidOperationException)
                 {
-                    throw new ArchiveVersionColumnTypeParsingException("Invalid parameters.", match.Groups["datatype"].Value, element, column, table);
+                    throw new ColumnTypeParsingException("Invalid parameters.", match.Groups["datatype"].Value, element, column, table);
                 }
             }
             else
             {
-                throw new ArchiveVersionColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
+                throw new ColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
             }
         }
 
