@@ -8,46 +8,110 @@ namespace HardHorn.Analysis
     {
         DateTime _lastErrorsEventTime = DateTime.Now;
 
+        /// <summary>
+        /// The number of errors found, when analyzing the column.
+        /// </summary>
         public int ErrorCount { get; private set; }
+
+        /// <summary>
+        /// A dictionary of the test failures.
+        /// </summary>
         public IDictionary<Test, IList<Tuple<Post, Exception>>> TestFailures { get; private set; }
+
+        /// <summary>
+        /// The tests to be performed on this column.
+        /// </summary>
         public IList<Test> Tests { get; private set; }
+
+        /// <summary>
+        /// The suggestion for this column.
+        /// </summary>
         public ParameterizedDataType SuggestedType { get; set; }
+
+        /// <summary>
+        /// The column to be analyzed.
+        /// </summary>
         public Column Column { get; private set; }
 
+        /// <summary>
+        /// All posts so far analyzed are null.
+        /// </summary>
         public bool AllNullSoFar { get; private set; }
+
+        /// <summary>
+        /// The first row has been analyzed.
+        /// </summary>
         public bool FirstRowAnalyzed { get; set; }
 
+        /// <summary>
+        /// If true, this field will only have Character-type suggestions.
+        /// </summary>
         public bool ForceCharacterType { get; set; }
-
         public Parameter CharacterMinParameter { get; private set; }
         public Parameter CharacterMaxParameter { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts encountered so far are valid timestamps without time zones.
+        /// </summary>
         public bool TimestampFormat { get; private set; }
         public Parameter TimestampMinParameter { get; private set; }
         public Parameter TimestampMaxParameter { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts encountered so far are valid time without time zones.
+        /// </summary>
         public bool TimeFormat { get; private set; }
         public Parameter TimeMinParameter { get; private set; }
         public Parameter TimeMaxParameter { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts encountered so far are valid timestamps with time zones.
+        /// </summary>
         public bool TimestampTimeZoneFormat { get; private set; }
         public Parameter TimestampTimeZoneMinParameter { get; private set; }
         public Parameter TimestampTimeZoneMaxParameter { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts encounted so far are valid time with time zones.
+        /// </summary>
         public bool TimeTimeZoneFormat { get; private set; }
         public Parameter TimeTimeZoneMinParameter { get; private set; }
         public Parameter TimeTimeZoneMaxParameter { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts encountered so far are valid dates.
+        /// </summary>
         public bool DateFormat { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts analyzed so far are valid numerics.
+        /// </summary>
         public bool NumericFormat { get; private set; }
+
+        /// <summary>
+        /// The maximum parameter for numerics encountered so far.
+        /// </summary>
         public Parameter NumericMinParameter { get; private set; }
+
+        /// <summary>
+        /// The minimum parameter for numerics encountered so far.
+        /// </summary>
         public Parameter NumericMaxParameter { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts analyzed so far are valid floats.
+        /// </summary>
         public bool FloatFormat { get; private set; }
 
+        /// <summary>
+        /// Indicates whether all posts analyzed so far are valid integers.
+        /// </summary>
         public bool IntegerFormat { get; private set; }
 
+        /// <summary>
+        /// Construct a ColumnAlysis from a Column.
+        /// </summary>
+        /// <param name="column">The column.</param>
         public ColumnAnalysis(Column column)
         {
             FirstRowAnalyzed = false;
@@ -69,6 +133,9 @@ namespace HardHorn.Analysis
             TestFailures = new Dictionary<Test, IList<Tuple<Post, Exception>>>();
         }
 
+        /// <summary>
+        /// Apply the suggestion to the encapsulated column.
+        /// </summary>
         public void ApplySuggestion()
         {
             if (SuggestedType != null)
@@ -78,6 +145,10 @@ namespace HardHorn.Analysis
             }
         }
 
+        /// <summary>
+        /// Run all tests on a the given post.
+        /// </summary>
+        /// <param name="post">A post.</param>
         public void RunTests(Post post)
         {
             foreach (var test in Tests)
@@ -102,9 +173,9 @@ namespace HardHorn.Analysis
         }
 
         /// <summary>
-        /// Update the length measurements given the new data.
+        /// Update the length measurements given the new post.
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="post">A post</param>
         public void UpdateLengthStatistics(Post post)
         {
             bool allPreviousNull = AllNullSoFar;
@@ -256,6 +327,9 @@ namespace HardHorn.Analysis
             }
         }
 
+        /// <summary>
+        /// Add a suggested type to this column analysis, after analysis has been performed.
+        /// </summary>
         public void SuggestType()
         {
             if (!FirstRowAnalyzed)
@@ -330,6 +404,9 @@ namespace HardHorn.Analysis
             }
         }
 
+        /// <summary>
+        /// Clear the column analysis, setting the error count to zero, clearing all tests and test failures.
+        /// </summary>
         public void Clear()
         {
             ErrorCount = 0;
