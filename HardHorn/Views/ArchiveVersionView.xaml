@@ -1013,7 +1013,7 @@
                                                             <oxy:ColumnSeries ItemsSource="{Binding Values, Converter={StaticResource ValuesToColumnItemsConverter}}" />
                                                         </oxy:Plot.Series>
                                                         <oxy:Plot.Axes>
-                                                            <oxy:CategoryAxis ItemsSource="{Binding Values, Converter={StaticResource ValuesToCategoryAxisConverter}}" />
+                                                            <oxy:CategoryAxis MinimumRange="25" ItemsSource="{Binding Values, Converter={StaticResource ValuesToCategoryAxisConverter}}" />
                                                         </oxy:Plot.Axes>
                                                     </oxy:Plot>
                                                 </Grid>
