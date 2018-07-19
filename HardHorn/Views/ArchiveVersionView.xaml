@@ -1017,10 +1017,6 @@
                                                         </oxy:Plot.Axes>
                                                     </oxy:Plot>
                                                 </Grid>
-                                                <!--<StackPanel>
-                                <TextBlock Text="{Binding Title}" HorizontalAlignment="Center" FontWeight="Bold" />
-                                <ctl:BarChart Height="150" Margin="5" BucketCount="{Binding BucketCount}" Values="{Binding Values}"></ctl:BarChart>
-                            </StackPanel>-->
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
