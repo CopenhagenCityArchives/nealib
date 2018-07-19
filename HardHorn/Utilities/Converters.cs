@@ -13,9 +13,74 @@ using System.Windows.Controls;
 using Caliburn.Micro;
 using System.Data;
 using System.Text.RegularExpressions;
+using OxyPlot;
+using OxyPlot.Series;
 
 namespace HardHorn.Utilities
 {
+    public class ValuesToColumnItemsConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var values = value as IEnumerable<uint>;
+
+            if (values != null)
+            {
+                var barItems = new List<ColumnItem>();
+                var list = values.ToList();
+                list.Sort();
+                var map = new Dictionary<uint, int>();
+                foreach (var item in list)
+                {
+                    if (map.ContainsKey(item))
+                    {
+                        map[item]++;
+                    }
+                    else
+                    {
+                        map[item] = 1;
+                    }
+                }
+
+                foreach (var item in map.Keys)
+                {
+                    barItems.Add(new ColumnItem(map[item]));
+                }
+
+                return barItems;
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class ValuesToCategoryAxisConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var values = value as IEnumerable<uint>;
+
+            if (values != null)
+            {
+                var list = new HashSet<uint>(values).ToList();
+                list.Sort();
+                return list.Select(v => v.ToString());
+            }
+
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class KeyTestResultListToDataTable : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

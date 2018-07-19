@@ -6,7 +6,8 @@
                     xmlns:util="clr-namespace:HardHorn.Utilities;assembly=HardHorn"
                     xmlns:log="clr-namespace:HardHorn.Logging;assembly=LibHardHorn"
                     xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
-                    xmlns:cal="http://www.caliburnproject.org">
+                    xmlns:cal="http://www.caliburnproject.org"
+                    xmlns:oxy="http://oxyplot.org/wpf">
     <util:HasErrorsColorConverter x:Key="HasErrorsColorConverter" />
     <util:ErrorCountColorConverter x:Key="ErrorCountColorConverter" />
     <util:DataTypeToStringConverter x:Key="DataTypeToStringConverter" />
@@ -16,6 +17,8 @@
     <util:ParameterToStringConverter x:Key="ParameterToStringConverter" />
     <util:RecentLocationsMenuItemConverter x:Key="RecentLocationMenuItemConverter" />
     <util:KeyTestResultListToDataTable x:Key="KeyTestResultListToDataTable" />
+    <util:ValuesToColumnItemsConverter x:Key="ValuesToColumnItemsConverter" />
+    <util:ValuesToCategoryAxisConverter x:Key="ValuesToCategoryAxisConverter" />
 
     <DataTemplate x:Key="ErrorViewTemplate">
         <StackPanel>
@@ -156,10 +159,17 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel>
+                            <Grid>
+                                <oxy:Plot Title="{Binding Title}">
+                                    <oxy:Plot.Series>
+                                        <oxy:LineSeries ItemsSource="{Binding Values, Converter={StaticResource ValuesToDataPointsConverter}}" />
+                                    </oxy:Plot.Series>
+                            </oxy:Plot>
+                            </Grid>
+                            <!--<StackPanel>
                                 <TextBlock Text="{Binding Title}" HorizontalAlignment="Center" FontWeight="Bold" />
                                 <ctl:BarChart Height="150" Margin="5" BucketCount="{Binding BucketCount}" Values="{Binding Values}"></ctl:BarChart>
-                            </StackPanel>
+                            </StackPanel>-->
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

@@ -10,6 +10,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
         xmlns:vm="clr-namespace:HardHorn.ViewModels"
+        xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600">
     <TabControl SelectedIndex="{Binding TabSelectedIndex}">
         <TabItem Header="Tabel- og datavisning">
@@ -972,7 +973,68 @@
 
         <TabItem Header="Statistik">
             <ScrollViewer>
-                <ItemsControl ItemsSource="{Binding DataTypeStatistics}" ItemTemplate="{StaticResource StatisticsItemTemplate}">
+                <ItemsControl ItemsSource="{Binding DataTypeStatistics}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <GroupBox Margin="5">
+                                <GroupBox.Header>
+                                    <TextBlock FontWeight="Bold" Text="{Binding DataType}" />
+                                </GroupBox.Header>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Label>Antal kolonner:</Label>
+                                    <Label x:Name="MinParamLabel" Grid.Row="1">Minimumsparametre:</Label>
+                                    <Label x:Name="MaxParamLabel" Grid.Row="2">Maksimumsparametre:</Label>
+                                    <Label Grid.Column="1" Content="{Binding Count}"/>
+                                    <Label Grid.Column="1" Grid.Row="1" Content="{Binding MinParam, Converter={StaticResource ParameterToStringConverter}}"/>
+                                    <Label Grid.Column="1" Grid.Row="2" Content="{Binding MaxParam, Converter={StaticResource ParameterToStringConverter}}"/>
+                                    <Label x:Name="HistLabel" Grid.Row="3" Grid.ColumnSpan="2">Typeparameterhistogrammer:</Label>
+                                    <ItemsControl Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding BarCharts}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Vertical"></StackPanel>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Height="250">
+                                                    <oxy:Plot Title="{Binding Title}">
+                                                        <oxy:Plot.Series>
+                                                            <oxy:ColumnSeries ItemsSource="{Binding Values, Converter={StaticResource ValuesToColumnItemsConverter}}" />
+                                                        </oxy:Plot.Series>
+                                                        <oxy:Plot.Axes>
+                                                            <oxy:CategoryAxis ItemsSource="{Binding Values, Converter={StaticResource ValuesToCategoryAxisConverter}}" />
+                                                        </oxy:Plot.Axes>
+                                                    </oxy:Plot>
+                                                </Grid>
+                                                <!--<StackPanel>
+                                <TextBlock Text="{Binding Title}" HorizontalAlignment="Center" FontWeight="Bold" />
+                                <ctl:BarChart Height="150" Margin="5" BucketCount="{Binding BucketCount}" Values="{Binding Values}"></ctl:BarChart>
+                            </StackPanel>-->
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </GroupBox>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding MinParam}" Value="{x:Null}">
+                                    <Setter TargetName="MinParamLabel" Property="Visibility" Value="Collapsed" />
+                                    <Setter TargetName="MaxParamLabel" Property="Visibility" Value="Collapsed" />
+                                    <Setter TargetName="HistLabel" Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Vertical" />
