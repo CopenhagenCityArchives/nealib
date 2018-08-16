@@ -447,7 +447,7 @@ namespace LibHardHornTest
             {
                 if (columnAnalysis.SuggestedType == null)
                 {
-                    Assert.Fail("No type was suggested, but a suggestion was expected.");
+                    Assert.Fail($"No type was suggested, but a suggestion of {expected.DataType} was expected.");
                 }
                 else
                 {
@@ -608,6 +608,7 @@ namespace LibHardHornTest
                     new Post("", true));
             }
         }
+
         [TestMethod]
         public void SuggestAllNull()
         {
@@ -619,6 +620,59 @@ namespace LibHardHornTest
                     new Post("", true),
                     new Post("", true),
                     new Post("", true),
+                    new Post("", true));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestBoolean01()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
+                    dataType == DataType.BOOLEAN ? null : new ParameterizedDataType(DataType.BOOLEAN, null),
+                    new Post("0", false),
+                    new Post("1", false),
+                    new Post("0", false),
+                    new Post("", true),
+                    new Post("1", false),
+                    new Post("1", false));
+            }
+        }
+
+        [TestMethod]
+        public void SuggestBooleanTrueFalse()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
+                    dataType == DataType.BOOLEAN ? null : new ParameterizedDataType(DataType.BOOLEAN, null),
+                    new Post("true", false),
+                    new Post("false", false),
+                    new Post("", true),
+                    new Post("false", false),
+                    new Post("false", false),
+                    new Post("true", false),
+                    new Post("", true));
+            }
+        }
+
+
+        [TestMethod]
+        public void SuggestBooleanMixed01TrueFalse()
+        {
+            foreach (DataType dataType in Enum.GetValues(typeof(DataType)))
+            {
+                AssertSuggestion(new ParameterizedDataType(dataType, Parameter.Default(dataType)),
+                    dataType == DataType.BOOLEAN ? null : new ParameterizedDataType(DataType.BOOLEAN, null),
+                    new Post("true", false),
+                    new Post("false", false),
+                    new Post("1", false),
+                    new Post("", true),
+                    new Post("false", false),
+                    new Post("false", false),
+                    new Post("0", false),
+                    new Post("true", false),
                     new Post("", true));
             }
         }

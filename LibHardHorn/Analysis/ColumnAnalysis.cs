@@ -109,6 +109,11 @@ namespace HardHorn.Analysis
         public bool IntegerFormat { get; private set; }
 
         /// <summary>
+        /// Indicates whether all posts analyzed so far are valid booleans.
+        /// </summary>
+        public bool BooleanFormat { get; private set; }
+
+        /// <summary>
         /// Construct a ColumnAlysis from a Column.
         /// </summary>
         /// <param name="column">The column.</param>
@@ -127,6 +132,7 @@ namespace HardHorn.Analysis
             NumericFormat = true;
             FloatFormat = true;
             IntegerFormat = true;
+            BooleanFormat = true;
 
             ErrorCount = 0;
             Tests = new List<Test>();
@@ -314,6 +320,9 @@ namespace HardHorn.Analysis
             if (IntegerFormat)
                 IntegerFormat &= Test.integer_regex.Match(data).Success;
 
+            if (BooleanFormat)
+                BooleanFormat &= Test.boolean_regex.Match(data).Success;
+
             // Always measure character lengths
             if (FirstRowAnalyzed && !allPreviousNull)
             {
@@ -337,7 +346,11 @@ namespace HardHorn.Analysis
 
             if (!ForceCharacterType)
             {
-                if (IntegerFormat)
+                if (BooleanFormat)
+                {
+                    SuggestedType = new ParameterizedDataType(DataType.BOOLEAN, null);
+                }
+                else if (IntegerFormat)
                 {
                     SuggestedType = new ParameterizedDataType(DataType.INTEGER, null);
                 }
