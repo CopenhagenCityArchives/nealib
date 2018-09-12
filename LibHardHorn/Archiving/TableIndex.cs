@@ -98,6 +98,8 @@ namespace HardHorn.Archiving
                 try
                 {
                     var schemaLocation = tableIndexDocument.Root.Attribute(xmlns + "schemaLocation").Value.Split(' ').ToArray();
+                    if (schemaLocation[1].StartsWith("file:"))
+                        schemaLocation[1].Remove(0, 5);
                     var targetNamespace = schemaLocation[0];
                     var schemaUri = System.IO.Path.GetFullPath(System.IO.Path.GetDirectoryName(path) + "\\" + schemaLocation[1].Replace('/', '\\'));
                     schemas.Add(targetNamespace, schemaUri);
