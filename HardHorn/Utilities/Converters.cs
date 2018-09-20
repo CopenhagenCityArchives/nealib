@@ -102,7 +102,7 @@ namespace HardHorn.Utilities
             foreach (var reference in foreignKey.References)
             {
                 var dataColumn = new DataColumn(string.Format("<{0}: {1}>", reference.Column.ColumnId, reference.ColumnName.Replace("_", "__")), typeof(string));
-                dataTable.Columns.Add();
+                dataTable.Columns.Add(dataColumn);
             }
             dataTable.Columns.Add("Antal fejl", typeof(int));
 
