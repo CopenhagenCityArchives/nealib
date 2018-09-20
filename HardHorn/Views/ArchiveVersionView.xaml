@@ -1174,7 +1174,7 @@
                     <ListBox x:Name="KeyTestTableList" ItemsSource="{Binding KeyTestTablesView}" SelectionMode="Extended" ItemContainerStyle="{StaticResource KeyTestTableListContainerStyle}" />
                 </DockPanel>
 
-                <DataGrid DockPanel.Dock="Right" Width="400" ItemsSource="{Binding SelectedItem, ElementName=KeyTestResultList, Converter={StaticResource KeyTestResultListToDataTable}}" />
+                <DataGrid CanUserAddRows="False" CanUserDeleteRows="False" DockPanel.Dock="Right" Width="400" ItemsSource="{Binding SelectedItem, ElementName=KeyTestResultList, Converter={StaticResource KeyTestResultListToDataTable}}" />
 
                 <ListView x:Name="KeyTestResultList" ItemsSource="{Binding ForeignKeyTestResults}">
                     <ListView.View>
