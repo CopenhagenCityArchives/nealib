@@ -146,7 +146,7 @@ namespace HardHorn.Archiving
                 case DataType.CHARACTER_VARYING:
                 case DataType.NATIONAL_CHARACTER:
                 case DataType.NATIONAL_CHARACTER_VARYING:
-                    if (parameters.Length == 1)
+                    if (parameters.Length == 1 && parameters[0] > 0)
                     {
                         return WithLength(parameters[0]);
                     }
