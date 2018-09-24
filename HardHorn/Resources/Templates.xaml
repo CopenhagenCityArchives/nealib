@@ -81,8 +81,8 @@
     
     <DataTemplate x:Key="RegexTableTemplate">
         <StackPanel Orientation="Horizontal">
-            <TextBlock Text="{Binding Name}" FontWeight="Bold" />
-            <TextBlock Margin="5 0 0 0" Text="{Binding Description}" FontStyle="Italic" />
+            <TextBlock Text="{Binding Table.Name}" FontWeight="Bold" />
+            <TextBlock Margin="5 0 0 0" Text="{Binding Table.Description}" FontStyle="Italic" />
         </StackPanel>
     </DataTemplate>
 
