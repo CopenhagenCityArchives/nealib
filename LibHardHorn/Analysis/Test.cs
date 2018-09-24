@@ -32,6 +32,7 @@ namespace HardHorn.Analysis
 
         public int ErrorCount { get; private set; }
         public abstract AnalysisTestType Type { get; }
+        public string Name { get { return Type.ToString(); } }
 
         List<Post> _posts = new List<Post>();
         public IEnumerable<Post> ErrorPosts { get { return _posts; } }
@@ -294,6 +295,7 @@ namespace HardHorn.Analysis
         {
             AnalysisTestType _type;
             public override AnalysisTestType Type { get { return _type; } }
+            public new string Name { get { return $"Regex \"{Regex.ToString()}\""; } }
 
             public Regex Regex { get; private set; }
             public Func<MatchCollection, Result> HandleMatches { get; private set; }

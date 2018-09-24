@@ -472,7 +472,7 @@
                                     <TextBlock>
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="{}{0} ({1})">
-                                                <Binding Path="Type" />
+                                                <Binding Path="Name" />
                                                 <Binding Path="ErrorCount" />
                                             </MultiBinding>
                                         </TextBlock.Text>
@@ -878,6 +878,7 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition/>
                                     <RowDefinition/>
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
