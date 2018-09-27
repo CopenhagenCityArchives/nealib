@@ -71,7 +71,7 @@ namespace LibHardHornTest
 
             pattern = new Regex(@"AAA(\d)", RegexOptions.Compiled);
             replacement = "BBB$1";
-            AssertReplacePost("AAA1/AAA2/AAA3", false, pattern, replacement, "BBB1/BBB2/BBB3", 4);
+            AssertReplacePost("AAA1/AAA2/AAA3/AAA4", false, pattern, replacement, "BBB1/BBB2/BBB3/BBB4", 4);
         }
     }
 }

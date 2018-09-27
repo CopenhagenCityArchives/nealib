@@ -381,7 +381,11 @@ namespace LibHardHornTest
             });
             var column = new Column(null, "name", new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(100)), "VARCHAR (100)", false, "desc", "c1", 1, null, null);
             AssertOkay(column, test, "a1");
+            AssertOkay(column, test, "   b9   ");
             AssertError(column, test, "12");
+            AssertError(column, test, "1a");
+            AssertError(column, test, " 12 ");
+            AssertError(column, test, "abcd 1abcd");
         }
 
         [TestMethod]
