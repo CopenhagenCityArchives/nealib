@@ -1032,9 +1032,17 @@ namespace HardHorn.ViewModels
                 {
                     errorViewModel = new ColumnParsingErrorViewModel();
                 }
-                else
+                else if (ex is ForeignKeyNotMatchingException)
+                {
+                    errorViewModel = new ForeignKeyNotMatchingErrorViewModel();
+                }
+                else if (ex is ArchiveVersionXmlValidationException)
                 {
                     errorViewModel = new XmlValidationErrorViewModel();
+                }
+                else
+                {
+                    return;
                 }
 
                 LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;

@@ -854,7 +854,42 @@
                                 <Label Grid.Row="2" Grid.Column="1" Content="{Binding Post.Data}" />
                             </Grid>
                         </DataTemplate>
-                        <DataTemplate DataType="{x:Type vm:XmlValidationErrorViewModel}">
+                        <DataTemplate DataType="{x:Type av:ForeignKeyNotMatchingException}">
+                            <StackPanel Margin="5">
+                                <Label>
+                                    <TextBlock FontWeight="Bold" Text="{Binding ForeignKey.Name}" />
+                                </Label>
+                                <ItemsControl ItemsSource="{Binding ForeignKey.References}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type av:Reference}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition></ColumnDefinition>
+                                                    <ColumnDefinition></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock>
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0}.{1}">
+                                                            <Binding Path="Column.Table" />
+                                                            <Binding Path="Column" />
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="1">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0}.{1}">
+                                                            <Binding Path="ReferencedColumn.Table" />
+                                                            <Binding Path="ReferencedColumn" />
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                        <DataTemplate DataType="{x:Type av:ArchiveVersionXmlValidationException}">
                             <Grid Margin="5">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
@@ -936,8 +971,8 @@
                                     </TextBlock>
                                 </Button>
 
-                                <Label Grid.Row="1">Type:</Label>
-                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Type}" />
+                                <Label Grid.Row="1">Læst type:</Label>
+                                <Label Grid.Row="1" Grid.Column="1" Content="{Binding Element.Value}" />
                             </Grid>
                         </DataTemplate>
                         <DataTemplate DataType="{x:Type vm:ColumnCount}">

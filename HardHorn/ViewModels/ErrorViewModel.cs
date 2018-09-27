@@ -141,6 +141,30 @@ namespace HardHorn.ViewModels
         }
     }
 
+    public class ForeignKeyNotMatchingErrorViewModel : ErrorViewModelBase
+    {
+        public override string Header
+        {
+            get
+            {
+                return "Fremmednøgle type-mismatch";
+            }
+        }
+
+        public override void Add(object error)
+        {
+            var ex = error as ForeignKeyNotMatchingException;
+
+            if (ex == null)
+            {
+                throw new InvalidOperationException("Added invalid object to ForeignKeyNotMatchingErrorViewModel.");
+            }
+
+            Count++;
+            Subjects.Add(ex);
+        }
+    }
+
     public class ColumnParsingErrorViewModel : ErrorViewModelBase
     {
         public override string Header

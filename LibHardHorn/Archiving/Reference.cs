@@ -21,12 +21,14 @@ namespace HardHorn.Archiving
             ReferencedColumnName = referencedColumnName;
         }
 
-        public void Initialize(Table table, Table referencedTable)
+        public bool Initialize(Table table, Table referencedTable)
         {
             try
             {
                 Column = table.Columns.First(c => c.Name.ToLower() == ColumnName.ToLower());
                 ReferencedColumn = referencedTable.Columns.First(c => c.Name.ToLower() == ReferencedColumnName.ToLower());
+
+                return Column.ParameterizedDataType.CompareTo(ReferencedColumn.ParameterizedDataType) == 0;
             }
             catch (InvalidOperationException ex)
             {

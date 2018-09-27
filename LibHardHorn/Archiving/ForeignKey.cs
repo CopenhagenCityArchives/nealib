@@ -24,14 +24,16 @@ namespace HardHorn.Archiving
             References = new List<Reference>(references);
         }
 
-        public void Initialize(TableIndex tableIndex, Table table)
+        public bool Initialize(TableIndex tableIndex, Table table)
         {
+            bool matchingDataTypes = true;
             Table = table;
             ReferencedTable = tableIndex.Tables.First(t => t.Name.ToLower() == ReferencedTableName.ToLower());
             foreach (var reference in References)
             {
-                reference.Initialize(Table, ReferencedTable);
+                matchingDataTypes = matchingDataTypes && reference.Initialize(Table, ReferencedTable);
             }
+            return matchingDataTypes;
         }
 
         public ForeignKeyValue GetValueFromRow(int row, Post[,] posts)

@@ -42,6 +42,16 @@ namespace HardHorn.Archiving
         }
     }
 
+    public class ForeignKeyNotMatchingException : Exception
+    {
+        public ForeignKey ForeignKey { get; private set; }
+
+        public ForeignKeyNotMatchingException(ForeignKey foreignKey)
+        {
+            ForeignKey = foreignKey;
+        }
+    }
+
     public class RequiredFieldMissingException : Exception
     {
         public string Field { get; private set; }

@@ -80,7 +80,10 @@ namespace HardHorn.Archiving
             {
                 foreach (var fkey in table.ForeignKeys)
                 {
-                    fkey.Initialize(tableIndex, table);
+                    if (!fkey.Initialize(tableIndex, table))
+                    {
+                        callback(new ForeignKeyNotMatchingException(fkey));
+                    }
                 }
             }
 
