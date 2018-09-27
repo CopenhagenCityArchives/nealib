@@ -35,6 +35,7 @@ namespace HardHorn.ViewModels
         public Table Table { get; set; }
 
         public ObservableCollection<ForeignKeyViewModel> ForeignKeyViewModels { get; private set; }
+        public ObservableCollection<ForeignKeyViewModel> IncomingForeignKeyViewModels { get; private set; }
 
         uint _browseOffset;
         public uint BrowseOffset
@@ -152,6 +153,7 @@ namespace HardHorn.ViewModels
             Table = table;
             ColumnViewModels = new ObservableCollection<ColumnViewModel>(table.Columns.Select(c => new ColumnViewModel(c)));
             ForeignKeyViewModels = new ObservableCollection<ForeignKeyViewModel>(table.ForeignKeys.Select(fkey => new ForeignKeyViewModel(this, fkey)));
+            IncomingForeignKeyViewModels = new ObservableCollection<ForeignKeyViewModel>();
             AnalysisErrors = ColumnViewModels.Any(cvm => cvm.Column.ParameterizedDataType.DataType == DataType.UNDEFINED);
             BrowseOffset = 0;
             BrowseCount = 20;
@@ -162,6 +164,15 @@ namespace HardHorn.ViewModels
                 var dataColumn = new DataColumn(string.Format("<{0}: {1}>", column.ColumnId, column.Name.Replace("_", "__")), typeof(Post));
                 dataColumn.Caption = column.ColumnIdNumber.ToString();
                 _rowDataTable.Columns.Add(dataColumn);
+            }
+        }
+
+        public void InitializeIncomingForeignKeys(ArchiveVersionViewModel av)
+        {
+            foreach (var foreignKeyViewModel in ForeignKeyViewModels)
+            {
+                var tableVm = av.TableViewModelIndex[foreignKeyViewModel.ForeignKey.ReferencedTable.Name];
+                tableVm.IncomingForeignKeyViewModels.Add(foreignKeyViewModel);
             }
         }
 

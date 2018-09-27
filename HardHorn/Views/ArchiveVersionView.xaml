@@ -396,8 +396,10 @@
                             <DataGrid ItemsSource="{Binding SelectedTableViewModel.RowDataTable}" CellStyle="{StaticResource DataGridCellStyle}" IsReadOnly="True" SelectionUnit="Cell" />
                         </DockPanel>
                     </TabItem>
-                    <TabItem Header="Nøgler">
-                        <StackPanel>
+                    <TabItem Header="Nøgler" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer>
+                        <StackPanel ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <Label FontWeight="Bold">Primærnøgle</Label>
                             <GroupBox>
                                 <GroupBox.Header>
                                     <TextBlock FontWeight="Bold" Text="{Binding SelectedTableViewModel.Table.PrimaryKey.Name}" />
@@ -410,6 +412,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </GroupBox>
+                            <Label FontWeight="Bold">Udgående fremmednøgler</Label>
                             <ItemsControl ItemsSource="{Binding SelectedTableViewModel.ForeignKeyViewModels}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -432,7 +435,7 @@
                                                 <ItemsControl Grid.Column="1" ItemsSource="{Binding ReferenceViewModels}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <Button Margin="0,0,0,2" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToReferencedColumn($dataContext)]">
+                                                            <Button Margin="0,0,0,2" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToForeignKeyReferencedColumn($dataContext)]">
                                                                 <TextBlock Margin="0,0,0,-2">
                                                                     <TextBlock.Text>
                                                                         <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
@@ -451,7 +454,50 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </StackPanel>
+                            <Label FontWeight="Bold">Indgående fremmednøgler</Label>
+                                <ItemsControl ItemsSource="{Binding SelectedTableViewModel.IncomingForeignKeyViewModels}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <GroupBox>
+                                                <GroupBox.Header>
+                                                    <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                                </GroupBox.Header>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition />
+                                                        <ColumnDefinition />
+                                                    </Grid.ColumnDefinitions>
+                                                    <ItemsControl ItemsSource="{Binding ReferenceViewModels}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Button Margin="0,0,0,2" Style="{StaticResource HyperlinkButtonStyle}" cal:Message.Attach="[Event Click] = [Action GoToForeignKeyColumn($dataContext)]">
+                                                                    <TextBlock Margin="0,0,0,-2">
+                                                                        <TextBlock.Text>
+                                                                            <MultiBinding StringFormat="{}{0}.{1} &lt;{2}&gt;">
+                                                                                <Binding Path="Reference.Column.Table.Name"></Binding>
+                                                                                <Binding Path="Reference.Column.Name"></Binding>
+                                                                                <Binding Path="Reference.Column.ColumnId"></Binding>
+                                                                            </MultiBinding>
+                                                                        </TextBlock.Text>
+                                                                    </TextBlock>
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding ReferenceViewModels}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <TextBlock Text="{Binding Reference.ReferencedColumn.Name}"></TextBlock>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Grid>
+                                            </GroupBox>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
                     </TabItem>
                     <TabItem Header="Fejlvisning">
                         <TabItem.Style>

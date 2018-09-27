@@ -124,6 +124,11 @@ namespace HardHorn.ViewModels
                     TableViewModelIndex[table.Name] = vm;
                 }
 
+                foreach (var tvm in TableViewModels)
+                {
+                    tvm.InitializeIncomingForeignKeys(this);
+                }
+
                 NotifyOfPropertyChange("ArchiveVersion");
             }
         }
@@ -230,7 +235,7 @@ namespace HardHorn.ViewModels
         public ObservableCollection<TableViewModel> TableViewModels { get; set; }
         public ObservableCollection<ErrorViewModelBase> ErrorViewModels { get; set; }
         public TableRowCountErrorViewModel TableRowCountErrorViewModel { get; set; }
-        Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
+        public Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
         Dictionary<AnalysisTestType, ErrorViewModelBase> TestErrorViewModelIndex { get; set; }
         Dictionary<AnalysisTestType, ErrorViewModelBase> TestFailureViewModelIndex { get; set; }
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
@@ -1121,7 +1126,7 @@ namespace HardHorn.ViewModels
             SelectedTableViewModel = vm;
         }
 
-        public void GoToReferencedColumn(ReferenceViewModel referenceViewModel)
+        public void GoToForeignKeyReferencedColumn(ReferenceViewModel referenceViewModel)
         {
             var vm = TableViewModelIndex[referenceViewModel.Reference.ReferencedColumn.Table.Name];
             if (vm == null)
@@ -1130,6 +1135,17 @@ namespace HardHorn.ViewModels
             TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
             SelectedTableViewModel = vm;
             SelectedTableViewModel.SelectedColumnViewModel = SelectedTableViewModel.ColumnViewModels.First(cvm => cvm.Column == referenceViewModel.Reference.ReferencedColumn);
+        }
+
+        public void GoToForeignKeyColumn(ReferenceViewModel referenceViewModel)
+        {
+            var vm = TableViewModelIndex[referenceViewModel.Reference.Column.Table.Name];
+            if (vm == null)
+                return;
+
+            TabSelectedIndex = (int)TabNameEnum.TAB_ARCHIVEVERSION;
+            SelectedTableViewModel = vm;
+            SelectedTableViewModel.SelectedColumnViewModel = SelectedTableViewModel.ColumnViewModels.First(cvm => cvm.Column == referenceViewModel.Reference.Column);
         }
 
         public void GoToColumn(ColumnCount c)
