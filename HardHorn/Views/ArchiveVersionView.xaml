@@ -428,7 +428,14 @@
                                                 <ItemsControl ItemsSource="{Binding ReferenceViewModels}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <TextBlock Text="{Binding Reference.Column.Name}"></TextBlock>
+                                                            <TextBlock>
+                                                                <TextBlock.Text>
+                                                                    <MultiBinding StringFormat="{}{0} &lt;{1}&gt;">
+                                                                        <Binding Path="Reference.Column.Name" />
+                                                                        <Binding Path="Reference.Column.ColumnId" />
+                                                                    </MultiBinding>
+                                                                </TextBlock.Text>
+                                                            </TextBlock>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
@@ -487,7 +494,14 @@
                                                     <ItemsControl Grid.Column="1" ItemsSource="{Binding ReferenceViewModels}">
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <TextBlock Text="{Binding Reference.ReferencedColumn.Name}"></TextBlock>
+                                                                <TextBlock>
+                                                                    <TextBlock.Text>
+                                                                        <MultiBinding StringFormat="{}{0} &lt;{1}&gt;">
+                                                                            <Binding Path="Reference.ReferencedColumn.Name" />
+                                                                            <Binding Path="Reference.ReferencedColumn.ColumnId" />
+                                                                        </MultiBinding>
+                                                                    </TextBlock.Text>
+                                                                </TextBlock>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
