@@ -28,6 +28,7 @@ namespace HardHorn.Archiving
 
         public PrimaryKey PrimaryKey { get; private set; }
         public List<ForeignKey> ForeignKeys {get;private set;}
+        public int FolderNumber { get; private set; }
 
         public override string ToString()
         {
@@ -67,6 +68,8 @@ namespace HardHorn.Archiving
 
             string name = xtable.Element(xmlns + "name").Value;
             string folder = xtable.Element(xmlns + "folder").Value;
+            int folderNumber = -1;
+            int.TryParse(folder.Substring("table".Length), out folderNumber);
             int rows = int.Parse(xtable.Element(xmlns + "rows").Value);
             string desc = xtable.Element(xmlns + "description").Value;
             var pkey = PrimaryKey.Parse(xtable.Element(xmlns + "primaryKey"));
@@ -78,6 +81,7 @@ namespace HardHorn.Archiving
             }
 
             var table = new Table(name, folder, rows, desc, new List<Column>(), pkey, fkeys);
+            table.FolderNumber = folderNumber;
 
             int dummyCount = 1;
             var xcolumns = xtable.Element(xmlns + "columns");
