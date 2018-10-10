@@ -482,9 +482,15 @@ namespace HardHorn.ViewModels
             NotificationsCategoryViewSource = new CollectionViewSource() { Source = Notifications };
             NotificationsCategoryView = NotificationsCategoryViewSource.View;
             NotificationsView.GroupDescriptions.Add(new PropertyGroupDescription("Table"));
-            NotificationsView.SortDescriptions.Add(new SortDescription("Table.Name", ListSortDirection.Ascending));
+            NotificationsView.SortDescriptions.Add(new SortDescription("Table.FolderNumber", ListSortDirection.Ascending));
+            NotificationsView.SortDescriptions.Add(new SortDescription("Column.ColumnIdNumber", ListSortDirection.Ascending));
+            NotificationsView.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
+            NotificationsView.SortDescriptions.Add(new SortDescription("Message", ListSortDirection.Ascending));
             NotificationsView.Filter += Notifications_Filter;
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
+            NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Table.FolderNumber", ListSortDirection.Ascending));
+            NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Column.ColumnIdNumber", ListSortDirection.Ascending));
+            NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Message", ListSortDirection.Ascending));
             NotificationsCategoryView.GroupDescriptions.Add(new PropertyGroupDescription("Header"));
             NotificationsCategoryView.Filter += Notifications_Filter;
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
