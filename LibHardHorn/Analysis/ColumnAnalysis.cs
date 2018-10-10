@@ -1,4 +1,5 @@
 ﻿using HardHorn.Archiving;
+using HardHorn.Utility;
 using System;
 using System.Collections.Generic;
 
@@ -155,13 +156,13 @@ namespace HardHorn.Analysis
         /// Run all tests on a the given post.
         /// </summary>
         /// <param name="post">A post.</param>
-        public void RunTests(Post post)
+        public void RunTests(Post post, NotificationCallback notify)
         {
             foreach (var test in Tests)
             {
                 try
                 {
-                    var result = test.Run(post, Column);
+                    var result = test.Run(post, Column, notify);
                     if (result == Test.Result.ERROR)
                     {
                         ErrorCount++;
@@ -339,7 +340,7 @@ namespace HardHorn.Analysis
         /// <summary>
         /// Add a suggested type to this column analysis, after analysis has been performed.
         /// </summary>
-        public void SuggestType()
+        public void SuggestType(NotificationCallback notify=null)
         {
             if (!FirstRowAnalyzed || AllNullSoFar)
                 return;
@@ -399,10 +400,8 @@ namespace HardHorn.Analysis
                 {
                     SuggestedType = new ParameterizedDataType(DataType.NATIONAL_CHARACTER_VARYING, Parameter.WithLength(CharacterMaxParameter.Length));
                 }
-                return;
             }
-
-            if (SuggestedType == null && CharacterMinParameter.Length == CharacterMaxParameter.Length)
+            else if (SuggestedType == null && CharacterMinParameter.Length == CharacterMaxParameter.Length)
             {
                 SuggestedType = new ParameterizedDataType(DataType.CHARACTER, Parameter.WithLength(CharacterMaxParameter.Length));
             }
@@ -414,6 +413,11 @@ namespace HardHorn.Analysis
             if (SuggestedType != null && SuggestedType.CompareTo(Column.ParameterizedDataType) == 0)
             {
                 SuggestedType = null;
+            }
+
+            if (SuggestedType != null)
+            {
+                notify?.Invoke(new SuggestionNotification(Column, SuggestedType));
             }
         }
 

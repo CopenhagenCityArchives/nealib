@@ -182,7 +182,7 @@ namespace HardHorn.ViewModels
                     var vm = new ArchiveVersionViewModel(logger, Path.GetDirectoryName(location));
                     ArchiveVersion av = await Task.Run(() =>
                     {
-                        return ArchiveVersion.Load(location, logger, vm.OnArchiveVersionException);
+                        return ArchiveVersion.Load(location, logger, vm.HandleNotification);
                     });
                     vm.ArchiveVersion = av;
                     if (vm.ErrorViewModels.Count == 0)

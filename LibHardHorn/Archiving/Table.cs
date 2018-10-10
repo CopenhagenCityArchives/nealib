@@ -61,7 +61,7 @@ namespace HardHorn.Archiving
         /// <param name="xtable">The XML element to parse.</param>
         /// <param name="log">The logger.</param>
         /// <returns></returns>
-        public static Table Parse(XElement xtable, ILogger log, Action<Exception> callback = null)
+        public static Table Parse(XElement xtable, ILogger log, NotificationCallback notify)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
@@ -85,20 +85,22 @@ namespace HardHorn.Archiving
             {
                 try
                 {
-                    var column = Column.Parse(table, xcolumn);
+                    var column = Column.Parse(table, xcolumn, notify);
                     (table.Columns as List<Column>).Add(column);
                 }
                 catch (ColumnTypeParsingException ex)
                 {
+                    notify?.Invoke(new ColumnTypeErrorNotification(ex.Column, ex.Message));
                     (table.Columns as List<Column>).Add(ex.Column);
-                    if (callback != null)
-                        callback(ex);
+                    //if (callback != null)
+                    //    callback(ex);
                 }
                 catch (ColumnParsingException ex)
                 {
-                    (table.Columns as List<Column>).Add(new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", ParameterizedDataType.GetUndefined(), null, false, "", "", 0, null, null));
-                    if (callback != null)
-                        callback(ex);
+                    var column = new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", ParameterizedDataType.GetUndefined(), null, false, "", "", 0, null, null);
+                    (table.Columns as List<Column>).Add(column);
+                    //if (callback != null)
+                    //    callback(ex);
                 }
             }
 

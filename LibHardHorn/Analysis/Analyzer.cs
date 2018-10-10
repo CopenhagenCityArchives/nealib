@@ -71,6 +71,8 @@ namespace HardHorn.Analysis
         private TableReader _tableReader;
         private int _readRows = 0;
 
+        public NotificationCallback Notify { get; set; }
+
         /// <summary>
         /// Construct an analyzer object.
         /// </summary>
@@ -129,7 +131,7 @@ namespace HardHorn.Analysis
                 {
                     var post = rows[i,j];
                     TestHierachy[CurrentTable][CurrentTable.Columns[j]].UpdateLengthStatistics(post);
-                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].RunTests(post);
+                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].RunTests(post, Notify);
                 }
 
                 if (i == 0)
@@ -171,6 +173,11 @@ namespace HardHorn.Analysis
         /// <returns></returns>
         public bool MoveNextTable()
         {
+            if (_tableEnumerator.Current != null && _tableEnumerator.Current.Rows != TableDoneRows)
+            {
+                Notify?.Invoke(new TableRowCountNotification(_tableEnumerator.Current, TableDoneRows));
+            }
+
             if (_tableEnumerator.MoveNext())
             {
                 return true;

@@ -1,4 +1,5 @@
 ﻿using HardHorn.Archiving;
+using HardHorn.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -67,7 +68,7 @@ namespace HardHorn.Analysis
                    day > months[month - 1];
         }
 
-        public Result Run(Post post, Column column)
+        public Result Run(Post post, Column column, NotificationCallback notify)
         {
             if (post.IsNull)
                 return Result.OKAY;
@@ -76,6 +77,7 @@ namespace HardHorn.Analysis
             if (result == Result.ERROR)
             {
                 Add(post);
+                notify?.Invoke(new AnalysisErrorNotification(this, column, post));
             }
             return result;
         }
@@ -295,7 +297,20 @@ namespace HardHorn.Analysis
         {
             AnalysisTestType _type;
             public override AnalysisTestType Type { get { return _type; } }
-            public new string Name { get { return $"Regex \"{Regex.ToString()}\""; } }
+            public new string Name
+            {
+                get
+                {
+                    if (Type == AnalysisTestType.REGEX)
+                    {
+                        return $"Regex \"{Regex.ToString()}\"";
+                    }
+                    else
+                    {
+                        return base.Name;
+                    }
+                }
+            }
 
             public Regex Regex { get; private set; }
             public Func<MatchCollection, Result> HandleMatches { get; private set; }

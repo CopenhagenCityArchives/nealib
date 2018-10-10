@@ -122,7 +122,7 @@ namespace HardHorn.Archiving
         /// <param name="ns">The XML namespace to use.</param>
         /// <param name="xcolumn">The column XML element.</param>
         /// <returns></returns>
-        public static Column Parse(Table table, XElement xcolumn)
+        public static Column Parse(Table table, XElement xcolumn, NotificationCallback notify)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
@@ -134,6 +134,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, "Kolonnenavn mangler"));
                 throw new ColumnParsingException("Could not read column name.", xcolumn, table);
             }
             try
@@ -142,6 +143,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, "Kolonnetype mangler"));
                 throw new ColumnParsingException("Could not read column datatype.", xcolumn, table);
             }
             try
@@ -150,6 +152,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, "Oprindelig kolonnetype mangler"));
                 throw new ColumnParsingException("Could not read column original datatype", xcolumn, table);
             }
             try
@@ -158,6 +161,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, "Kolonnens nullbarhed mangler"));
                 throw new ColumnParsingException("Could not read column nullable value.", xcolumn, table);
             }
             try
@@ -166,6 +170,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, "Kolonnens beskrivelse mangler"));
                 throw new ColumnParsingException("Could not read column description.", xcolumn, table);
             }
             try
@@ -174,6 +179,7 @@ namespace HardHorn.Archiving
             }
             catch (InvalidOperationException)
             {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, "Kolonnens Id mangler"));
                 throw new ColumnParsingException("Could not read column ID.", xcolumn, table);
             }
             string defaultValue = null;
@@ -194,7 +200,10 @@ namespace HardHorn.Archiving
             if (xname.Value.Length > 0)
                 name = xname.Value;
             else
+            {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, "Kolonnens er tomt"));
                 throw new ColumnParsingException("Column name has length 0.", xcolumn, table);
+            }
 
             bool nullable;
             // parse nullable
@@ -204,6 +213,7 @@ namespace HardHorn.Archiving
                 nullable = false;
             else
             {
+                notify?.Invoke(new ColumnParsingErrorNotification(table, $"'{xnullable.Value}' er ikke en gyldig værdig for nullable"));
                 throw new ColumnParsingException("Column has invalid nullable value.", xnullable, table);
             }
 

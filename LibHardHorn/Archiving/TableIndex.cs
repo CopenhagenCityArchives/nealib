@@ -1,5 +1,6 @@
 ﻿using HardHorn.Archiving;
 using HardHorn.Logging;
+using HardHorn.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +48,7 @@ namespace HardHorn.Archiving
             return new XDocument(root);
         }
 
-        public static TableIndex Parse(XElement element, ILogger logger, Action<Exception> callback = null)
+        public static TableIndex Parse(XElement element, ILogger logger, NotificationCallback notify)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
@@ -64,7 +65,7 @@ namespace HardHorn.Archiving
             var databaseProductElem = element.Element(xmlns + "databaseProduct");
             string databaseProduct = databaseProductElem == null ? null : databaseProductElem.Value;
 
-            var tables = element.Element(xmlns + "tables").Elements().Select(xtable => Table.Parse(xtable, logger, callback));
+            var tables = element.Element(xmlns + "tables").Elements().Select(xtable => Table.Parse(xtable, logger, notify));
 
             var xviews = element.Element(xmlns + "views");
             var views = Enumerable.Empty<View>();
@@ -82,7 +83,7 @@ namespace HardHorn.Archiving
                 {
                     if (!fkey.Initialize(tableIndex, table))
                     {
-                        callback(new ForeignKeyNotMatchingException(fkey));
+                        notify?.Invoke(new ForeignKeyErrorNotification(fkey));
                     }
                 }
             }
@@ -90,7 +91,7 @@ namespace HardHorn.Archiving
             return tableIndex; 
         }
 
-        public static TableIndex ParseFile(string path, ILogger logger, Action<Exception> callback = null, bool validate = true)
+        public static TableIndex ParseFile(string path, ILogger logger, NotificationCallback notify, bool validate = true)
         {
             var tableIndexDocument = XDocument.Load(path);
 
@@ -114,14 +115,11 @@ namespace HardHorn.Archiving
 
                 tableIndexDocument.Validate(schemas, (o, e) =>
                 {
-                    if (callback != null)
-                    {
-                        callback(new ArchiveVersionXmlValidationException(o as XElement, e.Message));
-                    }
+                    notify?.Invoke(new XmlErrorNotification(e.Message));
                 });
             }
 
-            return Parse(tableIndexDocument.Root, logger, callback);
+            return Parse(tableIndexDocument.Root, logger, notify);
         }
     }
 }

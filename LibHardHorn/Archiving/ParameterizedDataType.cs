@@ -64,7 +64,7 @@ namespace HardHorn.Archiving
                 }
                 catch (InvalidOperationException)
                 {
-                    throw new ColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
+                    throw new ColumnTypeParsingException($"Kunne ikke forstå datatypen {element.Value}", element.Value, element, column, table);
                 }
 
                 var parameterGroup = match.Groups["params"];
@@ -81,12 +81,12 @@ namespace HardHorn.Archiving
                 }
                 catch (InvalidOperationException)
                 {
-                    throw new ColumnTypeParsingException("Invalid parameters.", match.Groups["datatype"].Value, element, column, table);
+                    throw new ColumnTypeParsingException($"Ugyldige parametre ({string.Join(", ", parameters)}) til {dataType}", match.Groups["datatype"].Value, element, column, table);
                 }
             }
             else
             {
-                throw new ColumnTypeParsingException("Could not parse the datatype.", element.Value, element, column, table);
+                throw new ColumnTypeParsingException($"Kunne ikke forstå datatypen {element.Value}", element.Value, element, column, table);
             }
         }
 

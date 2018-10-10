@@ -580,10 +580,10 @@ namespace HardHorn.Archiving
         /// <param name="path">A path to the root of the archive versions first media.</param>
         /// <param name="log">A logger.</param>
         /// <returns></returns>
-        public static ArchiveVersion Load(string path, ILogger log, Action<Exception> callback = null)
+        public static ArchiveVersion Load(string path, ILogger log, NotificationCallback notify=null)
         {
             var archiveVersion = new ArchiveVersion(System.IO.Path.GetFileName(path), path, null);
-            archiveVersion.LoadTableIndex(log, callback);
+            archiveVersion.LoadTableIndex(log, notify);
             archiveVersion.LoadArchiveIndex(System.IO.Path.Combine(path, "Indices", "archiveIndex.xml"), log);
             return archiveVersion;
         }
@@ -715,11 +715,11 @@ namespace HardHorn.Archiving
         /// <param name="path">The path to the table index file.</param>
         /// <param name="log">The logger.</param>
         /// <returns>An enumerable of the tables.</returns>
-        public void LoadTableIndex(ILogger log, Action<Exception> callback = null)
+        public void LoadTableIndex(ILogger log, NotificationCallback notify)
         {
             XNamespace xmlns = "http://www.sa.dk/xmlns/diark/1.0";
 
-            var tableIndex = TableIndex.ParseFile(System.IO.Path.Combine(Path, "Indices", "tableIndex.xml"), log, callback);
+            var tableIndex = TableIndex.ParseFile(System.IO.Path.Combine(Path, "Indices", "tableIndex.xml"), log, notify);
 
             foreach (var table in tableIndex.Tables)
             {

@@ -156,7 +156,7 @@ namespace HardHorn.Archiving
                     }
                     else
                     {
-                        throw new InvalidOperationException("Invalid parameters.");
+                        throw new InvalidOperationException($"Invalid parameters ({string.Join(", ", parameters)}) for {dataType}.");
                     }
                 case DataType.NUMERIC:
                 case DataType.DECIMAL:
@@ -170,7 +170,7 @@ namespace HardHorn.Archiving
                     }
                     else
                     {
-                        throw new InvalidOperationException("Invalid parameters.");
+                        throw new InvalidOperationException($"Invalid parameters ({string.Join(", ", parameters)}) for {dataType}.");
                     }
                 case DataType.FLOAT:
                     if (parameters == null || parameters.Length == 0)
@@ -183,7 +183,7 @@ namespace HardHorn.Archiving
                     }
                     else
                     {
-                        throw new InvalidOperationException("Invalid parameters.");
+                        throw new InvalidOperationException($"Invalid parameters ({string.Join(", ", parameters)}) for {dataType}.");
                     }
                 case DataType.TIMESTAMP:
                 case DataType.TIMESTAMP_WITH_TIME_ZONE:
@@ -197,7 +197,7 @@ namespace HardHorn.Archiving
                     }
                     else
                     {
-                        throw new InvalidOperationException("Invalid parameters.");
+                        throw new InvalidOperationException($"Invalid parameters ({string.Join(", ", parameters)}) for {dataType}.");
                     }
                 case DataType.TIME:
                 case DataType.TIME_WITH_TIME_ZONE:
@@ -211,7 +211,7 @@ namespace HardHorn.Archiving
                     }
                     else
                     {
-                        throw new InvalidOperationException("Invalid parameters");
+                        throw new InvalidOperationException($"Invalid parameters ({string.Join(", ", parameters)}) for {dataType}.");
                     }
                 default:
                     return null;

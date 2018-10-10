@@ -50,6 +50,7 @@
     <Compile Include="Analysis\AnalysisTestType.cs" />
     <Compile Include="Analysis\ColumnAnalysis.cs" />
     <Compile Include="Analysis\ForeignKeyTest.cs" />
+    <Compile Include="Utility\Notification.cs" />
     <Compile Include="Analysis\Test.cs" />
     <Compile Include="Archiving\ArchiveVersion.cs" />
     <Compile Include="Archiving\DataType.cs" />
@@ -72,7 +73,6 @@
     <Compile Include="Utility\ColumnComparison.cs" />
     <Compile Include="Utility\DataTypeUtility.cs" />
     <Compile Include="Utility\ForeignKeyComparison.cs" />
-    <Compile Include="Utility\NotifyPropertyChangedBase.cs" />
     <Compile Include="Utility\ReferenceComparison.cs" />
     <Compile Include="Utility\ReplacementOperation.cs" />
     <Compile Include="Utility\TableComparison.cs" />

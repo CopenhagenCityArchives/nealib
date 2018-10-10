@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using HardHorn.Utility;
 using System.Collections;
+using System.Globalization;
+using System.Web;
 
 namespace HardHorn.ViewModels
 {
@@ -240,6 +242,111 @@ namespace HardHorn.ViewModels
         Dictionary<AnalysisTestType, ErrorViewModelBase> TestFailureViewModelIndex { get; set; }
         Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
 
+        Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>> AnalysisErrorNotificationIndex { get; set; }
+        public ObservableCollection<NotificationViewModel> Notifications { get; set; }
+
+        public void Notifications_RefreshViews()
+        {
+            NotificationsView.Refresh();
+            NotificationsCategoryView.Refresh();
+            NotificationCount = NotificationsView.Cast<object>().Count();
+        }
+
+        int notificationCount = 0;
+        public int NotificationCount
+        {
+            get { return notificationCount; }
+            set { notificationCount = value; NotifyOfPropertyChange("NotificationCount"); }
+        }
+        
+        bool notifications_ShowHints = true;
+        public bool Notifications_ShowHints
+        {
+            get { return notifications_ShowHints; }
+            set { notifications_ShowHints = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowErrors = true;
+        public bool Notifications_ShowErrors
+        {
+            get { return notifications_ShowErrors; }
+            set { notifications_ShowErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowOverflow = true;
+        public bool Notifications_ShowOverflow
+        {
+            get { return notifications_ShowOverflow; }
+            set { notifications_ShowOverflow = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowUnderflow = true;
+        public bool Notifications_ShowUnderflow
+        {
+            get { return notifications_ShowUnderflow; }
+            set { notifications_ShowUnderflow = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowFormat = true;
+        public bool Notifications_ShowFormat
+        {
+            get { return notifications_ShowFormat; }
+            set { notifications_ShowFormat = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowBlank = true;
+        public bool Notifications_ShowBlank
+        {
+            get { return notifications_ShowBlank; }
+            set { notifications_ShowBlank = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowRegex = true;
+        public bool Notifications_ShowRegex
+        {
+            get { return notifications_ShowRegex; }
+            set { notifications_ShowRegex = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowParameterSuggestions = true;
+        public bool Notifications_ShowParameterSuggestions
+        {
+            get { return notifications_ShowParameterSuggestions; }
+            set { notifications_ShowParameterSuggestions = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowDatatypeSuggestions = true;
+        public bool Notifications_ShowDatatypeSuggestions
+        {
+            get { return notifications_ShowDatatypeSuggestions; }
+            set { notifications_ShowDatatypeSuggestions = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowXmlValidationErrors = true;
+        public bool Notifications_ShowXmlValidationErrors
+        {
+            get { return notifications_ShowXmlValidationErrors; }
+            set { notifications_ShowXmlValidationErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowColumnErrors = true;
+        public bool Notifications_ShowColumnErrors
+        {
+            get { return notifications_ShowColumnErrors; }
+            set { notifications_ShowColumnErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowColumnTypeErrors = true;
+        public bool Notifications_ShowColumnTypeErrors
+        {
+            get { return notifications_ShowColumnTypeErrors; }
+            set { notifications_ShowColumnTypeErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowForeignKeyErrors = true;
+        public bool Notifications_ShowForeignKeyErrors
+        {
+            get { return notifications_ShowForeignKeyErrors; }
+            set { notifications_ShowForeignKeyErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowTableRowCountErrors = true;
+        public bool Notifications_ShowTableRowCountErrors
+        {
+            get { return notifications_ShowTableRowCountErrors; }
+            set { notifications_ShowTableRowCountErrors = value; Notifications_RefreshViews(); }
+        }
+        public ICollectionView NotificationsView { get; set; }
+        public ICollectionView NotificationsCategoryView { get; set; }
+        public int Notifications_SelectedGroupingIndex { get; set; }
+
         CancellationTokenSource _testCts;
         CancellationTokenSource _keyTestCts;
 
@@ -335,6 +442,7 @@ namespace HardHorn.ViewModels
         public ICollectionView ReplaceTablesView { get; private set; }
         public int TableReplacementTotalReplacements { get; private set; }
         public string TempName { get; private set; }
+        public CollectionViewSource InteractiveTablesViewSource { get; private set; }
         #endregion
 
         public void UpdateSelection(SelectionChangedEventArgs ea)
@@ -345,10 +453,40 @@ namespace HardHorn.ViewModels
             SelectedTableViewModels.AddRange(added);
         }
 
+        CollectionViewSource NotificationsViewSource;
+        CollectionViewSource NotificationsCategoryViewSource;
+
+        class NotificationTypeToStringConverter : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                var notificationType = value as NotificationType?;
+                return notificationType?.ToString();
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         #region Constructors
         public ArchiveVersionViewModel(ILogger mainLogger, string tempName)
         {
             TempName = tempName;
+            AnalysisErrorNotificationIndex = new Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>>();
+            Notifications = new ObservableCollection<NotificationViewModel>();
+            Notifications.CollectionChanged += (o, a) => Notifications_RefreshViews();
+            NotificationsViewSource = new CollectionViewSource() { Source = Notifications };
+            NotificationsView = NotificationsViewSource.View;
+            NotificationsCategoryViewSource = new CollectionViewSource() { Source = Notifications };
+            NotificationsCategoryView = NotificationsCategoryViewSource.View;
+            NotificationsView.GroupDescriptions.Add(new PropertyGroupDescription("Table"));
+            NotificationsView.SortDescriptions.Add(new SortDescription("Table.Name", ListSortDirection.Ascending));
+            NotificationsView.Filter += Notifications_Filter;
+            NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
+            NotificationsCategoryView.GroupDescriptions.Add(new PropertyGroupDescription("Header"));
+            NotificationsCategoryView.Filter += Notifications_Filter;
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
@@ -382,7 +520,8 @@ namespace HardHorn.ViewModels
             };
             ReplacementOperationsView = CollectionViewSource.GetDefaultView(ReplacementOperations);
             ReplacementOperationsView.GroupDescriptions.Add(new PropertyGroupDescription("Table"));
-            InteractiveTablesView = new CollectionViewSource() { Source = TableViewModels }.View;
+            InteractiveTablesViewSource = new CollectionViewSource() { Source = TableViewModels };
+            InteractiveTablesView = InteractiveTablesViewSource.View;
             InteractiveTablesView.Filter += o =>
             {
                 var vm = o as TableViewModel;
@@ -395,7 +534,69 @@ namespace HardHorn.ViewModels
         }
         #endregion
 
+        #region Callbacks
+        public void HandleNotification(INotification notification)
+        {
+            NotificationViewModel notificationViewModel = null;
+            switch (notification.Type)
+            {
+                case NotificationType.AnalysisError:
+                    if (!AnalysisErrorNotificationIndex.ContainsKey(notification.Column))
+                    {
+                        AnalysisErrorNotificationIndex[notification.Column] = new Dictionary<AnalysisTestType, NotificationViewModel>();
+                    }
+
+                    if (AnalysisErrorNotificationIndex[notification.Column].ContainsKey((notification as AnalysisErrorNotification).TestType))
+                    {
+                        AnalysisErrorNotificationIndex[notification.Column][(notification as AnalysisErrorNotification).TestType].Count++;
+                    }
+                    else
+                    {
+                        notificationViewModel = new NotificationViewModel(NotificationType.AnalysisError, notification.Severity);
+                        notificationViewModel.Message = notification.Message;
+                        notificationViewModel.Header = notification.Header;
+                        notificationViewModel.Column = notification.Column;
+                        notificationViewModel.Table = notification.Table;
+                        AnalysisErrorNotificationIndex[notification.Column][(notification as AnalysisErrorNotification).TestType] = notificationViewModel;
+                    }
+                    break;
+                default:
+                    notificationViewModel = new NotificationViewModel(notification);
+                    break;
+            }
+
+            if (notificationViewModel != null)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Notifications.Add(notificationViewModel);
+                });
+            }
+        }
+        #endregion
+
         #region Methods
+        private bool Notifications_Filter(object obj)
+        {
+            var nvm = obj as NotificationViewModel;
+            bool includeBySeverity = (nvm.Severity == Severity.Hint && Notifications_ShowHints)
+                                  || (nvm.Severity == Severity.Error && Notifications_ShowErrors);
+            bool includeByNotificationType = (nvm.Header == "Test (OVERFLOW)" && Notifications_ShowOverflow)
+                || (nvm.Header == "Test (UNDERFLOW)" && Notifications_ShowUnderflow)
+                || (nvm.Header == "Test (FORMAT)" && Notifications_ShowFormat)
+                || (nvm.Header == "Test (BLANK)" && Notifications_ShowBlank)
+                || (nvm.Header == "Test (REGEX)" && Notifications_ShowRegex)
+                || (nvm.Header == "Parameterforslag" && Notifications_ShowParameterSuggestions)
+                || (nvm.Header == "Datatypeforslag" && Notifications_ShowDatatypeSuggestions)
+                || (nvm.Header == "Xml-valideringsfejl" && Notifications_ShowXmlValidationErrors)
+                || (nvm.Header == "Feltindlæsningsfejl" && Notifications_ShowColumnErrors)
+                || (nvm.Header == "Datatypefejl" && Notifications_ShowColumnTypeErrors)
+                || (nvm.Header == "Fremmednøglefejl" && Notifications_ShowForeignKeyErrors)
+                || (nvm.Header == "Tabelrækkeantalsfejl" && Notifications_ShowTableRowCountErrors);
+
+            return includeBySeverity && includeByNotificationType;
+        }
+
         public void RunStatistics()
         {
             _stats = new DataStatistics(ArchiveVersion.Tables.ToArray());
@@ -440,6 +641,106 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Actions
+        public void Notifications_ExportHTML()
+        {
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                var now = DateTime.Now;
+                dialog.Filter = "Html|*.html|Alle filtyper|*.*";
+                dialog.FileName = $"HardHorn_{ArchiveVersion.Id}_{now.ToString("yyyy-MM-dd_HH-mm-ss")}.html";
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    using (var stream = dialog.OpenFile())
+                    {
+                        using (var writer = new StreamWriter(stream))
+                        {
+                            if (Notifications_SelectedGroupingIndex == 0) // Table groups
+                            {
+                                writer.WriteLine("<!doctype html>");
+                                writer.WriteLine("<html>");
+                                writer.WriteLine("<head>");
+                                writer.WriteLine($"<title>{ArchiveVersion.Id} - HardHorn Log</title>");
+                                writer.WriteLine("</head>");
+                                writer.WriteLine("<body>");
+                                writer.WriteLine($"<h1>{ArchiveVersion.Id} - HardHorn Log</h1>");
+                                writer.WriteLine($"<p><strong>Tidspunkt:</strong> {now}</p>");
+                                foreach (CollectionViewGroup group in NotificationsView.Groups)
+                                {
+                                    writer.WriteLine("<div>");
+                                    writer.WriteLine($"<h2>{HttpUtility.HtmlEncode(group.Name)}</h2>");
+                                    writer.WriteLine("<div style=\"display: table\">");
+                                    writer.WriteLine("<div style=\"display: table-row\">");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Felt</strong></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Kategori</strong></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Forekomster</strong></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Besked</strong></div>");
+                                    writer.WriteLine("</div>");
+                                    foreach (INotification notification in group.Items)
+                                    {
+                                        writer.WriteLine("<div style=\"display: table-row\">");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{(notification.Severity == Severity.Hint ? "<b style=\"background: yellow;\">!</b>" : "<b style=\"background: red; color: white;\">X</b>")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Column?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Header?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{notification.Count?.ToString() ?? "-"}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Message?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine("</div>");
+                                    }
+                                    writer.WriteLine("</div>");
+                                    writer.WriteLine("</div>");
+                                }
+                                writer.WriteLine("</body>");
+                                writer.WriteLine("</html>");
+                            }
+                            else // Category groups
+                            {
+                                writer.WriteLine("<!doctype html>");
+                                writer.WriteLine("<html>");
+                                writer.WriteLine("<head>");
+                                writer.WriteLine($"<title>{ArchiveVersion.Id} - HardHorn Log</title>");
+                                writer.WriteLine("</head>");
+                                writer.WriteLine("<body>");
+                                writer.WriteLine($"<h1>{ArchiveVersion.Id} - HardHorn Log</h1>");
+                                writer.WriteLine($"<p><strong>Tidspunkt:</strong> {DateTime.Now}</p>");
+                                foreach (CollectionViewGroup group in NotificationsCategoryView.Groups)
+                                {
+                                    writer.WriteLine("<div>");
+                                    writer.WriteLine($"<h2>{HttpUtility.HtmlEncode(group.Name)}</h2>");
+                                    writer.WriteLine("<div style=\"display: table\">");
+                                    writer.WriteLine("<div style=\"display: table-row\">");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Tabel</strong></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Felt</strong></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Forekomster</strong></div>");
+                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Besked</strong></div>");
+                                    writer.WriteLine("</div>");
+                                    foreach (INotification notification in group.Items)
+                                    {
+                                        writer.WriteLine("<div style=\"display: table-row\">");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{(notification.Severity == Severity.Hint ? "<b style=\"background: yellow;\">!</b>" : "<b style=\"background: red; color: white;\">X</b>")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Table?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Column?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{notification.Count?.ToString() ?? "-"}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Message?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine("</div>");
+                                    }
+                                    writer.WriteLine("</div>");
+                                    writer.WriteLine("</div>");
+                                }
+                                writer.WriteLine("</body>");
+                                writer.WriteLine("</html>");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public async void Notifications_ExportText()
+        {
+
+        }
+
         public async void ReplaceTableToFile(TableViewModel tableViewModel)
         {
             var table = tableViewModel.Table;
@@ -623,6 +924,7 @@ namespace HardHorn.ViewModels
                 return;
             }
             Analyzer = startTestViewModel.Analyzer;
+            Analyzer.Notify = HandleNotification;
 
             // Create cancallation token
             _testCts = new CancellationTokenSource();
@@ -867,7 +1169,7 @@ namespace HardHorn.ViewModels
                         bool typesSuggested = false;
                         foreach (var report in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
                         {
-                            report.SuggestType();
+                            report.SuggestType(HandleNotification);
                             if (report.SuggestedType != null)
                                 typesSuggested = true;
                         }

@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:HardHorn.Views"
         xmlns:cal="http://www.caliburnproject.org"
         xmlns:util="clr-namespace:HardHorn.Utilities"
+        xmlns:libutil="clr-namespace:HardHorn.Utility;assembly=LibHardHorn"
         xmlns:av="clr-namespace:HardHorn.Archiving;assembly=LibHardHorn"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:ana="clr-namespace:HardHorn.Analysis;assembly=LibHardHorn"
@@ -874,6 +875,150 @@
                 </Grid>
             </ScrollViewer>
         </TabItem>
+
+        <TabItem Header="Notifikationer">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
+                    <GroupBox Margin="5" Header="Alvorlighed">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHints}">Vis hints</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowErrors}">Vis fejl</CheckBox>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Margin="5" Header="Testkategorier">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowOverflow}">Test (OVERFLOW)</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowUnderflow}">Test (UNDERFLOW)</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Test (FORMAT)</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowBlank}">Test (BLANK)</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowRegex}">Test (REGEX)</CheckBox>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Margin="5" Header="Forslag">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowParameterSuggestions}">Parameterforslag</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowDatatypeSuggestions}">Datatypeforslag</CheckBox>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Margin="5" Header="Struktur">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowXmlValidationErrors}">Xml-valideringsfejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowTableRowCountErrors}">Tabelrækkeantalsfejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnErrors}">Feltindlæsning</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnTypeErrors}">Datatypefejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyErrors}">Fremmednøglefejl</CheckBox>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Margin="5" Header="Eksport">
+                        <StackPanel Orientation="Vertical">
+                            <Button Margin="5" cal:Message.Attach="Notifications_ExportHTML()">Som HTML-fil...</Button>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+                <Label DockPanel.Dock="Top">
+                    <Label.Content>
+                        <TextBlock>
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}Viser {0} ud af {1} notifikationer.">
+                                    <Binding Path="NotificationCount" />
+                                    <Binding Path="Notifications.Count" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </Label.Content>
+                </Label>
+                <TabControl DockPanel.Dock="Bottom" SelectedIndex="{Binding Notifications_SelectedGroupingIndex}">
+                    <TabItem Header="Tabelgruppering">
+                        <ListView ItemsSource="{Binding NotificationsView}">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn>
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Image Height="16" Width="16">
+                                                    <Image.Style>
+                                                        <Style>
+                                                            <Setter Property="Image.Source" Value="pack://application:,,,/Resources/error.png"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Severity}" Value="{x:Static libutil:Severity.Hint}">
+                                                                    <Setter Property="Image.Source" Value="pack://application:,,,/Resources/warning.png" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Image.Style>
+                                                </Image>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
+                                    <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Header}" />
+                                    <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
+                                    <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
+                                </GridView>
+                            </ListView.View>
+                            <ListView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListView.GroupStyle>
+                        </ListView>
+                    </TabItem>
+                    <TabItem Header="Kategorigruppering">
+                    <ListView ItemsSource="{Binding NotificationsCategoryView}">
+                        <ListView.View>
+                            <GridView>
+                                    <GridViewColumn>
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Image Height="16" Width="16">
+                                                    <Image.Style>
+                                                        <Style>
+                                                            <Setter Property="Image.Source" Value="pack://application:,,,/Resources/error.png"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Severity}" Value="{x:Static libutil:Severity.Hint}">
+                                                                    <Setter Property="Image.Source" Value="pack://application:,,,/Resources/warning.png" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Image.Style>
+                                                </Image>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                <GridViewColumn Header="Tabel" DisplayMemberBinding="{Binding Table}" />
+                                <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
+                                <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
+                                <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
+                            </GridView>
+                        </ListView.View>
+                        <ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListView.GroupStyle>
+                    </ListView>
+                </TabItem>
+                </TabControl>
+                <!--<DataGrid DockPanel.Dock="Bottom" ItemsSource="{Binding NotificationsView}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Grad" Binding="{Binding Severity}" />
+                        <DataGridTextColumn Header="Tabel" Binding="{Binding Table}" />
+                        <DataGridTextColumn Header="Felt" Binding="{Binding Column}" />
+                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" />
+                        <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Message}" />
+                        <DataGridTextColumn Header="Forekomster" Binding="{Binding ErrorCount}" />
+                    </DataGrid.Columns>
+                </DataGrid>-->
+            </DockPanel>
+        </TabItem>
         
         <TabItem Header="Fejlvisning">
             <Grid>
@@ -891,6 +1036,7 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
+                
                 <ListView Grid.Column="1" ItemsSource="{Binding Path=SelectedItem.Subjects, ElementName=ErrorViewModelList}">
                     <ListView.Resources>
                         <DataTemplate DataType="{x:Type vm:TestFailure}">
