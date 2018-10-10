@@ -244,12 +244,25 @@ namespace HardHorn.ViewModels
 
         Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>> AnalysisErrorNotificationIndex { get; set; }
         public ObservableCollection<NotificationViewModel> Notifications { get; set; }
+        System.Timers.Timer Notifications_RefreshViewTimer = new System.Timers.Timer(1000);
 
         public void Notifications_RefreshViews()
         {
-            NotificationsView.Refresh();
-            NotificationsCategoryView.Refresh();
-            NotificationCount = NotificationsView.Cast<object>().Count();
+            if (!Notifications_RefreshViewTimer.Enabled)
+            {
+                Notifications_RefreshViewTimer.Start();
+            }
+        }
+
+        public void Notifications_RefreshViewTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs a)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Notifications_RefreshViewTimer.Stop();
+                NotificationsView.Refresh();
+                NotificationsCategoryView.Refresh();
+                NotificationCount = NotificationsView.Cast<object>().Count();
+            });
         }
 
         int notificationCount = 0;
@@ -495,6 +508,7 @@ namespace HardHorn.ViewModels
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Message", ListSortDirection.Ascending));
             NotificationsCategoryView.GroupDescriptions.Add(new PropertyGroupDescription("Header"));
             NotificationsCategoryView.Filter += Notifications_Filter;
+            Notifications_RefreshViewTimer.Elapsed += Notifications_RefreshViewTimer_Elapsed;
             LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
             TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
