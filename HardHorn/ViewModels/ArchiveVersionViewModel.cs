@@ -484,9 +484,11 @@ namespace HardHorn.ViewModels
             NotificationsView.GroupDescriptions.Add(new PropertyGroupDescription("Table"));
             NotificationsView.SortDescriptions.Add(new SortDescription("Table.FolderNumber", ListSortDirection.Ascending));
             NotificationsView.SortDescriptions.Add(new SortDescription("Column.ColumnIdNumber", ListSortDirection.Ascending));
+            NotificationsView.SortDescriptions.Add(new SortDescription("Type", ListSortDirection.Ascending));
             NotificationsView.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
             NotificationsView.SortDescriptions.Add(new SortDescription("Message", ListSortDirection.Ascending));
             NotificationsView.Filter += Notifications_Filter;
+            NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Type", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Table.FolderNumber", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Column.ColumnIdNumber", ListSortDirection.Ascending));
@@ -660,20 +662,28 @@ namespace HardHorn.ViewModels
                     {
                         using (var writer = new StreamWriter(stream))
                         {
+                            writer.WriteLine("<!doctype html>");
+                            writer.WriteLine("<html>");
+                            writer.WriteLine("<head>");
+                            writer.WriteLine($"<title>{ArchiveVersion.Id} - HardHorn Log</title>");
+                            writer.WriteLine("</head>");
+                            writer.WriteLine("<body>");
+                            writer.WriteLine($"<h1>{ArchiveVersion.Id} - HardHorn Log</h1>");
+                            writer.WriteLine($"<p><strong>Tidspunkt:</strong> {now}</p>");
+                            writer.WriteLine("<h2 id=\"oversigt\">Oversigt</h2>");
+                            writer.WriteLine("<ul>");
+                            foreach (CollectionViewGroup group in Notifications_SelectedGroupingIndex == 0 ? NotificationsView.Groups : NotificationsCategoryView.Groups)
+                            {
+                                writer.WriteLine($"<li><a href=\"#{HttpUtility.HtmlEncode(group.Name)}\">{HttpUtility.HtmlEncode(group.Name)} ({group.ItemCount} punkter)</a></li>");
+                            }
+                            writer.WriteLine("</ul>");
+                            writer.WriteLine("<h2>Rapport</h2>");
                             if (Notifications_SelectedGroupingIndex == 0) // Table groups
                             {
-                                writer.WriteLine("<!doctype html>");
-                                writer.WriteLine("<html>");
-                                writer.WriteLine("<head>");
-                                writer.WriteLine($"<title>{ArchiveVersion.Id} - HardHorn Log</title>");
-                                writer.WriteLine("</head>");
-                                writer.WriteLine("<body>");
-                                writer.WriteLine($"<h1>{ArchiveVersion.Id} - HardHorn Log</h1>");
-                                writer.WriteLine($"<p><strong>Tidspunkt:</strong> {now}</p>");
                                 foreach (CollectionViewGroup group in NotificationsView.Groups)
                                 {
                                     writer.WriteLine("<div>");
-                                    writer.WriteLine($"<h2>{HttpUtility.HtmlEncode(group.Name)}</h2>");
+                                    writer.WriteLine($"<h3 id=\"{HttpUtility.HtmlEncode(group.Name)}\">{HttpUtility.HtmlEncode(group.Name)}&nbsp;<span style=\"font-weight: normal; font-size: 12pt;\"><a href=\"#oversigt\">[til oversigt]</a></span></h3>");
                                     writer.WriteLine("<div style=\"display: table\">");
                                     writer.WriteLine("<div style=\"display: table-row\">");
                                     writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"></div>");
@@ -695,23 +705,13 @@ namespace HardHorn.ViewModels
                                     writer.WriteLine("</div>");
                                     writer.WriteLine("</div>");
                                 }
-                                writer.WriteLine("</body>");
-                                writer.WriteLine("</html>");
                             }
                             else // Category groups
                             {
-                                writer.WriteLine("<!doctype html>");
-                                writer.WriteLine("<html>");
-                                writer.WriteLine("<head>");
-                                writer.WriteLine($"<title>{ArchiveVersion.Id} - HardHorn Log</title>");
-                                writer.WriteLine("</head>");
-                                writer.WriteLine("<body>");
-                                writer.WriteLine($"<h1>{ArchiveVersion.Id} - HardHorn Log</h1>");
-                                writer.WriteLine($"<p><strong>Tidspunkt:</strong> {DateTime.Now}</p>");
                                 foreach (CollectionViewGroup group in NotificationsCategoryView.Groups)
                                 {
                                     writer.WriteLine("<div>");
-                                    writer.WriteLine($"<h2>{HttpUtility.HtmlEncode(group.Name)}</h2>");
+                                    writer.WriteLine($"<h3 id=\"{HttpUtility.HtmlEncode(group.Name)}\">{HttpUtility.HtmlEncode(group.Name)}&nbsp;<span style=\"font-weight: normal; font-size: 12pt;\"><a href=\"#oversigt\">[til oversigt]</a></span></h3>");
                                     writer.WriteLine("<div style=\"display: table\">");
                                     writer.WriteLine("<div style=\"display: table-row\">");
                                     writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"></div>");
@@ -733,9 +733,9 @@ namespace HardHorn.ViewModels
                                     writer.WriteLine("</div>");
                                     writer.WriteLine("</div>");
                                 }
-                                writer.WriteLine("</body>");
-                                writer.WriteLine("</html>");
                             }
+                            writer.WriteLine("</body>");
+                            writer.WriteLine("</html>");
                         }
                     }
                 }
