@@ -871,7 +871,7 @@
                     <CheckBox Grid.Row="28" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.OtherAccessTypeRestrictions, Mode=OneWay}" />
 
                     <Label Grid.Row="29">Godkendelsesarkiv:</Label>
-                    <CheckBox Grid.Row="29" Grid.Column="1" Margin="5 0 0 0" VerticalAlignment="Center" Focusable="False" IsHitTestVisible="False" IsChecked="{Binding ArchiveVersion.ArchiveApproval, Mode=OneWay}" />
+                    <Label Grid.Row="29" Grid.Column="1" Content="{Binding ArchiveVersion.ArchiveApproval, Mode=OneWay}" />
                 </Grid>
             </ScrollViewer>
         </TabItem>
@@ -968,9 +968,9 @@
                         </ListView>
                     </TabItem>
                     <TabItem Header="Kategorigruppering">
-                    <ListView ItemsSource="{Binding NotificationsCategoryView}">
-                        <ListView.View>
-                            <GridView>
+                        <ListView ItemsSource="{Binding NotificationsCategoryView}">
+                            <ListView.View>
+                                <GridView>
                                     <GridViewColumn>
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
@@ -989,38 +989,28 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                <GridViewColumn Header="Tabel" DisplayMemberBinding="{Binding Table}" />
-                                <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
-                                <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
-                                <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
-                            </GridView>
-                        </ListView.View>
-                        <ListView.GroupStyle>
-                            <GroupStyle>
-                                <GroupStyle.HeaderTemplate>
-                                    <DataTemplate>
-                                        <TextBlock FontWeight="Bold" Text="{Binding Name}" />
-                                    </DataTemplate>
-                                </GroupStyle.HeaderTemplate>
-                            </GroupStyle>
-                        </ListView.GroupStyle>
-                    </ListView>
-                </TabItem>
+                                    <GridViewColumn Header="Tabel" DisplayMemberBinding="{Binding Table}" />
+                                    <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
+                                    <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
+                                    <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
+                                </GridView>
+                            </ListView.View>
+                            <ListView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListView.GroupStyle>
+                        </ListView>
+                    </TabItem>
                 </TabControl>
-                <!--<DataGrid DockPanel.Dock="Bottom" ItemsSource="{Binding NotificationsView}" AutoGenerateColumns="False" IsReadOnly="True">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Grad" Binding="{Binding Severity}" />
-                        <DataGridTextColumn Header="Tabel" Binding="{Binding Table}" />
-                        <DataGridTextColumn Header="Felt" Binding="{Binding Column}" />
-                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" />
-                        <DataGridTextColumn Header="Beskrivelse" Binding="{Binding Message}" />
-                        <DataGridTextColumn Header="Forekomster" Binding="{Binding ErrorCount}" />
-                    </DataGrid.Columns>
-                </DataGrid>-->
             </DockPanel>
         </TabItem>
         
-        <TabItem Header="Fejlvisning">
+        <!--<TabItem Header="Fejlvisning">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"></ColumnDefinition>
@@ -1211,7 +1201,7 @@
                     </ListView.Resources>
                 </ListView>
             </Grid>
-        </TabItem>
+        </TabItem>-->
 
         <TabItem Header="Statistik">
             <ScrollViewer>

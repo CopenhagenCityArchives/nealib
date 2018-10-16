@@ -65,8 +65,6 @@ namespace HardHorn.ViewModels
         public TestSelection SelectedTests { get; set; }
         public ILogger MainLogger { get; private set; }
 
-        public int[] BarChartValues { get; set; }
-
         public int TableTestProgress
         {
             get { return AnalysisTableRowCount == 0 ? 0 : (int)(((long)AnalysisTableDoneRows) * 100 / AnalysisTableRowCount); }
@@ -235,12 +233,7 @@ namespace HardHorn.ViewModels
         public ObservableCollection<ColumnAnalysis> CurrentColumnAnalyses { get; set; }
 
         public ObservableCollection<TableViewModel> TableViewModels { get; set; }
-        public ObservableCollection<ErrorViewModelBase> ErrorViewModels { get; set; }
-        public TableRowCountErrorViewModel TableRowCountErrorViewModel { get; set; }
         public Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
-        Dictionary<AnalysisTestType, ErrorViewModelBase> TestErrorViewModelIndex { get; set; }
-        Dictionary<AnalysisTestType, ErrorViewModelBase> TestFailureViewModelIndex { get; set; }
-        Dictionary<Type, ErrorViewModelBase> LoadingErrorViewModelIndex { get; set; }
 
         Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>> AnalysisErrorNotificationIndex { get; set; }
         public ObservableCollection<NotificationViewModel> Notifications { get; set; }
@@ -369,12 +362,15 @@ namespace HardHorn.ViewModels
         enum TabNameEnum
         {
             TAB_ARCHIVEVERSION = 0,
-            TAB_ERRORS = 1,
-            TAB_STATISTICS = 2,
-            TAB_SPECTABLE = 3,
-            TAB_KEYTEST = 4,
-            TAB_COMPARE = 5,
-            TAB_STATUSLOG = 6
+            TAB_METADATA = 1,
+            TAB_ERRORS = 2,
+            TAB_NOTIFICATIONS = 3,
+            TAB_STATISTICS = 4,
+            TAB_SPECTABLE = 5,
+            TAB_KEYTEST = 6,
+            TAB_COMPARE = 7,
+            TAB_REPLACE = 8,
+            TAB_STATUSLOG = 9
         }
 
         public Analyzer Analyzer { get; private set; }
@@ -509,11 +505,6 @@ namespace HardHorn.ViewModels
             NotificationsCategoryView.GroupDescriptions.Add(new PropertyGroupDescription("Header"));
             NotificationsCategoryView.Filter += Notifications_Filter;
             Notifications_RefreshViewTimer.Elapsed += Notifications_RefreshViewTimer_Elapsed;
-            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
-            ErrorViewModels = new ObservableCollection<ErrorViewModelBase>();
-            TestErrorViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
-            TestFailureViewModelIndex = new Dictionary<AnalysisTestType, ErrorViewModelBase>();
-            LoadingErrorViewModelIndex = new Dictionary<Type, ErrorViewModelBase>();
             TableComparisons = new ObservableCollection<TableComparison>();
             RemovedTableComparisons = new ObservableCollection<TableComparison>();
             AddedTableComparisons = new ObservableCollection<TableComparison>();
@@ -653,7 +644,7 @@ namespace HardHorn.ViewModels
             LogItems.Add(new Tuple<LogLevel, DateTime, string>(level, DateTime.Now, msg));
             if (ArchiveVersion == null)
             {
-                MainLogger.Log("Loading " + TempName + " - " + msg, level);
+                MainLogger.Log("Indlæser " + TempName + " - " + msg, level);
             }
             else
             {
@@ -672,6 +663,7 @@ namespace HardHorn.ViewModels
                 dialog.FileName = $"HardHorn_{ArchiveVersion.Id}_{now.ToString("yyyy-MM-dd_HH-mm-ss")}.html";
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
+                    Log($"Eksporterer {NotificationCount} ud af {Notifications.Count} notifikationer til '{dialog.FileName}'.");
                     using (var stream = dialog.OpenFile())
                     {
                         using (var writer = new StreamWriter(stream))
@@ -964,23 +956,6 @@ namespace HardHorn.ViewModels
                 tableViewModel.AnalysisDone = false;
             }
 
-            // Clear test error view models from list and index
-            TestErrorViewModelIndex.Clear();
-            TestFailureViewModelIndex.Clear();
-            var filteredErrorViewModels = new List<ErrorViewModelBase>();
-            foreach (var errorViewModel in ErrorViewModels)
-            {
-                if (errorViewModel is ColumnParsingErrorViewModel
-                    || errorViewModel is ColumnTypeParsingErrorViewModel)
-                {
-                    filteredErrorViewModels.Add(errorViewModel);
-                }
-            }
-            ErrorViewModels.Clear();
-            foreach (var errorViewModel in filteredErrorViewModels)
-            {
-                ErrorViewModels.Add(errorViewModel);
-            }
             foreach (var tableViewModel in tableViewModelsToTest)
             {
                 tableViewModel.AnalysisErrors = tableViewModel.Table.Columns.Any(c => c.ParameterizedDataType.DataType == DataType.UNDEFINED);
@@ -999,99 +974,15 @@ namespace HardHorn.ViewModels
                 {
                     ColumnsView.Refresh();
                 }
-
-                // Update error view
-                foreach (var analysis in Analyzer.TestHierachy[table].Values)
-                {
-                    foreach (var test in analysis.Tests)
-                    {
-                        if (test.ErrorCount > 0)
-                        {
-                            ErrorViewModelBase testErrorViewModel;
-                            if (!TestErrorViewModelIndex.TryGetValue(test.Type, out testErrorViewModel))
-                            {
-                                testErrorViewModel = new TestErrorViewModel(test.Type);
-                                TestErrorViewModelIndex[test.Type] = testErrorViewModel;
-                                ErrorViewModels.Add(testErrorViewModel);
-                            }
-
-                            testErrorViewModel.Add(new ColumnCount() { Column = analysis.Column, Count = test.ErrorCount });
-                            testErrorViewModel.NotifyOfPropertyChange("ErrorCount");
-                        }
-                    }
-
-                    if (analysis.TestFailures.Count > 0)
-                    {
-                        foreach (var test in analysis.TestFailures.Keys)
-                        {
-                            ErrorViewModelBase testFailureViewModel;
-                            if (!TestFailureViewModelIndex.TryGetValue(test.Type, out testFailureViewModel))
-                            {
-                                testFailureViewModel = new TestFailureViewModel(test.Type);
-                                TestFailureViewModelIndex[test.Type] = testFailureViewModel;
-                                ErrorViewModels.Add(testFailureViewModel);
-                            }
-
-                            foreach (var tuple in analysis.TestFailures[test])
-                            {
-                                testFailureViewModel.Add(tuple);
-                            }
-                        }
-                    }
-                }
             });
 
             IProgress<Table> showReportProgress = new Progress<Table>(table =>
             {
-
                 var tableReport = Analyzer.TestHierachy[table];
                 Tuple<int, int> errors = tableReport.Values.Aggregate(new Tuple<int, int>(0, 0),
                     (c, r) => new Tuple<int, int>(r.ErrorCount + c.Item1, r.ErrorCount > 0 ? c.Item2 + 1 : c.Item2));
                 int suggestions = tableReport.Values.Aggregate(0, (c, r) => r.SuggestedType == null ? c : c + 1);
                 Log(string.Format("I alt: {0} fejl i {1} kolonner, {2} forslag.", errors.Item1, errors.Item2, suggestions));
-                if (errors.Item1 > 0)
-                {
-                    Log("Fejl:");
-                }
-                foreach (var columnAnalysis in tableReport.Values)
-                {
-                    var column = columnAnalysis.Column;
-                    if (columnAnalysis.ErrorCount > 0)
-                    {
-                        Log("\t- " + column.ToString());
-                        foreach (var test in columnAnalysis.Tests)
-                        {
-                            if (test.ErrorCount == 0)
-                                continue;
-
-                            Log(string.Format("\t\t* {0}{1} ({2} forekomster)", test.Type.ToString(), test.Type == AnalysisTestType.REGEX ? " (" + (test as Test.Pattern).Regex.ToString() + ")" : "", test.ErrorCount));
-                            int i = 0;
-                            foreach (var post in test.ErrorPosts)
-                            {
-                                if (i >= Math.Min(10, test.ErrorCount))
-                                    break;
-
-                                string pos = string.Format("({0}, {1})", post.Line, post.Position);
-                                Log(string.Format("\t\t\t> {1} \"{0}\"", string.Join(Environment.NewLine + "\t\t\t" + string.Concat(Enumerable.Repeat(" ", pos.Length + 4)), (post.Data as string).Split(Environment.NewLine.ToCharArray())), pos));
-
-                                i++;
-                            }
-                        }
-                    }
-                }
-                if (suggestions > 0)
-                {
-                    Log("Forslag:");
-                }
-                foreach (var columnReport in tableReport.Values)
-                {
-                    var column = columnReport.Column;
-                    var suggestion = columnReport.SuggestedType;
-                    if (suggestion == null)
-                        continue;
-
-                    Log(string.Format("\t- {0} => {1}", column.ToString(), suggestion.ToString()));
-                }
             });
 
             var totalRowCountProgress = new Progress<int>(value => { AnalysisTotalRowCount = value; }) as IProgress<int>;
@@ -1122,24 +1013,6 @@ namespace HardHorn.ViewModels
 
                         // Print information of chosen tests for this table
                         logger.Log(string.Format("Tester {0}.", Analyzer.CurrentTable.ToString()), LogLevel.SECTION);
-                        foreach (var columnAnalysis in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
-                        {
-                            if (columnAnalysis.Tests.Count == 0)
-                                continue;
-
-                            logger.Log("\t- " + columnAnalysis.Column.ToString(), LogLevel.NORMAL);
-                            foreach (var test in columnAnalysis.Tests)
-                            {
-                                if (test.Type == AnalysisTestType.REGEX)
-                                {
-                                    logger.Log(string.Format("\t\t* {0} ({1})", test.Type.ToString(), (test as Test.Pattern).Regex.ToString()), LogLevel.NORMAL);
-                                }
-                                else
-                                {
-                                    logger.Log(string.Format("\t\t* {0}", test.Type.ToString()), LogLevel.NORMAL);
-                                }
-                            }
-                        }
 
                         // Initialize reader for table, handle missing file.
                         try
@@ -1164,27 +1037,6 @@ namespace HardHorn.ViewModels
                             if (_testCts.IsCancellationRequested)
                                 return;
                         } while (readNext);
-
-                        // Check if number of rows in table adds up
-                        if (Analyzer.TableDoneRows != Analyzer.TableRowCount)
-                        {
-                            if (TableRowCountErrorViewModel == null)
-                            {
-                                TableRowCountErrorViewModel = new TableRowCountErrorViewModel();
-                                TableRowCountErrorViewModel.Count = 1;
-                                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(TableRowCountErrorViewModel));
-                            }
-                            else
-                            {
-                                TableRowCountErrorViewModel.Count++;
-                            }
-
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                Log(string.Format("{0} har defineret {1} rækker, men {2} blev læst.", Analyzer.CurrentTable.ToString(), Analyzer.CurrentTable.Rows, AnalysisTableDoneRows), LogLevel.ERROR);
-                                TableRowCountErrorViewModel.Add(new Tuple<Table, int>(Analyzer.CurrentTable, AnalysisTableDoneRows));
-                            });
-                        }
 
                         bool typesSuggested = false;
                         foreach (var report in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
@@ -1336,8 +1188,6 @@ namespace HardHorn.ViewModels
 
         public void OnArchiveVersionException(Exception ex)
         {
-            ErrorViewModelBase errorViewModel;
-
             if (ex is ColumnTypeParsingException)
             {
                 var avctEx = ex as ColumnTypeParsingException;
@@ -1348,39 +1198,6 @@ namespace HardHorn.ViewModels
                 var avcEx = ex as ColumnParsingException;
                 Log(string.Format("En fejl opstod under afkodningen af en kolonne i tabellen '{0}': {1}", avcEx.Table.Name, avcEx.Message), LogLevel.ERROR);
             }
-
-            if (!LoadingErrorViewModelIndex.ContainsKey(ex.GetType()))
-            {
-                if (ex is ColumnTypeParsingException)
-                {
-                    errorViewModel = new ColumnTypeParsingErrorViewModel();
-                }
-                else if (ex is ColumnParsingException)
-                {
-                    errorViewModel = new ColumnParsingErrorViewModel();
-                }
-                else if (ex is ForeignKeyNotMatchingException)
-                {
-                    errorViewModel = new ForeignKeyNotMatchingErrorViewModel();
-                }
-                else if (ex is ArchiveVersionXmlValidationException)
-                {
-                    errorViewModel = new XmlValidationErrorViewModel();
-                }
-                else
-                {
-                    return;
-                }
-
-                LoadingErrorViewModelIndex[ex.GetType()] = errorViewModel;
-                Application.Current.Dispatcher.Invoke(() => ErrorViewModels.Add(errorViewModel));
-            }
-            else
-            {
-                errorViewModel = LoadingErrorViewModelIndex[ex.GetType()];
-            }
-
-            Application.Current.Dispatcher.Invoke(() => errorViewModel.Add(ex));
         }
 
         public void BrowseNext()
