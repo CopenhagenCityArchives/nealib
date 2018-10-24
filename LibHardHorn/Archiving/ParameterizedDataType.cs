@@ -125,7 +125,7 @@ namespace HardHorn.Archiving
 
                 if (Parameter != null)
                 {
-                    repr += " " + Parameter.ToString();
+                    repr += Parameter.ToString();
                 }
 
                 return repr;
@@ -149,7 +149,7 @@ namespace HardHorn.Archiving
 
             if (Parameter != null)
             {
-                repr += " " + Parameter.ToString();
+                repr += Parameter.ToString();
             }
 
             return repr;

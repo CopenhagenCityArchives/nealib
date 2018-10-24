@@ -236,7 +236,7 @@ namespace HardHorn.Archiving
             }
             else if (HasPrecision && HasScale && Scale != 0)
             {
-                return "(" + Precision + ", " + Scale + ")";
+                return "(" + Precision + "," + Scale + ")";
             }
 
             throw new InvalidOperationException("Invalid parameter");
