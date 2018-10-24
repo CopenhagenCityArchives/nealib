@@ -671,16 +671,24 @@ namespace HardHorn.ViewModels
                             writer.WriteLine("<!doctype html>");
                             writer.WriteLine("<html>");
                             writer.WriteLine("<head>");
-                            writer.Write(@"<script>
+                            writer.Write(@"<style>
+.sort {display:inline-block; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; }
+.asc {border-bottom: 10px solid black;}
+.desc {border-top: 10px solid black;}
+</style>
+<script>
 function sortBy(tableId, sortColumnIndex) {
 	var table = document.getElementById(tableId).nextElementSibling;
-	var sortType = table.children[0].children[sortColumnIndex].children[0].innerText;
+	var sortTypeElem = table.children[0].children[sortColumnIndex].getElementsByTagName('strong')[0];
+    var sortType = '';
+    if (sortTypeElem != undefined) {
+        sortType = sortTypeElem.innerText;
+    }
 	var rows = Array.prototype.slice.call(table.children, 1);
-	var glyphs = table.getElementsByClassName('sort-glyph');
+	var glyphs = table.getElementsByClassName('sort');
 	for (var i = 0; i < glyphs.length; i++) {
 		glyphs[i].remove();
 	}
-	console.log(table.lastSortType, sortType);
 	if (table.lastSortType == sortType) {
 		table.sortAscending = !table.sortAscending;
 		rows.reverse();
@@ -769,8 +777,12 @@ function readdRows(rows) {
 
 function addGlyph(table, columnIndex) {
 	var glyph = document.createElement('span');
-	glyph.innerText = table.sortAscending ? '↑' : '↓';
-	glyph.classList.add('sort-glyph');
+    glyph.classList.add('sort');
+    if (table.sortAscending) {
+        glyph.classList.add('asc');
+    } else {
+        glyph.classList.add('desc');
+    }
 	table.children[0].children[columnIndex].appendChild(glyph);
 }
 </script>");
