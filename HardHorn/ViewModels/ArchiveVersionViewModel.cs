@@ -671,9 +671,112 @@ namespace HardHorn.ViewModels
                             writer.WriteLine("<!doctype html>");
                             writer.WriteLine("<html>");
                             writer.WriteLine("<head>");
+                            writer.Write(@"<script>
+function sortBy(tableId, sortColumnIndex) {
+	var table = document.getElementById(tableId).nextElementSibling;
+	var sortType = table.children[0].children[sortColumnIndex].children[0].innerText;
+	var rows = Array.prototype.slice.call(table.children, 1);
+	var glyphs = table.getElementsByClassName('sort-glyph');
+	for (var i = 0; i < glyphs.length; i++) {
+		glyphs[i].remove();
+	}
+	console.log(table.lastSortType, sortType);
+	if (table.lastSortType == sortType) {
+		table.sortAscending = !table.sortAscending;
+		rows.reverse();
+	} else {
+		table.sortAscending = true;
+		table.lastSortType = sortType;
+		rows.sort(getSortFunc(sortType, sortColumnIndex)); 
+	}
+	addGlyph(table, sortColumnIndex);
+	readdRows(rows);
+}
+
+function getSortFunc(sortType, sortColumnIndex) {
+	switch (sortType) {
+		case 'Felt':
+			return function(row1, row2) {
+				var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+				var f1 = parseInt(field1.substr(2, field1.indexOf(':')-2));
+				var f2 = parseInt(field2.substr(2, field2.indexOf(':')-2));
+				return f1-f2;
+			};
+			break;
+		case 'Tabel':
+			return function(row1, row2) {
+				var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+				var f1 = parseInt(field1.substr(6, field1.indexOf(':')-6));
+				var f2 = parseInt(field2.substr(6, field2.indexOf(':')-6));
+				return f1-f2;
+			};
+			break;
+        case 'Forekomster':
+            return function(row1, row2) {
+                var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+                return parseInt(field1) - parseInt(field2);
+            };
+            break;
+		default:
+			return function(row1, row2) {
+				var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+				return field1.localeCompare(field2);
+			};
+			break;
+	}
+	
+}
+
+function readdRows(rows) {
+	for (var i = 0; i < rows.length; i++) {
+		var parent = rows[i].parentNode;
+		var detached = parent.removeChild(rows[i]);
+		parent.appendChild(detached); 
+	}
+}
+
+function addGlyph(table, columnIndex) {
+	var glyph = document.createElement('span');
+	glyph.innerText = table.sortAscending ? '↑' : '↓';
+	glyph.classList.add('sort-glyph');
+	table.children[0].children[columnIndex].appendChild(glyph);
+}
+</script>");
                             writer.WriteLine($"<title>{ArchiveVersion.Id} - HardHorn Log</title>");
                             writer.WriteLine("</head>");
-                            writer.WriteLine("<body>");
+                            writer.WriteLine("<body style=\"font-family: verdana, sans-serif;\">");
                             writer.WriteLine($"<h1>{ArchiveVersion.Id} - HardHorn Log</h1>");
                             writer.WriteLine($"<p><strong>Tidspunkt:</strong> {now}</p>");
                             writer.WriteLine("<h2 id=\"oversigt\">Oversigt</h2>");
@@ -692,11 +795,11 @@ namespace HardHorn.ViewModels
                                     writer.WriteLine($"<h3 id=\"{HttpUtility.HtmlEncode(group.Name)}\">{HttpUtility.HtmlEncode(group.Name)}&nbsp;<span style=\"font-weight: normal; font-size: 12pt;\"><a href=\"#oversigt\">[til oversigt]</a></span></h3>");
                                     writer.WriteLine("<div style=\"display: table\">");
                                     writer.WriteLine("<div style=\"display: table-row\">");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Felt</strong></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Kategori</strong></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Forekomster</strong></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Besked</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 0)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 1)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Felt</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 2)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Kategori</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 3)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Forekomster</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 4)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Besked</strong></div>");
                                     writer.WriteLine("</div>");
                                     foreach (INotification notification in group.Items)
                                     {
@@ -720,11 +823,11 @@ namespace HardHorn.ViewModels
                                     writer.WriteLine($"<h3 id=\"{HttpUtility.HtmlEncode(group.Name)}\">{HttpUtility.HtmlEncode(group.Name)}&nbsp;<span style=\"font-weight: normal; font-size: 12pt;\"><a href=\"#oversigt\">[til oversigt]</a></span></h3>");
                                     writer.WriteLine("<div style=\"display: table\">");
                                     writer.WriteLine("<div style=\"display: table-row\">");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Tabel</strong></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Felt</strong></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Forekomster</strong></div>");
-                                    writer.WriteLine("<div style=\"display: table-cell; padding: 2pt;\"><strong>Besked</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 0)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 1)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Tabel</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 2)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Felt</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 3)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Forekomster</strong></div>");
+                                    writer.WriteLine($"<div onclick=\"sortBy('{HttpUtility.HtmlEncode(group.Name)}', 4)\" style=\"cursor: pointer; display: table-cell; padding: 2pt;\"><strong>Besked</strong></div>");
                                     writer.WriteLine("</div>");
                                     foreach (INotification notification in group.Items)
                                     {
