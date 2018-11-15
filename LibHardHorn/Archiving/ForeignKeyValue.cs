@@ -9,9 +9,9 @@ namespace HardHorn.Archiving
     public class ForeignKeyValue : IEquatable<ForeignKeyValue>
     {
         public int Count { get; private set; }
-        public string[] Values { get; private set; }
+        public Post[] Values { get; private set; }
 
-        public ForeignKeyValue(params string[] values)
+        public ForeignKeyValue(params Post[] values)
         {
             Count = values.Length;
             Values = values;
@@ -24,7 +24,7 @@ namespace HardHorn.Archiving
                 int hash = 19;
                 foreach (var value in Values)
                 {
-                    hash *= 31 + value == null ? 0 : value.GetHashCode();
+                    hash *= 31 + value.Data == null ? 0 : value.Data.GetHashCode();
                 }
                 return hash;
             }
@@ -35,14 +35,14 @@ namespace HardHorn.Archiving
             if (Count != other.Count)
                 return false;
             for (int i = 0; i < Count; i++)
-                if (Values[i] != other.Values[i])
+                if (Values[i].Data != other.Values[i].Data)
                     return false;
             return true;
         }
 
         public override string ToString()
         {
-            return string.Join("/", Values);
+            return string.Join("/", Values.Select(post => post.IsNull ? "<NULL>" : post.Data));
         }
     }
 }
