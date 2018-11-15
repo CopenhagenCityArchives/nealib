@@ -39,11 +39,15 @@ namespace HardHorn.ViewModels
 
         public NotificationViewModel(INotification notification)
         {
+            NotifyTimer = new Timer(250.0d);
+            NotifyTimer.Elapsed += (o, ae) =>
+            {
+                NotifyOfPropertyChange("Count");
+            };
             Type = notification.Type;
             Severity = notification.Severity;
             Table = notification.Table;
             Column = notification.Column;
-            Header = notification.Header;
             Message = notification.Message;
             Count = notification.Count;
         }

@@ -35,8 +35,12 @@ namespace HardHorn.Archiving
             if (Count != other.Count)
                 return false;
             for (int i = 0; i < Count; i++)
+            {
+                if (Values[i].IsNull != other.Values[i].IsNull)
+                    return false;
                 if (Values[i].Data != other.Values[i].Data)
                     return false;
+            }
             return true;
         }
 

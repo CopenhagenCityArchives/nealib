@@ -15,6 +15,7 @@ using System.Data;
 using System.Text.RegularExpressions;
 using OxyPlot;
 using OxyPlot.Series;
+using HardHorn.Utility;
 
 namespace HardHorn.Utilities
 {
@@ -101,7 +102,7 @@ namespace HardHorn.Utilities
             var dataTable = new DataTable();
             foreach (var reference in foreignKey.References)
             {
-                var dataColumn = new DataColumn(string.Format("<{0}: {1}>", reference.Column.ColumnId, reference.ColumnName.Replace("_", "__")), typeof(string));
+                var dataColumn = new DataColumn(string.Format("<{0}: {1}>", reference.Column.ColumnId, reference.ColumnName.Replace("_", "__")), typeof(Post));
                 dataTable.Columns.Add(dataColumn);
             }
             dataTable.Columns.Add("Antal fejl", typeof(int));
@@ -122,6 +123,63 @@ namespace HardHorn.Utilities
         }
     }
 
+    public class NotificationTypeToStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            NotificationType? type = value as NotificationType?;
+
+            if (!type.HasValue)
+            {
+                return null;
+            }
+
+            switch (type.Value)
+            {
+                case NotificationType.AnalysisErrorBlank:
+                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.BLANK);
+                case NotificationType.AnalysisErrorFormat:
+                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.FORMAT);
+                case NotificationType.AnalysisErrorOverflow:
+                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.OVERFLOW);
+                case NotificationType.AnalysisErrorUnderflow:
+                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.UNDERFLOW);
+                case NotificationType.AnalysisErrorRegex:
+                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.REGEX);
+                case NotificationType.ColumnParsing:
+                    return "Feltindlæsningsfejl";
+                case NotificationType.ColumnTypeError:
+                    return "Datatypefejl";
+                case NotificationType.TableRowCountError:
+                    return "Tabelrækkeantalsfejl";
+                case NotificationType.ForeignKeyTypeError:
+                    return "Fremmednøgledatatypefejl";
+                case NotificationType.XmlError:
+                    return "Xml-valideringsfejl";
+                case NotificationType.ParameterSuggestion:
+                    return "Parameterforslag";
+                case NotificationType.DataTypeSuggestion:
+                    return "Datatypeforslag";
+                case NotificationType.ForeignKeyTestError:
+                    return "Fremmednøgletestfejl";
+                case NotificationType.ForeignKeyTestBlank:
+                    return "Fremmednøgletestfejl med blanke værdier";
+                default:
+                    return null;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static string ConvertNotificationType(NotificationType type)
+        {
+            return (new NotificationTypeToStringConverter()).Convert(type, typeof(string), null, CultureInfo.CurrentCulture) as string;
+        }
+    }
+
     public class CellIsEmptyConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
@@ -133,6 +191,10 @@ namespace HardHorn.Utilities
                 var columnName = cell.Column.SortMemberPath;
 
                 var post = row[columnName] as Post;
+                if (post == null)
+                {
+                    return false;
+                }
                 if (!post.IsNull && string.IsNullOrEmpty(post.Data))
                 {
                     return true;
@@ -157,7 +219,13 @@ namespace HardHorn.Utilities
                 var row = values[1] as System.Data.DataRow;
                 var columnName = cell.Column.SortMemberPath;
 
-                if ((row[columnName] as Post).IsNull)
+                var post = row[columnName] as Post;
+                if (post == null)
+                {
+                    return false;
+                }
+
+                if (post.IsNull)
                 {
                     return true;
                 }
@@ -324,6 +392,8 @@ namespace HardHorn.Utilities
                     return "Foran- eller efterstillede blanktegn";
                 case AnalysisTestType.FORMAT:
                     return "Formateringsfejl";
+                case AnalysisTestType.REGEX:
+                    return "Match af regulært udtryk";
                 default:
                     return string.Empty;
             }

@@ -894,6 +894,12 @@
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowRegex}">Test (REGEX)</CheckBox>
                         </StackPanel>
                     </GroupBox>
+                    <GroupBox Margin="5" Header="Fremmednøgletest">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestErrors}">Fremmednøglefejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestBlanks}">Blanke fremmednøgler</CheckBox>
+                        </StackPanel>
+                    </GroupBox>
                     <GroupBox Margin="5" Header="Forslag">
                         <StackPanel Orientation="Vertical">
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowParameterSuggestions}">Parameterforslag</CheckBox>
@@ -906,7 +912,7 @@
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowTableRowCountErrors}">Tabelrækkeantalsfejl</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnErrors}">Feltindlæsning</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnTypeErrors}">Datatypefejl</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyErrors}">Fremmednøglefejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTypeErrors}">Fremmednøgle typefejl</CheckBox>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Margin="5" Header="Eksport">
@@ -951,7 +957,7 @@
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
                                     <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
-                                    <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Header}" />
+                                    <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Type, Converter={StaticResource NotificationTypeToStringConverter}}" />
                                     <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
                                     <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
                                 </GridView>
@@ -999,7 +1005,7 @@
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>
                                         <DataTemplate>
-                                            <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                            <TextBlock FontWeight="Bold" Text="{Binding Name, Converter={StaticResource NotificationTypeToStringConverter}}" />
                                         </DataTemplate>
                                     </GroupStyle.HeaderTemplate>
                                 </GroupStyle>
@@ -1305,11 +1311,11 @@
             </Grid>
         </TabItem>
 
-        <TabItem Header="Nøgletest">
+        <TabItem Header="Fremmednøgletest">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Left" Width="250">
-                    <Button Height="20" DockPanel.Dock="Bottom" cal:Message.Attach="StopKeyTest">Stop nøgletest</Button>
-                    <Button Height="20" DockPanel.Dock="Bottom" cal:Message.Attach="StartKeyTest(KeyTestTableList.SelectedItems)">Start nøgletest</Button>
+                    <Button Height="20" DockPanel.Dock="Bottom" cal:Message.Attach="StopKeyTest">Stop fremmednøgletest</Button>
+                    <Button Height="20" DockPanel.Dock="Bottom" cal:Message.Attach="StartKeyTest(KeyTestTableList.SelectedItems)">Start fremmednøgletest</Button>
                     
                     <Grid DockPanel.Dock="Bottom">
                         <ProgressBar Height="20" DockPanel.Dock="Bottom" Value="{Binding KeyTestTotalProgress, Mode=OneWay}"></ProgressBar>
@@ -1406,7 +1412,7 @@
                     <ListBox x:Name="KeyTestTableList" ItemsSource="{Binding KeyTestTablesView}" SelectionMode="Extended" ItemContainerStyle="{StaticResource KeyTestTableListContainerStyle}" />
                 </DockPanel>
 
-                <DataGrid CanUserAddRows="False" CanUserDeleteRows="False" DockPanel.Dock="Right" Width="400" ItemsSource="{Binding SelectedItem, ElementName=KeyTestResultList, Converter={StaticResource KeyTestResultListToDataTable}}" />
+                <DataGrid CanUserAddRows="False" CanUserDeleteRows="False" DockPanel.Dock="Right" Width="400" CellStyle="{StaticResource DataGridCellStyle}" ItemsSource="{Binding SelectedItem, ElementName=KeyTestResultList, Converter={StaticResource KeyTestResultListToDataTable}}" />
 
                 <ListView x:Name="KeyTestResultList" ItemsSource="{Binding ForeignKeyTestResults}">
                     <ListView.View>
