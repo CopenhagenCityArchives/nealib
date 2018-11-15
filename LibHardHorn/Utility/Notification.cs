@@ -145,7 +145,7 @@ namespace HardHorn.Utility
         {
             Table = foreignKey.Table;
             Reference typeErrorReference = foreignKey.References.First(reference => reference.Column.ParameterizedDataType.CompareTo(reference.ReferencedColumn.ParameterizedDataType) != 0);
-            Message = $"{foreignKey.Name} refererer {typeErrorReference.Column} tuk {typeErrorReference.ReferencedColumn} i {typeErrorReference.ReferencedColumn.Table}";
+            Message = $"{foreignKey.Name} refererer {typeErrorReference.Column} til {typeErrorReference.ReferencedColumn} i {typeErrorReference.ReferencedColumn.Table}";
         }
     }
 
