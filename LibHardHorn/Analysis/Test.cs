@@ -22,8 +22,12 @@ namespace HardHorn.Analysis
         public static Regex boolean_regex = new Regex(@"^(0|1|true|false)$", RegexOptions.Compiled);
         public static Regex float_regex = new Regex(@"^-?\d+(\.\d+)?([eE][+-]\d+)?$", RegexOptions.Compiled);
         public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
+        //public static Regex numeric_char_ref = new Regex(@"^&(?:#([0-9]+)|#x([0-9a-fA-F]+))$", RegexOptions.Compiled);
+        public static Regex entity_regex = new Regex(@"&(?!(amp;|apos;|lt;|gt;|quot;))[\w | #]*;", RegexOptions.Compiled);
+        public static Regex char_repeating_regex = new Regex(@"(.)\1{12,}", RegexOptions.Compiled);
+        public static Regex html_opentag_regex = new Regex(@"<[\w]*>", RegexOptions.Compiled);
+        public static Regex html_closetag_regex = new Regex(@"<\/[\w]*>", RegexOptions.Compiled);
 
-        public static readonly int MAX_ERROR_POSTS = 50;
 
         public enum Result
         {
@@ -34,6 +38,7 @@ namespace HardHorn.Analysis
         public int ErrorCount { get; private set; }
         public abstract AnalysisTestType Type { get; }
         public string Name { get { return Type.ToString(); } }
+        public static int MAX_ERROR_POSTS = 50;
 
         List<Post> _posts = new List<Post>();
         public IEnumerable<Post> ErrorPosts { get { return _posts; } }
@@ -73,6 +78,8 @@ namespace HardHorn.Analysis
             if (post.IsNull)
                 return Result.OKAY;
 
+            //To Do through HtmlNotification, fallback AnalysisError
+            // 
             var result = GetResult(post, column);
             if (result == Result.ERROR)
             {
@@ -87,7 +94,8 @@ namespace HardHorn.Analysis
         #region Predefined format tests
         public static Test DateFormatTest()
         {
-            return new Pattern(date_regex, m => {
+            return new Pattern(date_regex, m =>
+            {
                 int year = int.Parse(m[0].Groups[1].Value);
                 int month = int.Parse(m[0].Groups[2].Value);
                 int day = int.Parse(m[0].Groups[3].Value);
@@ -103,7 +111,8 @@ namespace HardHorn.Analysis
 
         public static Test TimeFormatTest()
         {
-            return new Pattern(time_regex, m => {
+            return new Pattern(time_regex, m =>
+            {
                 int hour = int.Parse(m[0].Groups[1].Value);
                 int minute = int.Parse(m[0].Groups[2].Value);
                 int second = int.Parse(m[0].Groups[3].Value);
@@ -119,7 +128,8 @@ namespace HardHorn.Analysis
 
         public static Test TimeWithTimeZoneTest()
         {
-            return new Pattern(time_timezone_regex, m => {
+            return new Pattern(time_timezone_regex, m =>
+            {
                 int hour = int.Parse(m[0].Groups[1].Value);
                 int minute = int.Parse(m[0].Groups[2].Value);
                 int second = int.Parse(m[0].Groups[3].Value);
@@ -146,7 +156,8 @@ namespace HardHorn.Analysis
 
         public static Test TimestampWithTimeZoneFormatTest()
         {
-            return new Pattern(timestamp_timezone_regex, m => {
+            return new Pattern(timestamp_timezone_regex, m =>
+            {
                 int year = int.Parse(m[0].Groups[1].Value);
                 int month = int.Parse(m[0].Groups[2].Value);
                 int day = int.Parse(m[0].Groups[3].Value);
@@ -193,7 +204,138 @@ namespace HardHorn.Analysis
                 return Result.OKAY;
             }, AnalysisTestType.FORMAT);
         }
+        // Test for keywords
+        public class SuspiciousKeyword : Test
+        {
+            public override AnalysisTestType Type { get { return AnalysisTestType.UNALLOWED_KEYWORD; } }
+
+            public Dictionary<string, int> Keywords = new Dictionary<string, int>
+            {
+                {"border", 0},
+                {"span", 0},
+                {"padding", 0},
+                {"font", 0 },
+                {"color", 0},
+                {"font-family", 0},
+                {"font-size", 0},
+                {"font-style", 0},
+                {"style", 0},
+                {"font-weight", 0},
+                {"background", 0},
+                {"spacing", 0},
+                {"line-height", 0},
+                {"table", 0},
+                {"margin", 0},
+                {"body", 0},
+                {"div", 0},
+                {"px", 0},
+                {"list", 0},
+                {"text-align", 0},
+                {"text-decoration", 0},
+                {"text-indent", 0},
+                {"text-transform", 0},
+                {"meta", 0},
+                {"title", 0},
+                {"header", 0},
+                {"position", 0},
+                {"template", 0},
+                {"form", 0},
+                {"html", 0},
+                {"head", 0},
+                {"h1", 0},
+                {"h2", 0},
+                {"h3", 0},
+                {"display", 0},
+            };
+            public void ContainsKeywords(string HugeText)
+            {
+                foreach (var key in Keywords.Keys.ToList())
+                {
+                    if (HugeText.Contains(key))
+                    {
+                        Keywords[key] += 1;
+                    }
+                }
+            }
+
+            public override Result GetResult(Post post, Column column)
+            {
+                ContainsKeywords(post.Data);
+                if (Keywords.LongCount() != 0)
+                    return Result.ERROR;
+                else
+                    return Result.OKAY;
+            }
+        }
+
         #endregion
+        // Test for all html code
+        public class HtmlEntity : Test
+        {
+            public override AnalysisTestType Type { get { return AnalysisTestType.HTML_TAG; } }
+
+            public string Value { get; set; }
+
+            public override Result GetResult(Post post, Column column)
+            {
+                Match match;
+                match = html_opentag_regex.Match(post.Data);
+                // opening tag-like structure found
+                if (match.Success)
+                {
+                    Value = match.Value;
+                    return Result.ERROR;
+                }
+                // closing tag-like structure found
+                match = html_closetag_regex.Match(post.Data);
+                if (match.Success)
+                {
+                    Value = match.Value;
+                    return Result.ERROR;
+                }
+                return Result.OKAY;
+            }
+        }
+        // Find all repeating characters
+        public class RepeatingChar : Test
+        {
+            public override AnalysisTestType Type { get { return AnalysisTestType.REPEATING_CHAR; } }
+
+            public string CharRepeating { get; set; }
+
+            public override Result GetResult(Post post, Column column)
+            {
+                Match match;
+                
+                match = char_repeating_regex.Match(post.Data);
+                if (match.Success)
+                {
+                    CharRepeating = match.Groups[1].ToString();
+                    return Result.ERROR;
+                }
+                return Result.OKAY;
+            }
+        }
+        // 
+        public class EntityCharRef : Test
+        {
+            public override AnalysisTestType Type { get { return AnalysisTestType.ENTITY_CHAR_REF; } }
+
+            public string CharRef { get; set; }
+
+            public override Result GetResult(Post post, Column column)
+            {
+                Match match;
+
+                match = entity_regex.Match(post.Data);
+                if (match.Success)
+                {
+                    CharRef = match.Groups[0].ToString();
+                    return Result.ERROR;
+                }
+                return Result.OKAY;
+            }
+        }
 
         public class Overflow : Test
         {
@@ -210,6 +352,7 @@ namespace HardHorn.Analysis
                     case DataType.CHARACTER:
                     case DataType.NATIONAL_CHARACTER_VARYING:
                     case DataType.CHARACTER_VARYING:
+
                         overflow = post.Data.Length > column.ParameterizedDataType.Parameter.Length;
                         break;
                     case DataType.DECIMAL:

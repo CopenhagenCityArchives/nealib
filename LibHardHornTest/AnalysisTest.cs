@@ -6,6 +6,7 @@ using HardHorn.Analysis;
 using LibHardHornTest.Utilities;
 using System.Text.RegularExpressions;
 using System.Linq;
+using HardHorn.Utility;
 
 namespace LibHardHornTest
 {
@@ -679,6 +680,83 @@ namespace LibHardHornTest
                     new Post("true", false),
                     new Post("", true));
             }
+        }
+
+        [TestMethod]
+        public void SuspiciosKeywordsTest()
+        {
+            string assertText = System.IO.File.ReadAllText(@"W:\Xml-tag\assertText.txt");
+            var test = new Test.SuspiciousKeyword();
+            INotification noti_kw = null;
+            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+            Assert.AreEqual(kwTest, Test.Result.ERROR);
+            Assert.AreEqual($"Test ({AnalysisTestType.UNALLOWED_KEYWORD})", noti_kw.Header);
+            Console.WriteLine(noti_kw.Message);        
+            Assert.IsNotNull(noti_kw);
+         
+        }
+
+        [TestMethod]
+        public void HtmlTagTest()
+        {
+            //Console.WriteLine(assertText);
+            var test = new Test.HtmlEntity();
+            // html entity
+            INotification noti_otag = null;
+            var optag = test.Run(new Post("aeio<span>rgroi", false), null, myNoti => noti_otag = myNoti);
+            Assert.AreEqual(optag, Test.Result.ERROR);
+            Assert.AreEqual("<span>", noti_otag.Message);
+
+            // html entity
+            INotification noti_ctag = null;
+            var closetag = test.Run(new Post("aeio</span>rgroi", false), null, myNoti => noti_ctag = myNoti);
+            Assert.AreEqual(closetag, Test.Result.ERROR);
+            Assert.AreEqual("</span>", noti_ctag.Message);
+        }
+
+        [TestMethod]
+        public void CharRefTest()
+        {
+            var test = new Test.EntityCharRef();
+            INotification noti = null;
+
+            // hexadecimal char reference found
+            var res1 = test.Run(new Post(".Socialt&#x0A;Kl. har boet sammen", false), null, myNoti => noti = myNoti);
+            // accepted char reference
+            Assert.AreEqual(res1, Test.Result.ERROR);
+            Assert.AreEqual("&#x0A;", noti.Message);
+
+            // char reference allowed
+            INotification noti_res2 = null;
+            var res2 = test.Run(new Post("borg&amp;Anja var her igår og steg til 20 mg. ", false), null, myNoti => noti_res2 = myNoti);
+            Assert.AreEqual(res2, Test.Result.OKAY);
+            Assert.IsNull(noti_res2);
+        }
+
+        [TestMethod]
+        public void RepeatingCharTest()
+        {
+            var test = new Test.RepeatingChar();
+            // repeating character
+            INotification noti = null;
+            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ", false), null, myNotification => noti = myNotification);
+            Assert.AreEqual(rep, Test.Result.ERROR);
+            // notification test
+            Assert.AreEqual("ÿ", noti.Message);
+        }
+
+        // lav en test - f en notifikation, kalde en funk. indh. notifycallback, run?
+        // 
+
+        [TestMethod]
+        public void NotificationsTest()
+        {
+            var notifTest = new Test.EntityCharRef();
+            INotification noti = null;
+            var test = notifTest.Run(new Post("&#x0A;", false), null, myNotification => noti = myNotification);
+            Assert.AreEqual(test, Test.Result.ERROR);
+            Assert.IsNotNull(noti);
+            Assert.AreEqual("&#x0A;", noti.Message);
         }
     }
 }

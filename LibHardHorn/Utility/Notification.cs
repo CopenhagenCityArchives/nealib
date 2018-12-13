@@ -24,7 +24,8 @@ namespace HardHorn.Utility
         TableRowCountError,
         ForeignKeyError,
         ColumnParsing,
-        Suggestion
+        Suggestion,  
+        HtmlEntity
     }
 
     public delegate void NotificationCallback(INotification notification);
@@ -41,6 +42,8 @@ namespace HardHorn.Utility
         int? Count { get; }
     }
 
+    // only function to check tables 
+    // include error check here?
     public class AnalysisErrorNotification : INotification
     {
         public NotificationType Type { get { return NotificationType.AnalysisError; } }
@@ -55,11 +58,54 @@ namespace HardHorn.Utility
         public AnalysisErrorNotification(Test test, Column column, Post post)
         {
             TestType = test.Type;
+            switch (TestType)
+            {
+                case AnalysisTestType.HTML_TAG:
+                    var htmlTest = (Test.HtmlEntity) test;
+                    Message = htmlTest.Value;
+                    break;
+                case AnalysisTestType.ENTITY_CHAR_REF:
+                    var charrefTest = (Test.EntityCharRef) test;
+                    Message = charrefTest.CharRef;
+                    break;
+                case AnalysisTestType.REPEATING_CHAR:
+                    var repcharTest = (Test.RepeatingChar) test;
+                    Message = repcharTest.CharRepeating;
+                    break;
+                case AnalysisTestType.UNALLOWED_KEYWORD:
+                    var keywordTest = (Test.SuspiciousKeyword)test;
+                    var keysFound = keywordTest.Keywords;
+                    throw new NotImplementedException();
+                    // this belongs to Notification to handle
+                    //var keysFound = keywordTest.Keywords
+                        //.Where(entry => entry.Value != 0)
+                        //.Select(entry => entry.Key)
+                        //.ToArray();
+                    //Message = String.Join(" ", keysFound);
+                    break;
+            }
+
             Severity = test.Type == AnalysisTestType.UNDERFLOW ? Severity.Hint : Severity.Error;
             Header = $"Test ({test.Type})";
-            Message = null;
             Column = column;
             Count = 1;
+        }
+    }
+
+    public class HtmlEntityErrorNotification : INotification
+    {
+        public NotificationType Type { get { return NotificationType.HtmlEntity; } }
+        public Severity Severity { get; }
+        public Column Column { get; private set; }
+        public Table Table { get; private set; }
+        public string Header { get; private set; }
+        public string Message { get; private set; }
+        public int? Count { get { return null; } }
+
+        public HtmlEntityErrorNotification(string message, Column column, Post post)
+        {
+            Header = "Fix this, some error";
+            Message = message;
         }
     }
 

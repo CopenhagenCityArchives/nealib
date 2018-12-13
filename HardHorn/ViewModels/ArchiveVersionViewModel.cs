@@ -559,10 +559,27 @@ namespace HardHorn.ViewModels
                         AnalysisErrorNotificationIndex[notification.Column] = new Dictionary<AnalysisTestType, NotificationViewModel>();
                     }
 
-                    if (AnalysisErrorNotificationIndex[notification.Column].ContainsKey((notification as AnalysisErrorNotification).TestType))
-                    {
-                        AnalysisErrorNotificationIndex[notification.Column][(notification as AnalysisErrorNotification).TestType].Count++;
+                    var testType = (notification as AnalysisErrorNotification).TestType;
+                    // if testType for column already exists
+                    if (AnalysisErrorNotificationIndex[notification.Column].ContainsKey(testType)
+                    {   // increment no of testType occurence in Index 
+                        AnalysisErrorNotificationIndex[notification.Column][testType].Count++;
+                        // when unallowed_keyword type
+                        if (testType == AnalysisTestType.UNALLOWED_KEYWORD)
+                        {
+                            throw new NotImplementedException();
+                            // notification.Message --update
+                            // get test.keywords
+                        }
                     }
+
+                    //if (AnalysisErrorNotificationIndex[notification.Column].ContainsKey((notification as AnalysisErrorNotification).TestType))
+                    //{
+                        //AnalysisErrorNotificationIndex[notification.Column][(notification as AnalysisErrorNotification).TestType].Count++;
+                        //// if test type un_kw change message
+                        //// hashmap? keyword exists already? : add kw 
+                        //if
+                              //}
                     else
                     {
                         notificationViewModel = new NotificationViewModel(NotificationType.AnalysisError, notification.Severity);
@@ -573,6 +590,8 @@ namespace HardHorn.ViewModels
                         AnalysisErrorNotificationIndex[notification.Column][(notification as AnalysisErrorNotification).TestType] = notificationViewModel;
                     }
                     break;
+                //case NotificationType.XmlError:
+                //    Console.WriteLine("HandleNotification case: XmlError");
                 default:
                     notificationViewModel = new NotificationViewModel(notification);
                     break;
@@ -599,6 +618,7 @@ namespace HardHorn.ViewModels
                 || (nvm.Header == "Test (FORMAT)" && Notifications_ShowFormat)
                 || (nvm.Header == "Test (BLANK)" && Notifications_ShowBlank)
                 || (nvm.Header == "Test (REGEX)" && Notifications_ShowRegex)
+                || (nvm.Header == "Test (UNALLOWED_KEYWORD)")
                 || (nvm.Header == "Parameterforslag" && Notifications_ShowParameterSuggestions)
                 || (nvm.Header == "Datatypeforslag" && Notifications_ShowDatatypeSuggestions)
                 || (nvm.Header == "Xml-valideringsfejl" && Notifications_ShowXmlValidationErrors)

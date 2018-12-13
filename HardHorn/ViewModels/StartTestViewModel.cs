@@ -114,6 +114,10 @@ namespace HardHorn.ViewModels
                                         continue;
                                 }
                                 Analyzer.AddTest(column, test);
+                                Analyzer.AddTest(column, new Test.HtmlEntity());
+                                Analyzer.AddTest(column, new Test.RepeatingChar());
+                                Analyzer.AddTest(column, new Test.SuspiciousKeyword());
+                                Analyzer.AddTest(column, new Test.EntityCharRef());
                             }
                         }
                     }

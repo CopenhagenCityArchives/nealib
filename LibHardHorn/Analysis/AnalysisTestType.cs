@@ -13,6 +13,10 @@ namespace HardHorn.Analysis
         FORMAT,
         NULL,
         BLANK,
-        REGEX
+        REGEX,
+        HTML_TAG,
+        ENTITY_CHAR_REF,
+        REPEATING_CHAR,
+        UNALLOWED_KEYWORD
     }
 }
