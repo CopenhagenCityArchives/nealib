@@ -78,7 +78,7 @@ namespace HardHorn.Utility
         public Column Column { get; private set; }
         public Table Table { get { return Column.Table; } }
         public string Message { get; private set; }
-        public int? Count { get; private set; }
+        public int? Count { get; set; }
         public AnalysisTestType TestType { get; private set; }
         public Post Post { get; private set; }
 
@@ -189,6 +189,24 @@ namespace HardHorn.Utility
             Table = foreignKey.Table;
             Reference typeErrorReference = foreignKey.References.First(reference => reference.Column.ParameterizedDataType.CompareTo(reference.ReferencedColumn.ParameterizedDataType) != 0);
             Message = $"{foreignKey.Name} refererer {typeErrorReference.Column} til {typeErrorReference.ReferencedColumn} i {typeErrorReference.ReferencedColumn.Table}";
+        }
+    }
+
+    public class ForeignKeyTestErrorNotification : INotification
+    {
+        public NotificationType Type { get { return NotificationType.ForeignKeyError; } }
+        public Severity Severity { get { return Severity.Error; } }
+        public Column Column { get { return null; } }
+        public Table Table { get; private set; }
+        public string Header { get { return "Fremmednøgletestfejl"; } }
+        public string Message { get; private set; }
+        public int? Count { get; private set; }
+
+        public ForeignKeyTestErrorNotification(ForeignKey foreignKey, int count, int categories)
+        {
+            Table = foreignKey.Table;
+            Message = $"{foreignKey.Name} refererer til {categories} ikke-eksisterende unikke værdier {count} gange i {foreignKey.ReferencedTableName}.";
+            Count = count;
         }
     }
 
