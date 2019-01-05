@@ -53,10 +53,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>030A4B8537ACD4D2BACAFF2384D8883ABD08F523</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>576CED150C2AA248E84C1F57416C620CF47B283E</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>SimpleHardHorn_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>SimpleHardHorn_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -138,6 +138,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="SimpleHardHorn_1_TemporaryKey.pfx" />
     <None Include="SimpleHardHorn_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
