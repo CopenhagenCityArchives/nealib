@@ -146,6 +146,8 @@ namespace HardHorn.Utilities
                     return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.UNDERFLOW);
                 case NotificationType.AnalysisErrorRegex:
                     return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.REGEX);
+                case NotificationType.DataTypeIllegalAlias:
+                    return "Ulovlig datatypeforkortelse";
                 case NotificationType.ColumnParsing:
                     return "Feltindlæsningsfejl";
                 case NotificationType.ColumnTypeError:

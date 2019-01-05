@@ -130,7 +130,7 @@ namespace HardHorn.Analysis
                 for (int j = 0; j < CurrentTable.Columns.Count; j++)
                 {
                     var post = rows[i,j];
-                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].UpdateLengthStatistics(post);
+                    TestHierachy[CurrentTable][CurrentTable.Columns[j]].UpdateColumnStatistics(post);
                     TestHierachy[CurrentTable][CurrentTable.Columns[j]].RunTests(post, Notify);
                 }
 

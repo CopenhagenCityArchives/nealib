@@ -27,7 +27,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <UpdateUrl>\\192.168.0.162\ajax\KSA PROGRAMMER\Installationsfiler\HardHorn\</UpdateUrl>
-    <ApplicationRevision>44</ApplicationRevision>
+    <ApplicationRevision>48</ApplicationRevision>
     <ApplicationVersion>1.4.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -150,6 +150,7 @@
     <Compile Include="Utilities\GridViewSort.cs" />
     <Compile Include="Utilities\RelayCommand.cs" />
     <Compile Include="ViewModels\ArchiveVersionViewModel.cs" />
+    <Compile Include="ViewModels\ColumnTextStatisticsViewModel.cs" />
     <Compile Include="ViewModels\ColumnViewModel.cs" />
     <Compile Include="ViewModels\ErrorViewModel.cs" />
     <Compile Include="ViewModels\ForeignKeyViewModel.cs" />
@@ -162,6 +163,9 @@
     <Compile Include="Views\ArchiveVersionView.xaml.cs">
       <DependentUpon>ArchiveVersionView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\ColumnTextStatisticsView.xaml.cs">
+      <DependentUpon>ColumnTextStatisticsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\RegexTestView.xaml.cs">
       <DependentUpon>RegexTestView.xaml</DependentUpon>
     </Compile>
@@ -172,6 +176,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Resource>
+    <Page Include="Views\ColumnTextStatisticsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\StartTestView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

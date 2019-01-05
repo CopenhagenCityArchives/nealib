@@ -30,7 +30,8 @@ namespace HardHorn.Utility
         AnalysisErrorOverflow,
         AnalysisErrorRegex,
         AnalysisErrorUnderflow,
-        ParameterSuggestion
+        ParameterSuggestion,
+        DataTypeIllegalAlias
     }
 
     public delegate void NotificationCallback(INotification notification);
@@ -45,6 +46,27 @@ namespace HardHorn.Utility
         string Message { get; }
         int? Count { get; }
     }
+
+    public class DataTypeIllegalAliasNotification : INotification
+    {
+        public NotificationType Type { get { return NotificationType.DataTypeIllegalAlias; } }
+        public Severity Severity { get { return Severity.Hint; } }
+        public Column Column { get; private set; }
+        public Table Table { get { return Column.Table; } }
+        public string Message { get { return $"DataTypen '{DataTypeValue}' er et ulovligt alias for '{DataTypeUtility.ToString(DataType)}'."; } }
+        public int? Count { get { return null; } }
+        public AnalysisTestType TestType { get; private set; }
+        public string DataTypeValue { get; private set; }
+        public DataType DataType { get; private set; }
+
+        public DataTypeIllegalAliasNotification(Column column, string dataTypeValue, DataType dataType)
+        {
+            Column = column;
+            DataTypeValue = dataTypeValue;
+            DataType = dataType;
+        }
+    }
+
 
     public class AnalysisErrorNotification : INotification
     {

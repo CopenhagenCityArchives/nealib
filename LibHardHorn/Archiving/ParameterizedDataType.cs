@@ -52,20 +52,24 @@ namespace HardHorn.Archiving
             return new ParameterizedDataType(DataType.UNDEFINED, null);
         }
 
-        public static ParameterizedDataType Parse(XElement element, Table table, Column column)
+        public static ParameterizedDataType Parse(XElement element, Table table, Column column, NotificationCallback notify)
         {
             var match = regex.Match(element.Value);
             if (match.Success)
             {
                 DataType dataType;
+                bool illegalAlias;
                 try
                 {
-                    dataType = DataTypeUtility.Parse(match.Groups["datatype"].Value);
+                    dataType = DataTypeUtility.Parse(match.Groups["datatype"].Value, out illegalAlias);
                 }
                 catch (InvalidOperationException)
                 {
                     throw new ColumnTypeParsingException($"Kunne ikke forstå datatypen {element.Value}", element.Value, element, column, table);
                 }
+
+                if (illegalAlias)
+                    notify?.Invoke(new DataTypeIllegalAliasNotification(column, match.Groups["datatype"].Value, dataType));
 
                 var parameterGroup = match.Groups["params"];
                 uint[] parameters = new uint[0];

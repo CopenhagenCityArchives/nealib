@@ -225,7 +225,7 @@ namespace HardHorn.Archiving
             var column = new Column(table, name, new ParameterizedDataType(DataType.UNDEFINED, null), typeOrig, nullable, desc, colId, colIdNum, defaultValue, functionalDescription);
 
             // parse type
-            ParameterizedDataType parameterizedDataType = ParameterizedDataType.Parse(xtype, table, column);
+            ParameterizedDataType parameterizedDataType = ParameterizedDataType.Parse(xtype, table, column, notify);
             column.ParameterizedDataType = parameterizedDataType;
 
             return column;

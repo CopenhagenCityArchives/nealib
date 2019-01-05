@@ -439,7 +439,7 @@ namespace LibHardHornTest
             ColumnAnalysis columnAnalysis = new ColumnAnalysis(new Column(null, null, before, null, false, null, "c1", 1, null, null));
             foreach (var post in posts)
             {
-                columnAnalysis.UpdateLengthStatistics(post);
+                columnAnalysis.UpdateColumnStatistics(post);
                 columnAnalysis.FirstRowAnalyzed |= true;
             }
             columnAnalysis.SuggestType();

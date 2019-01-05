@@ -61,7 +61,14 @@ namespace HardHorn.Utility
                                     var xnull = xpost.Attribute(xmlnsxsi + "nil");
                                     bool.TryParse(xnull.Value, out isNull);
                                 }
-                                rows[row, col] = new Post(xpost.Value, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition);
+
+                                System.Text.StringBuilder raw = new System.Text.StringBuilder();
+                                foreach (var node in xpost.Nodes())
+                                {
+                                    raw.Append(node.ToString());
+                                }
+                                var s = raw.ToString();
+                                rows[row, col] = new Post(s, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition);
                                 col++;
                             }
                         }

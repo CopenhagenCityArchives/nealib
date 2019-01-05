@@ -279,6 +279,12 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowErrors; }
             set { notifications_ShowErrors = value; Notifications_RefreshViews(); }
         }
+        bool notifications_ShowHintsWhereErrors = true;
+        public bool Notifications_ShowHintsWhereErrors
+        {
+            get { return notifications_ShowHintsWhereErrors; }
+            set { notifications_ShowHintsWhereErrors = value; Notifications_RefreshViews(); }
+        }
         bool notifications_ShowOverflow = true;
         public bool Notifications_ShowOverflow
         {
@@ -350,6 +356,12 @@ namespace HardHorn.ViewModels
         {
             get { return notifications_ShowColumnTypeErrors; }
             set { notifications_ShowColumnTypeErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowDataTypeIllegalAliasErrors = true;
+        public bool Notifications_ShowDataTypeIllegalAliasErrors
+        {
+            get { return notifications_ShowDataTypeIllegalAliasErrors; }
+            set { notifications_ShowDataTypeIllegalAliasErrors = value; Notifications_RefreshViews(); }
         }
         bool notifications_ShowForeignKeyTypeErrors = true;
         public bool Notifications_ShowForeignKeyTypeErrors
@@ -631,9 +643,10 @@ namespace HardHorn.ViewModels
         #region Methods
         private bool Notifications_Filter(object obj)
         {
-            var nvm = obj as NotificationViewModel;
+            var nvm = obj as NotificationViewModel; 
             bool includeBySeverity = (nvm.Severity == Severity.Hint && Notifications_ShowHints)
-                                  || (nvm.Severity == Severity.Error && Notifications_ShowErrors);
+                                  || (nvm.Severity == Severity.Error && Notifications_ShowErrors)
+                                  || (nvm.Severity == Severity.Hint && Notifications_ShowHintsWhereErrors && AnalysisErrorNotificationIndex.ContainsKey(nvm.Column));
             bool includeByNotificationType = (nvm.Type == NotificationType.AnalysisErrorOverflow && Notifications_ShowOverflow)
                 || (nvm.Type == NotificationType.AnalysisErrorUnderflow && Notifications_ShowUnderflow)
                 || (nvm.Type == NotificationType.AnalysisErrorFormat && Notifications_ShowFormat)
@@ -646,6 +659,7 @@ namespace HardHorn.ViewModels
                 || (nvm.Type == NotificationType.XmlError && Notifications_ShowXmlValidationErrors)
                 || (nvm.Type == NotificationType.ColumnParsing && Notifications_ShowColumnErrors)
                 || (nvm.Type == NotificationType.ColumnTypeError && Notifications_ShowColumnTypeErrors)
+                || (nvm.Type == NotificationType.DataTypeIllegalAlias && Notifications_ShowDataTypeIllegalAliasErrors)
                 || (nvm.Type == NotificationType.ForeignKeyTypeError && Notifications_ShowForeignKeyTypeErrors)
                 || (nvm.Type == NotificationType.TableRowCountError && Notifications_ShowTableRowCountErrors);
 

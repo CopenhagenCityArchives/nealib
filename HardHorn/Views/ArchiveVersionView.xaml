@@ -883,6 +883,7 @@
                         <StackPanel Orientation="Vertical">
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHints}">Vis hints</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowErrors}">Vis fejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHintsWhereErrors}">Vis hints ved fejl</CheckBox>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Margin="5" Header="Testkategorier">
@@ -912,6 +913,7 @@
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowTableRowCountErrors}">Tabelrækkeantalsfejl</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnErrors}">Feltindlæsning</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnTypeErrors}">Datatypefejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowDataTypeIllegalAliasErrors}">Ulovlige datatypeforkortelser</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTypeErrors}">Fremmednøgle typefejl</CheckBox>
                         </StackPanel>
                     </GroupBox>

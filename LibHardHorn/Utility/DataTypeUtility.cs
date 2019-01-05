@@ -15,60 +15,77 @@ namespace HardHorn.Utility
             return dataType.ToString().Replace('_', ' ');
         }
 
-        public static DataType Parse(string dataType)
+        public static DataType Parse(string dataType, out bool illegalAlias)
         {
             var upperDataType = dataType.ToUpper();
+            illegalAlias = false;
 
-            if (upperDataType.StartsWith("CHARACTER VARYING") ||
-                upperDataType.StartsWith("VARCHAR"))
-                return DataType.CHARACTER_VARYING;
-            else if (upperDataType.StartsWith("CHARACTER") ||
-                     upperDataType.StartsWith("CHAR"))
-                return DataType.CHARACTER;
-            else if (upperDataType.StartsWith("NATIONAL CHARACTER VARYING") ||
-                     upperDataType.StartsWith("NATIONAL VARCHAR") ||
-                     upperDataType.StartsWith("NVARCHAR"))
-                return DataType.NATIONAL_CHARACTER_VARYING;
-            else if (upperDataType.StartsWith("NATIONAL CHARACTER") ||
-                     upperDataType.StartsWith("NATIONAL CHAR") ||
-                     upperDataType.StartsWith("NCHAR"))
-                return DataType.NATIONAL_CHARACTER;
-            // Integer types
-            else if (upperDataType.StartsWith("INTEGER"))
-                return DataType.INTEGER;
-            else if (upperDataType.StartsWith("SMALLINT"))
-                return DataType.SMALLINT;
-            // Decimal types
-            else if (upperDataType.StartsWith("NUMERIC"))
-                return DataType.NUMERIC;
-            else if (upperDataType.StartsWith("DECIMAL"))
-                return DataType.DECIMAL;
-            else if (upperDataType.StartsWith("FLOAT"))
-                return DataType.FLOAT;
-            else if (upperDataType.StartsWith("DOUBLE PRECISION"))
-                return DataType.DOUBLE_PRECISION;
-            else if (upperDataType.StartsWith("REAL"))
-                return DataType.REAL;
-            // Boolean types
-            else if (upperDataType.StartsWith("BOOLEAN"))
-                return DataType.BOOLEAN;
-            // Date / time types
-            else if (upperDataType.StartsWith("DATE"))
-                return DataType.DATE;
-            else if (upperDataType.StartsWith("TIMESTAMP WITH TIME ZONE"))
-                return DataType.TIMESTAMP_WITH_TIME_ZONE;
-            else if (upperDataType.StartsWith("TIMESTAMP WITHOUT TIME ZONE"))
-                return DataType.TIMESTAMP;
-            else if (upperDataType.StartsWith("TIMESTAMP"))
-                return DataType.TIMESTAMP;
-            else if (upperDataType.StartsWith("TIME WITHOUT TIME ZONE"))
-                return DataType.TIME;
-            else if (upperDataType.StartsWith("TIME WITH TIME ZONE"))
-                return DataType.TIME_WITH_TIME_ZONE;
-            else if (upperDataType.StartsWith("TIME"))
-                return DataType.TIME;
-            else if (upperDataType.StartsWith("INTERVAL"))
-                return DataType.CHARACTER_VARYING;
+            switch (upperDataType)
+            {
+                case "CHARACTER VARYING":
+                case "VARCHAR":
+                    return DataType.CHARACTER_VARYING;
+                case "CHAR VARYING":
+                    illegalAlias = true;
+                    return DataType.CHARACTER_VARYING;
+                case "CHARACTER":
+                case "CHAR":
+                    return DataType.CHARACTER;
+                case "NATIONAL CHARACTER VARYING":
+                case "NATIONAL VARCHAR":
+                case "NVARCHAR":
+                    return DataType.NATIONAL_CHARACTER_VARYING;
+                case "NATIONAL CHARACTER":
+                case "NATIONAL CHAR":
+                case "NCHAR":
+                    return DataType.NATIONAL_CHARACTER;
+                case "NATIONAL CHAR VARYING":
+                case "NCHAR VARYING":
+                    illegalAlias = true;
+                    return DataType.NATIONAL_CHARACTER_VARYING;
+                // Integer types
+                case "INTEGER":
+                    return DataType.INTEGER;
+                case "INT":
+                    illegalAlias = true;
+                    return DataType.INTEGER;
+                case "SMALLINT":
+                    return DataType.SMALLINT;
+                // Decimal types
+                case "NUMERIC":
+                    return DataType.NUMERIC;
+                case "DECIMAL":
+                    return DataType.DECIMAL;
+                case "DEC":
+                    illegalAlias = true;
+                    return DataType.DECIMAL;
+                case "FLOAT":
+                    return DataType.FLOAT;
+                case "DOUBLE PRECISION":
+                    return DataType.DOUBLE_PRECISION;
+                case "REAL":
+                    return DataType.REAL;
+                // Boolean types
+                case "BOOLEAN":
+                    return DataType.BOOLEAN;
+                // Date / time types
+                case "DATE":
+                    return DataType.DATE;
+                case "TIMESTAMP WITH TIME ZONE":
+                    return DataType.TIMESTAMP_WITH_TIME_ZONE;
+                case "TIMESTAMP WITHOUT TIME ZONE":
+                    return DataType.TIMESTAMP;
+                case "TIMESTAMP":
+                    return DataType.TIMESTAMP;
+                case "TIME WITHOUT TIME ZONE":
+                    return DataType.TIME;
+                case "TIME WITH TIME ZONE":
+                    return DataType.TIME_WITH_TIME_ZONE;
+                case "TIME":
+                    return DataType.TIME;
+                case "INTERVAL":
+                    return DataType.CHARACTER_VARYING;
+            }
 
             var exp = new InvalidOperationException("Could not parse data type '"+dataType+"'.");
             exp.Data["DataType"] = dataType;
