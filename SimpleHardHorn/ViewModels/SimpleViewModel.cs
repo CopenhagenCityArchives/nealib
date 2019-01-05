@@ -63,11 +63,12 @@ namespace HardHorn.ViewModels
             private set { loadingArchiveVersion = value; NotifyOfPropertyChange("LoadingArchiveVersion"); }
         }
 
-        public ObservableCollection<INotification> Notifications { get; private set; }
-        public Dictionary<Column, Dictionary<AnalysisTestType, INotification>> AnalysisNotificationsMap { get; private set; }
+        public ObservableCollection<NotificationViewModel> Notifications { get; private set; }
+        public Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>> AnalysisNotificationsMap { get; private set; }
+        Dictionary<string, NotificationViewModel> ForeignKeyTestErrorNotificationsMap { get; set; }
+        Dictionary<string, NotificationViewModel> ForeignKeyTestBlankNotificationsMap { get; set; }
 
         System.Timers.Timer Notifications_RefreshViewTimer = new System.Timers.Timer(1000);
-
         int notificationCount = 0;
         public int NotificationCount
         {
@@ -86,6 +87,12 @@ namespace HardHorn.ViewModels
         {
             get { return notifications_ShowErrors; }
             set { notifications_ShowErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowHintsWhereErrors = true;
+        public bool Notifications_ShowHintsWhereErrors
+        {
+            get { return notifications_ShowHintsWhereErrors; }
+            set { notifications_ShowHintsWhereErrors = value; Notifications_RefreshViews(); }
         }
         bool notifications_ShowOverflow = true;
         public bool Notifications_ShowOverflow
@@ -117,6 +124,18 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowRegex; }
             set { notifications_ShowRegex = value; Notifications_RefreshViews(); }
         }
+        bool notifications_ShowForeignKeyTestErrors = true;
+        public bool Notifications_ShowForeignKeyTestErrors
+        {
+            get { return notifications_ShowForeignKeyTestErrors; }
+            set { notifications_ShowForeignKeyTestErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowForeignKeyTestBlanks = true;
+        public bool Notifications_ShowForeignKeyTestBlanks
+        {
+            get { return notifications_ShowForeignKeyTestBlanks; }
+            set { notifications_ShowForeignKeyTestBlanks = value; Notifications_RefreshViews(); }
+        }
         bool notifications_ShowParameterSuggestions = true;
         public bool Notifications_ShowParameterSuggestions
         {
@@ -147,23 +166,23 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowColumnTypeErrors; }
             set { notifications_ShowColumnTypeErrors = value; Notifications_RefreshViews(); }
         }
-        bool notifications_ShowForeignKeyErrors = true;
-        public bool Notifications_ShowForeignKeyErrors
+        bool notifications_ShowDataTypeIllegalAliasErrors = true;
+        public bool Notifications_ShowDataTypeIllegalAliasErrors
         {
-            get { return notifications_ShowForeignKeyErrors; }
-            set { notifications_ShowForeignKeyErrors = value; Notifications_RefreshViews(); }
+            get { return notifications_ShowDataTypeIllegalAliasErrors; }
+            set { notifications_ShowDataTypeIllegalAliasErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowForeignKeyTypeErrors = true;
+        public bool Notifications_ShowForeignKeyTypeErrors
+        {
+            get { return notifications_ShowForeignKeyTypeErrors; }
+            set { notifications_ShowForeignKeyTypeErrors = value; Notifications_RefreshViews(); }
         }
         bool notifications_ShowTableRowCountErrors = true;
         public bool Notifications_ShowTableRowCountErrors
         {
             get { return notifications_ShowTableRowCountErrors; }
             set { notifications_ShowTableRowCountErrors = value; Notifications_RefreshViews(); }
-        }
-        bool notifications_ShowForeignKeyTestErrors = true;
-        public bool Notifications_ShowForeignKeyTestErrors
-        {
-            get { return notifications_ShowForeignKeyTestErrors; }
-            set { notifications_ShowForeignKeyTestErrors = value; Notifications_RefreshViews(); }
         }
 
         public CollectionViewSource NotificationsViewSource { get; private set; }
@@ -178,8 +197,8 @@ namespace HardHorn.ViewModels
         #region Constructors
         public SimpleViewModel()
         {
-            Notifications = new ObservableCollection<INotification>();
-            AnalysisNotificationsMap = new Dictionary<Column, Dictionary<AnalysisTestType, INotification>>();
+            Notifications = new ObservableCollection<NotificationViewModel>();
+            AnalysisNotificationsMap = new Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>>();
             Notifications.CollectionChanged += (o, a) => Notifications_RefreshViews();
             NotificationsViewSource = new CollectionViewSource() { Source = Notifications };
             NotificationsView = NotificationsViewSource.View;
@@ -209,21 +228,23 @@ namespace HardHorn.ViewModels
         {
             var noti = obj as INotification;
             bool includeBySeverity = (noti.Severity == Severity.Hint && Notifications_ShowHints)
-                                  || (noti.Severity == Severity.Error && Notifications_ShowErrors);
-            bool includeByNotificationType = (noti.Header == "Test (OVERFLOW)" && Notifications_ShowOverflow)
-                || (noti.Header == "Test (UNDERFLOW)" && Notifications_ShowUnderflow)
-                || (noti.Header == "Test (FORMAT)" && Notifications_ShowFormat)
-                || (noti.Header == "Test (BLANK)" && Notifications_ShowBlank)
-                || (noti.Header == "Test (REGEX)" && Notifications_ShowRegex)
-                || (noti.Header == "Parameterforslag" && Notifications_ShowParameterSuggestions)
-                || (noti.Header == "Datatypeforslag" && Notifications_ShowDatatypeSuggestions)
-                || (noti.Header == "Xml-valideringsfejl" && Notifications_ShowXmlValidationErrors)
-                || (noti.Header == "Feltindlæsningsfejl" && Notifications_ShowColumnErrors)
-                || (noti.Header == "Datatypefejl" && Notifications_ShowColumnTypeErrors)
-                || (noti.Header == "Fremmednøglefejl" && Notifications_ShowForeignKeyErrors)
-                || (noti.Header == "Tabelrækkeantalsfejl" && Notifications_ShowTableRowCountErrors)
-                || (noti.Header == "Fremmednøgletestfejl" && Notifications_ShowForeignKeyTestErrors);
-
+                                  || (noti.Severity == Severity.Error && Notifications_ShowErrors)
+                                  || (noti.Severity == Severity.Hint && Notifications_ShowHintsWhereErrors && AnalysisNotificationsMap.ContainsKey(noti.Column));
+            bool includeByNotificationType = (noti.Type == NotificationType.AnalysisErrorOverflow && Notifications_ShowOverflow)
+                || (noti.Type == NotificationType.AnalysisErrorUnderflow && Notifications_ShowUnderflow)
+                || (noti.Type == NotificationType.AnalysisErrorFormat && Notifications_ShowFormat)
+                || (noti.Type == NotificationType.AnalysisErrorBlank && Notifications_ShowBlank)
+                || (noti.Type == NotificationType.AnalysisErrorRegex && Notifications_ShowRegex)
+                || (noti.Type == NotificationType.ForeignKeyTestError && Notifications_ShowForeignKeyTestErrors)
+                || (noti.Type == NotificationType.ForeignKeyTestBlank && Notifications_ShowForeignKeyTestBlanks)
+                || (noti.Type == NotificationType.ParameterSuggestion && Notifications_ShowParameterSuggestions)
+                || (noti.Type == NotificationType.DataTypeSuggestion && Notifications_ShowDatatypeSuggestions)
+                || (noti.Type == NotificationType.XmlError && Notifications_ShowXmlValidationErrors)
+                || (noti.Type == NotificationType.ColumnParsing && Notifications_ShowColumnErrors)
+                || (noti.Type == NotificationType.ColumnTypeError && Notifications_ShowColumnTypeErrors)
+                || (noti.Type == NotificationType.DataTypeIllegalAlias && Notifications_ShowDataTypeIllegalAliasErrors)
+                || (noti.Type == NotificationType.ForeignKeyTypeError && Notifications_ShowForeignKeyTypeErrors)
+                || (noti.Type == NotificationType.TableRowCountError && Notifications_ShowTableRowCountErrors);
             return includeBySeverity && includeByNotificationType;
         }
 
@@ -238,28 +259,65 @@ namespace HardHorn.ViewModels
 
         public void HandleNotification(INotification notification)
         {
-            if (notification.Type == NotificationType.AnalysisError)
+            NotificationViewModel viewModel = null;
+            switch (notification.Type)
             {
-                if (!AnalysisNotificationsMap.ContainsKey(notification.Column))
-                {
-                    AnalysisNotificationsMap[notification.Column] = new Dictionary<AnalysisTestType, INotification>();
-                }
+                case NotificationType.AnalysisErrorBlank:
+                case NotificationType.AnalysisErrorOverflow:
+                case NotificationType.AnalysisErrorUnderflow:
+                case NotificationType.AnalysisErrorFormat:
+                case NotificationType.AnalysisErrorRegex:
+                    if (!AnalysisNotificationsMap.ContainsKey(notification.Column))
+                    {
+                        AnalysisNotificationsMap[notification.Column] = new Dictionary<AnalysisTestType, NotificationViewModel>();
+                    }
 
-                if (AnalysisNotificationsMap[notification.Column].ContainsKey((notification as AnalysisErrorNotification).TestType))
-                {
-                    var analysisNotification = AnalysisNotificationsMap[notification.Column][(notification as AnalysisErrorNotification).TestType] as AnalysisErrorNotification;
-                    analysisNotification.Count++;
-                }
-                else
-                {
-                    AnalysisNotificationsMap[notification.Column][(notification as AnalysisErrorNotification).TestType] = notification;
-                }
+                    if (AnalysisNotificationsMap[notification.Column].ContainsKey((notification as AnalysisErrorNotification).TestType))
+                    {
+                        AnalysisNotificationsMap[notification.Column][(notification as AnalysisErrorNotification).TestType].Count++;
+                    }
+                    else
+                    {
+                        viewModel = new NotificationViewModel(notification);
+                        AnalysisNotificationsMap[notification.Column][(notification as AnalysisErrorNotification).TestType] = viewModel;
+                    }
+                    break;
+                case NotificationType.ForeignKeyTestError:
+                    var foreignKeyTestErrorNotification = notification as ForeignKeyTestErrorNotification;
+                    if (ForeignKeyTestErrorNotificationsMap.ContainsKey(foreignKeyTestErrorNotification.ForeignKey.Name))
+                    {
+                        ForeignKeyTestErrorNotificationsMap[foreignKeyTestErrorNotification.ForeignKey.Name].Count = foreignKeyTestErrorNotification.Count;
+                    }
+                    else
+                    {
+                        viewModel = new NotificationViewModel(notification);
+                        ForeignKeyTestErrorNotificationsMap[foreignKeyTestErrorNotification.ForeignKey.Name] = viewModel;
+                    }
+                    break;
+                case NotificationType.ForeignKeyTestBlank:
+                    var foreignKeyTestBlankNotification = notification as ForeignKeyTestBlankNotification;
+                    if (ForeignKeyTestBlankNotificationsMap.ContainsKey(foreignKeyTestBlankNotification.ForeignKey.Name))
+                    {
+                        ForeignKeyTestBlankNotificationsMap[foreignKeyTestBlankNotification.ForeignKey.Name].Count = foreignKeyTestBlankNotification.Count;
+                    }
+                    else
+                    {
+                        viewModel = new NotificationViewModel(notification);
+                        ForeignKeyTestBlankNotificationsMap[foreignKeyTestBlankNotification.ForeignKey.Name] = viewModel;
+                    }
+                    break;
+                default:
+                    viewModel = new NotificationViewModel(notification);
+                    break;
             }
 
-            Application.Current.Dispatcher.Invoke(() =>
+            if (viewModel != null)
             {
-                Notifications.Add(notification);
-            });
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Notifications.Add(viewModel);
+                });
+            }
         }
 
         public void Notifications_RefreshViews()
@@ -415,7 +473,7 @@ namespace HardHorn.ViewModels
                 }
 
                 // Add key test tasks
-                var keyTest = new ForeignKeyTest(av.Tables);
+                var keyTest = new ForeignKeyTest(av.Tables, HandleNotification);
                 foreach (var table in av.Tables)
                 {
                     Tasks.Add(new TaskViewModel($"Fremmednøgletest af {table.Name}", () =>
@@ -436,12 +494,6 @@ namespace HardHorn.ViewModels
                         {
                             readNext = keyTest.ReadForeignKeyValue();
                         } while (readNext);
-
-                        foreach (var foreignKey in keyTest.CurrentTable.ForeignKeys)
-                        {
-                            if (keyTest.GetErrorCount(foreignKey) > 0)
-                                HandleNotification(new ForeignKeyTestErrorNotification(foreignKey, keyTest.GetErrorCount(foreignKey), keyTest.GetErrorTypeCount(foreignKey)));
-                        }
                     }));
                 }
 
@@ -640,7 +692,7 @@ function addGlyph(table, columnIndex) {
                                         writer.WriteLine("<div style=\"display: table-row\">");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{(notification.Severity == Severity.Hint ? "<b style=\"background: yellow;\">!</b>" : "<b style=\"background: red; color: white;\">X</b>")}</div>");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Column?.ToString() ?? "-")}</div>");
-                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Header?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(Utilities.NotificationTypeToStringConverter.ConvertNotificationType(notification.Type)?.ToString() ?? "-")}</div>");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{notification.Count?.ToString() ?? "-"}</div>");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Message?.ToString() ?? "-")}</div>");
                                         writer.WriteLine("</div>");

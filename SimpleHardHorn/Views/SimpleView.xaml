@@ -98,15 +98,21 @@
                         <StackPanel Orientation="Vertical">
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHints}">Vis hints</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowErrors}">Vis fejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHintsWhereErrors}">Vis hints ved fejl</CheckBox>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Margin="5" Header="Testkategorier">
                         <StackPanel Orientation="Vertical">
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowOverflow}">Test (OVERFLOW)</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowUnderflow}">Test (UNDERFLOW)</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Test (FORMAT)</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowBlank}">Test (BLANK)</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowRegex}">Test (REGEX)</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowOverflow}">Overskridelse</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowUnderflow}">Underudfyldelse</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Formateringsfejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowBlank}">Foran- eller efterstillede blanktegn</CheckBox>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Margin="5" Header="Fremmednøgletest">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestErrors}">Fremmednøglefejl</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestBlanks}">Blanke fremmednøgler</CheckBox>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Margin="5" Header="Forslag">
@@ -166,7 +172,7 @@
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
                                     <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
-                                    <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Header}" />
+                                    <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Type, Converter={StaticResource NotificationTypeToStringConverter}}" />
                                     <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
                                     <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
                                 </GridView>

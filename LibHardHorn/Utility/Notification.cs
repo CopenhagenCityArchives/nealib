@@ -192,24 +192,6 @@ namespace HardHorn.Utility
         }
     }
 
-    public class ForeignKeyTestErrorNotification : INotification
-    {
-        public NotificationType Type { get { return NotificationType.ForeignKeyError; } }
-        public Severity Severity { get { return Severity.Error; } }
-        public Column Column { get { return null; } }
-        public Table Table { get; private set; }
-        public string Header { get { return "Fremmednøgletestfejl"; } }
-        public string Message { get; private set; }
-        public int? Count { get; private set; }
-
-        public ForeignKeyTestErrorNotification(ForeignKey foreignKey, int count, int categories)
-        {
-            Table = foreignKey.Table;
-            Message = $"{foreignKey.Name} refererer til {categories} ikke-eksisterende unikke værdier {count} gange i {foreignKey.ReferencedTableName}.";
-            Count = count;
-        }
-    }
-
     public class XmlErrorNotification : INotification
     {
         public NotificationType Type { get { return NotificationType.XmlError; } }

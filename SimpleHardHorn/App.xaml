@@ -1,9 +1,11 @@
 ﻿<Application x:Class="HardHorn.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:HardHorn">
+             xmlns:local="clr-namespace:HardHorn"
+             xmlns:util="clr-namespace:HardHorn.Utilities">
     <Application.Resources>
         <ResourceDictionary>
+            <util:NotificationTypeToStringConverter x:Key="NotificationTypeToStringConverter" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
                     <local:Bootstrapper x:Key="bootstrapper" />
