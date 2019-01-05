@@ -534,11 +534,9 @@ namespace HardHorn.ViewModels
             NotificationsView.SortDescriptions.Add(new SortDescription("Table.FolderNumber", ListSortDirection.Ascending));
             NotificationsView.SortDescriptions.Add(new SortDescription("Column.ColumnIdNumber", ListSortDirection.Ascending));
             NotificationsView.SortDescriptions.Add(new SortDescription("Type", ListSortDirection.Ascending));
-            NotificationsView.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
             NotificationsView.SortDescriptions.Add(new SortDescription("Message", ListSortDirection.Ascending));
             NotificationsView.Filter += Notifications_Filter;
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Type", ListSortDirection.Ascending));
-            NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Table.FolderNumber", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Column.ColumnIdNumber", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Message", ListSortDirection.Ascending));

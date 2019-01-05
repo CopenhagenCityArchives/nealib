@@ -89,18 +89,23 @@ namespace HardHorn.Utility
             {
                 case AnalysisTestType.BLANK:
                     Type = NotificationType.AnalysisErrorBlank;
+                    Message = "Der findes blanktegn i starten eller slutningen af visse felter.";
                     break;
                 case AnalysisTestType.FORMAT:
                     Type = NotificationType.AnalysisErrorFormat;
+                    Message = "Data har ikke det af datatypen påkrævede format.";
                     break;
                 case AnalysisTestType.OVERFLOW:
                     Type = NotificationType.AnalysisErrorOverflow;
+                    Message = "Data overskrider den maksimale længde defineret af datatypen.";
                     break;
                 case AnalysisTestType.REGEX:
                     Type = NotificationType.AnalysisErrorRegex;
+                    Message = null;
                     break;
                 case AnalysisTestType.UNDERFLOW:
                     Type = NotificationType.AnalysisErrorUnderflow;
+                    Message = "Data når ikke den minimale længde defineret af datatypen.";
                     break;
                 case AnalysisTestType.REPEATING_CHAR:
                     var repcharTest = (Test.RepeatingChar) test;

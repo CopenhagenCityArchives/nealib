@@ -171,17 +171,19 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
-                                    <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Type, Converter={StaticResource NotificationTypeToStringConverter}}" />
-                                    <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
-                                    <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
+                                    <GridViewColumn Width="200" Header="Felt" DisplayMemberBinding="{Binding Column}" />
+                                    <GridViewColumn Width="150" Header="Kategori" DisplayMemberBinding="{Binding Type, Converter={StaticResource NotificationTypeToStringConverter}}" />
+                                    <GridViewColumn Width="70" Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
+                                    <GridViewColumn Width="800" Header="Besked" DisplayMemberBinding="{Binding Message}" />
                                 </GridView>
                             </ListView.View>
                             <ListView.GroupStyle>
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>
                                         <DataTemplate>
-                                            <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                            <Label>
+                                                <TextBlock FontSize="16" FontWeight="Bold" Text="{Binding Name}" />
+                                            </Label>
                                         </DataTemplate>
                                     </GroupStyle.HeaderTemplate>
                                 </GroupStyle>
@@ -210,17 +212,19 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Tabel" DisplayMemberBinding="{Binding Table}" />
-                                    <GridViewColumn Header="Felt" DisplayMemberBinding="{Binding Column}" />
-                                    <GridViewColumn Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
-                                    <GridViewColumn Header="Besked" DisplayMemberBinding="{Binding Message}" />
+                                    <GridViewColumn Width="200" Header="Tabel" DisplayMemberBinding="{Binding Table}" />
+                                    <GridViewColumn Width="200" Header="Felt" DisplayMemberBinding="{Binding Column}" />
+                                    <GridViewColumn Width="70" Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
+                                    <GridViewColumn Width="800" Header="Besked" DisplayMemberBinding="{Binding Message}" />
                                 </GridView>
                             </ListView.View>
                             <ListView.GroupStyle>
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>
                                         <DataTemplate>
-                                            <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                            <Label>
+                                                <TextBlock FontSize="16" FontWeight="Bold" Text="{Binding Name, Converter={StaticResource NotificationTypeToStringConverter}}" />
+                                            </Label>
                                         </DataTemplate>
                                     </GroupStyle.HeaderTemplate>
                                 </GroupStyle>
