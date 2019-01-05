@@ -65,7 +65,7 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>icon_512.ico</ApplicationIcon>
+    <ApplicationIcon>hh.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Caliburn.Micro, Version=3.2.0.0, Culture=neutral, PublicKeyToken=8e5891231f2ed21f, processorArchitecture=MSIL">
@@ -179,6 +179,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="icon_512.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="hh.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
