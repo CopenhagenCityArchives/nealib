@@ -62,6 +62,37 @@
                     DockPanel.Dock="Top"
                     FontSize="25"
                     Content="{Binding ArchiveVersion.Id}" />
+                <Grid DockPanel.Dock="Bottom">
+                    <ProgressBar Height="20" Value="{Binding ProgressValue, Mode=OneWay}" />
+                    <Canvas VerticalAlignment="Center" Height="16">
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="Black">
+                            Total
+                        </TextBlock>
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="2" Canvas.Left="0" Foreground="Black">
+                            Total
+                        </TextBlock>
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="2" Canvas.Left="2" Foreground="Black">
+                            Total
+                        </TextBlock>
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="0" Canvas.Left="2" Foreground="Black">
+                            Total
+                        </TextBlock>
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="1" Canvas.Left="1" Foreground="White">
+                            Total
+                        </TextBlock>
+                    </Canvas>
+                </Grid>
+
+                <Grid DockPanel.Dock="Bottom">
+                    <ProgressBar Height="20" Value="{Binding ProgressValueTask, Mode=OneWay}" />
+                    <Canvas VerticalAlignment="Center" Height="16">
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="Black" Text="{Binding CurrentTask.Name}" />
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="2" Canvas.Left="0" Foreground="Black" Text="{Binding CurrentTask.Name}" />
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="2" Canvas.Left="2" Foreground="Black" Text="{Binding CurrentTask.Name}" />
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="0" Canvas.Left="2" Foreground="Black" Text="{Binding CurrentTask.Name}" />
+                        <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="1" Canvas.Left="1" Foreground="White" Text="{Binding CurrentTask.Name}" />
+                    </Canvas>
+                </Grid>
                 <ListBox ItemsSource="{Binding Tasks}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>

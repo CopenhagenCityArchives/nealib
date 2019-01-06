@@ -192,6 +192,12 @@ namespace HardHorn.ViewModels
         public int Notifications_SelectedGroupingIndex { get; set; }
 
         public ObservableCollection<TaskViewModel> Tasks { get; private set; }
+        public TaskViewModel CurrentTask { get; private set; }
+        public long ProgressTaskTotal { get; private set; }
+        public long ProgressKeyTestTotal { get; private set; }
+        public long ProgressAnalysisTotal { get; private set; }
+        public double ProgressValue { get; private set; }
+        public double ProgressValueTask { get; private set; }
         #endregion
 
         #region Constructors
@@ -367,7 +373,7 @@ namespace HardHorn.ViewModels
             if (!args.Data.GetDataPresent(DataFormats.FileDrop))
                 return;
 
-            var filenames = args.Data.GetData(DataFormats.FileDrop) as string[];
+            string[] filenames = args.Data.GetData(DataFormats.FileDrop) as string[];
             if (filenames == null || filenames.Length != 1)
                 return;
 
@@ -387,6 +393,30 @@ namespace HardHorn.ViewModels
                 SetStatus($"Placeringen '{location}' er ikke en gyldig arkiveringsversion.", LogLevel.ERROR);
             }
 
+
+            IProgress<long> analysisProgress = new Progress<long>(analysis =>
+            {
+                ProgressValue = ((double)analysis / ProgressAnalysisTotal) * 50d;
+                NotifyOfPropertyChange("ProgressValue");
+            });
+
+            IProgress<long> keyTestProgress = new Progress<long>(keyTest =>
+            {
+                ProgressValue = 50d + ((double)keyTest / ProgressKeyTestTotal) * 50d;
+                NotifyOfPropertyChange("ProgressValue");
+            });
+
+            IProgress<long> taskTotalProgress = new Progress<long>(taskTotal => {
+                ProgressTaskTotal = taskTotal;
+                NotifyOfPropertyChange("ProgressTaskTotal");
+            });
+
+            IProgress<long> taskProgress = new Progress<long>(task =>
+            {
+                ProgressValueTask = ((double)task / ProgressTaskTotal) * 100d;
+                NotifyOfPropertyChange("ProgressValueTask");
+            });
+
             SetStatus($"Indlæser tabeller fra '{location}'", LogLevel.SECTION);
             LoadingArchiveVersion = true;
             try
@@ -399,6 +429,7 @@ namespace HardHorn.ViewModels
                 Analyzer analyzer = await Task.Run(() =>
                 {
                     var ana = new Analyzer(av, av.Tables, null);
+                    ProgressAnalysisTotal = ana.TotalRowCount;
                     ana.Notify = HandleNotification;
 
                     foreach (var table in av.Tables)
@@ -465,6 +496,8 @@ namespace HardHorn.ViewModels
                         do
                         {
                             readNext = Analyzer.AnalyzeRows(chunk);
+                            taskProgress.Report(Analyzer.TableDoneRows);
+                            analysisProgress.Report(Analyzer.TotalDoneRows);
                         }
                         while (readNext);
                     }));
@@ -472,6 +505,8 @@ namespace HardHorn.ViewModels
 
                 // Add key test tasks
                 var keyTest = new ForeignKeyTest(av.Tables, HandleNotification);
+                ProgressKeyTestTotal = keyTest.TotalRowCount;
+                NotifyOfPropertyChange("ProgressKeyTestTotal");
                 foreach (var table in av.Tables)
                 {
                     Tasks.Add(new TaskViewModel($"Fremmednøgletest af {table.Name}", () =>
@@ -479,11 +514,16 @@ namespace HardHorn.ViewModels
                         bool readNext = false;
                         keyTest.MoveNextTable();
                         keyTest.InitializeReferencedValueLoading();
+
+                        taskTotalProgress.Report(keyTest.TableRowCount);
+
                         while (keyTest.MoveNextForeignKey())
                         {   
                             do
                             {
                                 readNext = keyTest.ReadReferencedForeignKeyValue();
+                                taskProgress.Report(keyTest.TableDoneRows);
+                                keyTestProgress.Report(keyTest.TotalDoneRows);
                             } while (readNext);
                         }
 
@@ -491,6 +531,8 @@ namespace HardHorn.ViewModels
                         do
                         {
                             readNext = keyTest.ReadForeignKeyValue();
+                            taskProgress.Report(keyTest.TableDoneRows);
+                            keyTestProgress.Report(keyTest.TotalDoneRows);
                         } while (readNext);
                     }));
                 }
@@ -510,6 +552,8 @@ namespace HardHorn.ViewModels
 
             foreach (var task in Tasks)
             {
+                CurrentTask = task;
+                NotifyOfPropertyChange("CurrentTask");
                 SetStatus($"Udfører {task.Name}.", LogLevel.SECTION);
                 await task.Run();
                 SetStatus($"{task.Name} udført.", LogLevel.SECTION);
