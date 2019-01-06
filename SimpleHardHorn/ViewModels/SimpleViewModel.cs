@@ -38,7 +38,7 @@ namespace HardHorn.ViewModels
         {
             get
             {
-                return $"{(ArchiveVersion != null ? ArchiveVersion.Id + " - " : string.Empty)}HardHorn";
+                return $"{(ArchiveVersion != null ? ArchiveVersion.Id + " - " : string.Empty)}HardHorn Light";
             }
         }
 
@@ -129,6 +129,12 @@ namespace HardHorn.ViewModels
         {
             get { return notifications_ShowForeignKeyTestErrors; }
             set { notifications_ShowForeignKeyTestErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowForeignKeyErrors = true;
+        public bool Notifications_ShowForeignKeyErrors
+        {
+            get { return notifications_ShowForeignKeyErrors; }
+            set { notifications_ShowForeignKeyErrors = value; Notifications_RefreshViews(); }
         }
         bool notifications_ShowForeignKeyTestBlanks = true;
         public bool Notifications_ShowForeignKeyTestBlanks
@@ -396,13 +402,19 @@ namespace HardHorn.ViewModels
 
             IProgress<long> analysisProgress = new Progress<long>(analysis =>
             {
-                ProgressValue = ((double)analysis / ProgressAnalysisTotal) * 50d;
+                if (ProgressAnalysisTotal == 0)
+                    ProgressValue = 0;
+                else
+                    ProgressValue = ((double)analysis / ProgressAnalysisTotal) * 50d;
                 NotifyOfPropertyChange("ProgressValue");
             });
 
             IProgress<long> keyTestProgress = new Progress<long>(keyTest =>
             {
-                ProgressValue = 50d + ((double)keyTest / ProgressKeyTestTotal) * 50d;
+                if (ProgressKeyTestTotal == 0)
+                    ProgressValue = 0;
+                else
+                    ProgressValue = 50d + ((double)keyTest / ProgressKeyTestTotal) * 50d;
                 NotifyOfPropertyChange("ProgressValue");
             });
 
@@ -413,7 +425,10 @@ namespace HardHorn.ViewModels
 
             IProgress<long> taskProgress = new Progress<long>(task =>
             {
-                ProgressValueTask = ((double)task / ProgressTaskTotal) * 100d;
+                if (ProgressTaskTotal == 0)
+                    ProgressValueTask = 0;
+                else
+                    ProgressValueTask = ((double)task / ProgressTaskTotal) * 100d;
                 NotifyOfPropertyChange("ProgressValueTask");
             });
 
@@ -550,6 +565,8 @@ namespace HardHorn.ViewModels
                 LoadingArchiveVersion = false;
             }
 
+            var beginTime = DateTime.Now;
+
             foreach (var task in Tasks)
             {
                 CurrentTask = task;
@@ -558,6 +575,10 @@ namespace HardHorn.ViewModels
                 await task.Run();
                 SetStatus($"{task.Name} udført.", LogLevel.SECTION);
             }
+
+            var elapsed = DateTime.Now - beginTime;
+
+            SetStatus($"Test fuldført klokken {DateTime.Now.ToShortTimeString()} efter {elapsed.Hours} timer, {elapsed.Minutes} minutter og {elapsed.Seconds} sekunder.", LogLevel.SECTION);
         }
 
         public void SelectLocation()

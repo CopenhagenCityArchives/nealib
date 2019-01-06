@@ -18,13 +18,14 @@
         <!-- ArchiveVersion loading -->
         <Label
             cal:Message.Attach="[Event MouseLeftButtonUp] = [Action SelectLocation()]; [Event DragEnter] = [Action OnDrag($eventArgs)]; [Event Drop] = [Action OnDrop($eventArgs)]; [Event DragOver] = [Action OnDrag($eventArgs)]"
+            Cursor="Hand"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
             FontSize="25"
             AllowDrop="True"
-            Content="Træk en arkiveringsversion hertil for at teste...">
+            Content="Klik her, eller træk en arkiveringsversion hertil for at teste...">
             <Label.Style>
                 <Style>
                     <Setter Property="Label.Visibility" Value="Collapsed" />
@@ -62,7 +63,7 @@
                     DockPanel.Dock="Top"
                     FontSize="25"
                     Content="{Binding ArchiveVersion.Id}" />
-                <Grid DockPanel.Dock="Bottom">
+                <Grid DockPanel.Dock="Bottom" Margin="5 0">
                     <ProgressBar Height="20" Value="{Binding ProgressValue, Mode=OneWay}" />
                     <Canvas VerticalAlignment="Center" Height="16">
                         <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="Black">
@@ -83,7 +84,7 @@
                     </Canvas>
                 </Grid>
 
-                <Grid DockPanel.Dock="Bottom">
+                <Grid DockPanel.Dock="Bottom" Margin="5 0">
                     <ProgressBar Height="20" Value="{Binding ProgressValueTask, Mode=OneWay}" />
                     <Canvas VerticalAlignment="Center" Height="16">
                         <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="0" Canvas.Left="0" Foreground="Black" Text="{Binding CurrentTask.Name}" />
@@ -93,7 +94,7 @@
                         <TextBlock FontWeight="Bold" Width="350" TextAlignment="Center" Canvas.Top="1" Canvas.Left="1" Foreground="White" Text="{Binding CurrentTask.Name}" />
                     </Canvas>
                 </Grid>
-                <ListBox ItemsSource="{Binding Tasks}">
+                <ListBox ItemsSource="{Binding Tasks}" Margin="5">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel x:Name="ListTable" Orientation="Horizontal">
@@ -124,49 +125,43 @@
             </DockPanel>
 
             <DockPanel Grid.Column="1">
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
-                    <GroupBox Margin="5" Header="Alvorlighed">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHints}">Vis hints</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowErrors}">Vis fejl</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHintsWhereErrors}">Vis hints ved fejl</CheckBox>
-                        </StackPanel>
-                    </GroupBox>
-                    <GroupBox Margin="5" Header="Testkategorier">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowOverflow}">Overskridelse</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowUnderflow}">Underudfyldelse</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Formateringsfejl</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowBlank}">Foran- eller efterstillede blanktegn</CheckBox>
-                        </StackPanel>
-                    </GroupBox>
-                    <GroupBox Margin="5" Header="Fremmednøgletest">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestErrors}">Fremmednøglefejl</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestBlanks}">Blanke fremmednøgler</CheckBox>
-                        </StackPanel>
-                    </GroupBox>
-                    <GroupBox Margin="5" Header="Forslag">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowParameterSuggestions}">Parameterforslag</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowDatatypeSuggestions}">Datatypeforslag</CheckBox>
-                        </StackPanel>
-                    </GroupBox>
-                    <GroupBox Margin="5" Header="Struktur">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowXmlValidationErrors}">Xml-valideringsfejl</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowTableRowCountErrors}">Tabelrækkeantalsfejl</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnErrors}">Feltindlæsning</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnTypeErrors}">Datatypefejl</CheckBox>
-                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyErrors}">Fremmednøglefejl</CheckBox>
-                        </StackPanel>
-                    </GroupBox>
-                    <GroupBox Margin="5" Header="Eksport">
-                        <StackPanel Orientation="Vertical">
-                            <Button Margin="5" cal:Message.Attach="Notifications_ExportHTML()">Som HTML-fil...</Button>
-                        </StackPanel>
-                    </GroupBox>
-                </StackPanel>
+                <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <Label FontWeight="Bold">Alvorlighed</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHints}">Vis hints</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowErrors}">Vis fejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHintsWhereErrors}">Vis hints ved fejl</CheckBox>
+                    </StackPanel>
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <Label FontWeight="Bold">Testkategorier</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowOverflow}">Overskridelse</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowUnderflow}">Underudfyldelse</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Formateringsfejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowBlank}">Foran- eller efterstillede blanktegn</CheckBox>
+                    </StackPanel>
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <Label FontWeight="Bold">Fremmednøgletest</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestErrors}">Fremmednøglefejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestBlanks}">Blanke fremmednøgler</CheckBox>
+                    </StackPanel>
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <Label FontWeight="Bold">Forslag</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowParameterSuggestions}">Parameterforslag</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowDatatypeSuggestions}">Datatypeforslag</CheckBox>
+                    </StackPanel>
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <Label FontWeight="Bold">Struktur</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowXmlValidationErrors}">Xml-valideringsfejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowTableRowCountErrors}">Tabelrækkeantalsfejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnErrors}">Feltindlæsning</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnTypeErrors}">Datatypefejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyErrors}">Fremmednøglefejl</CheckBox>
+                    </StackPanel>
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <Label FontWeight="Bold">Eksportér</Label>
+                        <Button Margin="5" Padding="5" cal:Message.Attach="Notifications_ExportHTML()">Som HTML-fil...</Button>
+                    </StackPanel>
+                </WrapPanel>
                 <Label DockPanel.Dock="Top">
                     <Label.Content>
                         <TextBlock>

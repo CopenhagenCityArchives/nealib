@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibHardHorn", "LibHardHorn\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibHardHornTest", "LibHardHornTest\LibHardHornTest.csproj", "{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleHardHorn", "SimpleHardHorn\SimpleHardHorn.csproj", "{AE323D14-7514-4480-BC94-0430FEDCD208}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HardHornLight", "SimpleHardHorn\HardHornLight.csproj", "{AE323D14-7514-4480-BC94-0430FEDCD208}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
