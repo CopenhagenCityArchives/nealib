@@ -569,9 +569,9 @@ namespace HardHorn.ViewModels
 
             foreach (var task in Tasks)
             {
+                SetStatus($"Udfører {task.Name}.", LogLevel.SECTION);
                 CurrentTask = task;
                 NotifyOfPropertyChange("CurrentTask");
-                SetStatus($"Udfører {task.Name}.", LogLevel.SECTION);
                 await task.Run();
                 SetStatus($"{task.Name} udført.", LogLevel.SECTION);
             }
