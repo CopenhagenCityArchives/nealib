@@ -7,7 +7,7 @@
         xmlns:cal="http://www.caliburnproject.org"
         ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" Height="860" Width="1248"
+        Title="{Binding WindowTitle}" Height="900" Width="1400"
         Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
     <Grid>
         <Grid.RowDefinitions>

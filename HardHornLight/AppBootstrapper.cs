@@ -3,12 +3,14 @@ using Caliburn.Micro;
 using System.Windows.Markup;
 using System.Globalization;
 using System.Linq;
+using System.Collections.Generic;
+using System;
 
 namespace HardHorn
 {
-    public class Bootstrapper : BootstrapperBase
+    public class AppBootstrapper : BootstrapperBase
     {
-        public Bootstrapper()
+        public AppBootstrapper()
         {
             Initialize();
         }

@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using HardHorn.Utility;
 using System.Web;
+using System.Windows.Shell;
 
 namespace HardHorn.ViewModels
 {
@@ -230,6 +231,12 @@ namespace HardHorn.ViewModels
             NotificationsCategoryView.Filter += Notifications_Filter;
             Notifications_RefreshViewTimer.Elapsed += Notifications_RefreshViewTimer_Elapsed;
             Tasks = new ObservableCollection<TaskViewModel>();
+
+            var args = Environment.GetCommandLineArgs();
+            if (args.Length == 2 && Directory.Exists(args[1]))
+            {
+                LoadLocation(args[1]);
+        }
         }
         #endregion
 
@@ -551,6 +558,22 @@ namespace HardHorn.ViewModels
                         } while (readNext);
                     }));
                 }
+
+                // Add location to JumpList (recent files, etc.)
+                var jumpList = JumpList.GetJumpList(Application.Current);
+                string title = Path.GetFileName(location);
+                string programLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
+
+                var recent = new JumpTask
+                {
+                    ApplicationPath = programLocation,
+                    Arguments = location,
+                    Description = location,
+                    IconResourcePath = programLocation,
+                    Title = title
+                };
+
+                JumpList.AddToRecentCategory(recent);
 
                 ArchiveVersion = av;
                 Analyzer = analyzer;

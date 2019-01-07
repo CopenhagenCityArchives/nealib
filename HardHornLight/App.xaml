@@ -8,11 +8,15 @@
             <util:NotificationTypeToStringConverter x:Key="NotificationTypeToStringConverter" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
-                    <local:Bootstrapper x:Key="bootstrapper" />
+                    <local:AppBootstrapper x:Key="bootstrapper" />
                 </ResourceDictionary>
                 <ResourceDictionary Source="Resources/Styles.xaml"></ResourceDictionary>
                 <!--<ResourceDictionary Source="Resources/Templates.xaml"></ResourceDictionary>-->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
+
+    <JumpList.JumpList>
+        <JumpList ShowRecentCategory="True" />
+    </JumpList.JumpList>
 </Application>
