@@ -236,7 +236,7 @@ namespace HardHorn.ViewModels
             if (args.Length == 2 && Directory.Exists(args[1]))
             {
                 LoadLocation(args[1]);
-        }
+            }
         }
         #endregion
 
