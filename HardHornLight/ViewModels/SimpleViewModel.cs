@@ -512,6 +512,7 @@ namespace HardHorn.ViewModels
                     Tasks.Add(new TaskViewModel($"Analyse af {table.Name}", () => {
                         Analyzer.MoveNextTable();
                         Analyzer.InitializeTable();
+                        taskTotalProgress.Report(Analyzer.TableRowCount);
 
                         bool readNext = false;
                         int chunk = 20000;
