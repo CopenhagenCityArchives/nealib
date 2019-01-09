@@ -514,6 +514,7 @@ namespace HardHorn.ViewModels
                         Analyzer.MoveNextTable();
                         Analyzer.InitializeTable();
                         taskTotalProgress.Report(Analyzer.TableRowCount);
+                        taskProgress.Report(0);
 
                         bool readNext = false;
                         int chunk = 20000;
