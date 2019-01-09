@@ -545,6 +545,7 @@ namespace HardHorn.ViewModels
                         keyTest.InitializeReferencedValueLoading();
 
                         taskTotalProgress.Report(keyTest.TableRowCount);
+                        taskProgress.Report(0);
 
                         while (keyTest.MoveNextForeignKey())
                         {   
