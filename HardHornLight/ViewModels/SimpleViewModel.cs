@@ -414,6 +414,7 @@ namespace HardHorn.ViewModels
                     ProgressValue = 0;
                 else
                     ProgressValue = ((double)analysis / ProgressAnalysisTotal) * 50d;
+
                 NotifyOfPropertyChange("ProgressValue");
             });
 
@@ -423,6 +424,7 @@ namespace HardHorn.ViewModels
                     ProgressValue = 0;
                 else
                     ProgressValue = 50d + ((double)keyTest / ProgressKeyTestTotal) * 50d;
+
                 NotifyOfPropertyChange("ProgressValue");
             });
 
@@ -437,6 +439,7 @@ namespace HardHorn.ViewModels
                     ProgressValueTask = 0;
                 else
                     ProgressValueTask = ((double)task / ProgressTaskTotal) * 100d;
+
                 NotifyOfPropertyChange("ProgressValueTask");
             });
 
@@ -517,7 +520,7 @@ namespace HardHorn.ViewModels
                         taskProgress.Report(0);
 
                         bool readNext = false;
-                        int chunk = 20000;
+                        int chunk = 10000;
                         do
                         {
                             readNext = Analyzer.AnalyzeRows(chunk);

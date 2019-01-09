@@ -70,6 +70,9 @@ namespace HardHorn.Analysis
             TotalRowCount = 0;
             foreach (var table in Tables)
             {
+                if (table.ForeignKeys.Count == 0)
+                    continue;
+
                 TotalRowCount += table.Rows;
                 foreach (var foreignTable in table.ForeignKeys.Select(fkey => fkey.ReferencedTable))
                 {
