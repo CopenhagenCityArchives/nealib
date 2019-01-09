@@ -22,7 +22,6 @@ using System.Windows.Shell;
 
 namespace HardHorn.ViewModels
 {
-
     class SimpleViewModel : PropertyChangedBase
     {
         #region Properties
@@ -212,6 +211,8 @@ namespace HardHorn.ViewModels
         {
             Notifications = new ObservableCollection<NotificationViewModel>();
             AnalysisNotificationsMap = new Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>>();
+            ForeignKeyTestErrorNotificationsMap = new Dictionary<string, NotificationViewModel>();
+            ForeignKeyTestBlankNotificationsMap = new Dictionary<string, NotificationViewModel>();
             Notifications.CollectionChanged += (o, a) => Notifications_RefreshViews();
             NotificationsViewSource = new CollectionViewSource() { Source = Notifications };
             NotificationsView = NotificationsViewSource.View;
@@ -532,6 +533,10 @@ namespace HardHorn.ViewModels
                 NotifyOfPropertyChange("ProgressKeyTestTotal");
                 foreach (var table in av.Tables)
                 {
+                    // Skip if no foreign keys.
+                    if (table.ForeignKeys == null || table.ForeignKeys.Count == 0)
+                        continue;
+
                     Tasks.Add(new TaskViewModel($"Fremmednøgletest af {table.Name}", () =>
                     {
                         bool readNext = false;
