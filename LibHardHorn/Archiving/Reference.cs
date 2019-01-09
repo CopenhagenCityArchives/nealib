@@ -15,24 +15,33 @@ namespace HardHorn.Archiving
         public Column ReferencedColumn { get; private set; }
         public string ReferencedColumnName { get; private set; }
 
+        public override string ToString()
+        {
+            return $"<ref: {ColumnName} -> {ReferencedColumnName}>";
+        }
+
         public Reference(string columnName, string referencedColumnName)
         {
             ColumnName = columnName;
             ReferencedColumnName = referencedColumnName;
         }
 
-        public bool Initialize(Table table, Table referencedTable)
+        public void Initialize(ForeignKey foreignKey, NotificationCallback notify)
         {
+
             try
             {
-                Column = table.Columns.First(c => c.Name.ToLower() == ColumnName.ToLower());
-                ReferencedColumn = referencedTable.Columns.First(c => c.Name.ToLower() == ReferencedColumnName.ToLower());
+                Column = foreignKey.Table.Columns.First(c => c.Name.ToLower() == ColumnName.ToLower());
+                ReferencedColumn = foreignKey.ReferencedTable.Columns.First(c => c.Name.ToLower() == ReferencedColumnName.ToLower());
 
-                return Column.ParameterizedDataType.CompareTo(ReferencedColumn.ParameterizedDataType) == 0;
+                if (Column.ParameterizedDataType.CompareTo(ReferencedColumn.ParameterizedDataType) != 0)
+                {
+                    notify?.Invoke(new ForeignKeyTypeErrorNotification(foreignKey));
+                }
             }
             catch (InvalidOperationException ex)
             {
-                throw new Exception(string.Format("Kunne ikke oprette en reference fra {0}.{1} til {2}.{3} - feltet kunne ikke findes.", Column.Table.Name, Column.Name, referencedTable.Name, ReferencedColumnName), ex);
+                throw new Exception(string.Format("Kunne ikke oprette en reference fra {0}.{1} til {2}.{3} - feltet kunne ikke findes.", Column.Table.Name, Column.Name, foreignKey.ReferencedTable.Name, ReferencedColumnName), ex);
             }
         }
 

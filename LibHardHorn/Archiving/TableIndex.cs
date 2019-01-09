@@ -81,10 +81,7 @@ namespace HardHorn.Archiving
             {
                 foreach (var fkey in table.ForeignKeys)
                 {
-                    if (!fkey.Initialize(tableIndex, table))
-                    {
-                        notify?.Invoke(new ForeignKeyTypeErrorNotification(fkey));
-                    }
+                    fkey.Initialize(tableIndex, table, notify);
                 }
             }
 

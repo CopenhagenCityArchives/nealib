@@ -16,6 +16,10 @@ namespace HardHorn.Archiving
         public string Columns { get { return string.Join("/", References.Select(r => r.ColumnName)); } }
         public string ReferencedColumns { get { return string.Join("/", References.Select(r => r.ReferencedColumnName)); } }
 
+        public override string ToString()
+        {
+            return $"<{Name}: {Table.Name}.{Columns} {ReferencedTableName}.{ReferencedColumns}>";
+        }
 
         public ForeignKey(string name, string referencedTableName, IEnumerable<Reference> references)
         {
@@ -24,16 +28,14 @@ namespace HardHorn.Archiving
             References = new List<Reference>(references);
         }
 
-        public bool Initialize(TableIndex tableIndex, Table table)
+        public void Initialize(TableIndex tableIndex, Table table, NotificationCallback notify)
         {
-            bool matchingDataTypes = true;
             Table = table;
             ReferencedTable = tableIndex.Tables.First(t => t.Name.ToLower() == ReferencedTableName.ToLower());
             foreach (var reference in References)
             {
-                matchingDataTypes = matchingDataTypes && reference.Initialize(Table, ReferencedTable);
+                reference.Initialize(this, notify);
             }
-            return matchingDataTypes;
         }
 
         public ForeignKeyValue GetValueFromRow(int row, Post[,] posts)
