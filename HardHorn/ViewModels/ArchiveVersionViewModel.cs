@@ -307,6 +307,12 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowRegex; }
             set { notifications_ShowRegex = value; Notifications_RefreshViews(); }
         }
+        bool notifications_ShowSuspiciousKeywords = true;
+        public bool Notifications_ShowSuspiciousKeywords
+        {
+            get { return notifications_ShowSuspiciousKeywords; }
+            set { notifications_ShowSuspiciousKeywords = value; Notifications_RefreshViews(); }
+        }
         bool notifications_ShowParameterSuggestions = true;
         public bool Notifications_ShowParameterSuggestions
         {
@@ -568,7 +574,7 @@ namespace HardHorn.ViewModels
                         if (testType == AnalysisTestType.UNALLOWED_KEYWORD)
                         {
                             //throw new NotImplementedException();
-                            notificationViewModel.Message = "custom Message";
+                            notificationViewModel.Message = "Implement custom message here";
                             // get test.keywords
                         }
                     }

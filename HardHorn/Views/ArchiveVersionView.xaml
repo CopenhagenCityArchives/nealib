@@ -892,6 +892,7 @@
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Test (FORMAT)</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowBlank}">Test (BLANK)</CheckBox>
                             <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowRegex}">Test (REGEX)</CheckBox>
+                            <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowSuspiciousKeyword}">Test (UNALLOWED_KEYWORD)</CheckBox>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Margin="5" Header="Forslag">

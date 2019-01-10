@@ -263,6 +263,7 @@ namespace HardHorn.Analysis
                 ContainsKeywords(post.Data);
                 if (Keywords.LongCount() != 0)
                     return Result.ERROR;
+                    
                 else
                     return Result.OKAY;
             }

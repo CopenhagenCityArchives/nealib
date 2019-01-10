@@ -685,14 +685,16 @@ namespace LibHardHornTest
         [TestMethod]
         public void SuspiciosKeywordsTest()
         {
-            string assertText = System.IO.File.ReadAllText(@"W:\Xml-tag\assertText.txt");
+            //string assertText = System.IO.File.ReadAllText(@"W:\Xml-tag\assertText.txt");
+            string assertText2 = "se nedenstående notat.p class=MsoNormal style=margin: 0cm 0cm 0pt 26.95pt; span style=font - family: Times New Roman;";
             var test = new Test.SuspiciousKeyword();
             INotification noti_kw = null;
-            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+            var kwTest = test.Run(new Post(assertText2, false), null, myNoti => noti_kw = myNoti);
             Assert.AreEqual(kwTest, Test.Result.ERROR);
             Assert.AreEqual($"Test ({AnalysisTestType.UNALLOWED_KEYWORD})", noti_kw.Header);
             Console.WriteLine(noti_kw.Message);        
             Assert.IsNotNull(noti_kw);
+            Assert.AreEqual(noti_kw.Message, "span font style margin");
          
         }
 

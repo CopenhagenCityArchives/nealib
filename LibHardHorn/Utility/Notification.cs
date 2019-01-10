@@ -74,14 +74,12 @@ namespace HardHorn.Utility
                     break;
                 case AnalysisTestType.UNALLOWED_KEYWORD:
                     var keywordTest = (Test.SuspiciousKeyword)test;
-                    var keysFound = keywordTest.Keywords;
-                    throw new NotImplementedException();
-                    // this belongs to Notification to handle
-                    //var keysFound = keywordTest.Keywords
-                        //.Where(entry => entry.Value != 0)
-                        //.Select(entry => entry.Key)
-                        //.ToArray();
-                    //Message = String.Join(" ", keysFound);
+                    var entriesFound = keywordTest.Keywords;//.Where(pair => !pair.Value.Equals(0));
+                    var keysFound = keywordTest.Keywords
+                        .Where(entry => entry.Value != 0)
+                        .Select(entry => entry.Key)
+                        .ToArray();
+                    Message = String.Join(" ", keysFound);
                     break;
             }
 

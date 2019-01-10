@@ -324,6 +324,12 @@ namespace HardHorn.Utilities
                     return "Foran- eller efterstillede blanktegn";
                 case AnalysisTestType.FORMAT:
                     return "Formateringsfejl";
+                case AnalysisTestType.UNALLOWED_KEYWORD:
+                    return "Suspicious Keyword!!";
+                case AnalysisTestType.REPEATING_CHAR:
+                    return "Repeating character";
+                case AnalysisTestType.ENTITY_CHAR_REF:
+                    return "Entity char reference";
                 default:
                     return string.Empty;
             }
