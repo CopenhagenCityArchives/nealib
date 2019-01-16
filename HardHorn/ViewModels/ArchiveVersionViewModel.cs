@@ -313,6 +313,12 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowSuspiciousKeywords; }
             set { notifications_ShowSuspiciousKeywords = value; Notifications_RefreshViews(); }
         }
+        bool notifications_ShowCharEntityRef = true;
+        public bool Notifications_ShowCharEntityRef
+        {
+            get { return notifications_ShowCharEntityRef; }
+            set { notifications_ShowCharEntityRef = value; Notifications_RefreshViews(); }
+        }
         bool notifications_ShowParameterSuggestions = true;
         public bool Notifications_ShowParameterSuggestions
         {
@@ -566,17 +572,11 @@ namespace HardHorn.ViewModels
                     }
 
                     var testType = (notification as AnalysisErrorNotification).TestType;
+                    
                     // if testType for column already exists
                     if (AnalysisErrorNotificationIndex[notification.Column].ContainsKey(testType))
                     {   // increment no of testType occurence in Index 
                         AnalysisErrorNotificationIndex[notification.Column][testType].Count++;
-                        // when unallowed_keyword type
-                        if (testType == AnalysisTestType.UNALLOWED_KEYWORD)
-                        {
-                            //throw new NotImplementedException();
-                            notificationViewModel.Message = "Implement custom message here";
-                            // get test.keywords
-                        }
                     }
                     else
                     {

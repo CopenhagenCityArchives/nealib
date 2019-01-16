@@ -63,14 +63,17 @@ namespace HardHorn.Utility
                 case AnalysisTestType.HTML_TAG:
                     var htmlTest = (Test.HtmlEntity) test;
                     Message = htmlTest.Value;
+                    Header = $"Test ({test.Type})";
                     break;
                 case AnalysisTestType.ENTITY_CHAR_REF:
                     var charrefTest = (Test.EntityCharRef) test;
                     Message = charrefTest.CharRef;
+                    Header = $"Test ({test.Type})";
                     break;
                 case AnalysisTestType.REPEATING_CHAR:
                     var repcharTest = (Test.RepeatingChar) test;
                     Message = repcharTest.CharRepeating;
+                    Header = $"Test ({test.Type})";
                     break;
                 case AnalysisTestType.UNALLOWED_KEYWORD:
                     var keywordTest = (Test.SuspiciousKeyword)test;
@@ -78,13 +81,14 @@ namespace HardHorn.Utility
                     var keysFound = keywordTest.Keywords
                         .Where(entry => entry.Value != 0)
                         .Select(entry => entry.Key)
-                        .ToArray();
-                    Message = String.Join(" ", keysFound);
+                        .ToList();
+                    Message = keysFound.Count() == 0  ?  null : string.Join(" ", keysFound);
+                    Header = keysFound.Count() == 0 ? null : $"Test ({test.Type})";
                     break;
             }
 
             Severity = test.Type == AnalysisTestType.UNDERFLOW ? Severity.Hint : Severity.Error;
-            Header = $"Test ({test.Type})";
+            
             Column = column;
             Count = 1;
         }

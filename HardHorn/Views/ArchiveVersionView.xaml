@@ -930,7 +930,7 @@
                 </Label>
                 <TabControl DockPanel.Dock="Bottom" SelectedIndex="{Binding Notifications_SelectedGroupingIndex}">
                     <TabItem Header="Tabelgruppering">
-                        <ListView ItemsSource="{Binding NotificationsView}">
+                        <ListView ItemsSource="{Binding NotificationsView}" SelectionChanged="ListView_SelectionChanged">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn>
