@@ -42,7 +42,17 @@ namespace LibHardHornTest
                 Assert.IsTrue(assertPattern.IsMatch(post.Data));
             }
         }
-
+        /*
+        [TestMethod]
+        public void TestTableReadAsString()
+        {
+            var archiveVersion = ArchiveVersion.Load(@"E:\AVID.HOSA.1025-OLD", new TestLogger());
+            var table1 = archiveVersion.Tables.First();
+            TableReader reader = new TableReader(table1);
+            String tableContent = reader.TableToString(table1);
+            Assert.AreEqual(tableContent, "");
+        }
+        */
         public void AssertReplacePost(string data, bool isNull, Regex pattern, string replacement, string expected, int expectedReplacements = 1)
         {
             AssertReplacePost(new Post(data, isNull), pattern, replacement, expected, expectedReplacements);

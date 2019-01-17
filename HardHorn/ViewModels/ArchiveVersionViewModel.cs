@@ -313,11 +313,11 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowSuspiciousKeywords; }
             set { notifications_ShowSuspiciousKeywords = value; Notifications_RefreshViews(); }
         }
-        bool notifications_ShowCharEntityRef = true;
-        public bool Notifications_ShowCharEntityRef
+        bool notifications_ShowRepeatingChar = true;
+        public bool Notifications_ShowRepeatingChar
         {
-            get { return notifications_ShowCharEntityRef; }
-            set { notifications_ShowCharEntityRef = value; Notifications_RefreshViews(); }
+            get { return notifications_ShowRepeatingChar; }
+            set { notifications_ShowRepeatingChar = value; Notifications_RefreshViews(); }
         }
         bool notifications_ShowParameterSuggestions = true;
         public bool Notifications_ShowParameterSuggestions
@@ -614,7 +614,10 @@ namespace HardHorn.ViewModels
                 || (nvm.Header == "Test (FORMAT)" && Notifications_ShowFormat)
                 || (nvm.Header == "Test (BLANK)" && Notifications_ShowBlank)
                 || (nvm.Header == "Test (REGEX)" && Notifications_ShowRegex)
-                || (nvm.Header == "Test (UNALLOWED_KEYWORD)")
+                || (nvm.Header == "Test (UNALLOWED_KEYWORD)" && Notifications_ShowSuspiciousKeywords)
+                || (nvm.Header == "Test (ENTITY_CHAR_REF)" && Notifications_ShowCharEntityRef)
+                || (nvm.Header == "Test (REPEATING_CHAR)" && Notifications_ShowRepeatingChar)
+                || (nvm.Header == "Test (HTML_TAG)" && notifications_ShowHtmlEntity)
                 || (nvm.Header == "Parameterforslag" && Notifications_ShowParameterSuggestions)
                 || (nvm.Header == "Datatypeforslag" && Notifications_ShowDatatypeSuggestions)
                 || (nvm.Header == "Xml-valideringsfejl" && Notifications_ShowXmlValidationErrors)

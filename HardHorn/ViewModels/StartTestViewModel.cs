@@ -88,7 +88,13 @@ namespace HardHorn.ViewModels
                                     case AnalysisTestType.UNDERFLOW:
                                         test = new Test.Underflow();
                                         break;
-                                    case AnalysisTestType.FORMAT:
+                                    case AnalysisTestType.REPEATING_CHAR:
+                                        test = new Test.RepeatingChar();
+                                        break;
+                                    case AnalysisTestType.UNALLOWED_KEYWORD:
+                                        test = new Test.SuspiciousKeyword();
+                                        break;
+                                        case AnalysisTestType.FORMAT:
                                         switch (dataTypeSelection.DataType)
                                         {
                                             case DataType.TIMESTAMP:

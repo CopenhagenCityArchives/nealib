@@ -26,8 +26,28 @@ namespace HardHorn.Utility
             _table = table;
             _stream = stream;
             _xmlReader = XmlReader.Create(stream);
-        }
 
+            /*
+             * XmlReaderSettings ignore_charref_settings = new XmlReaderSettings();
+            ignore_charref_settings.CheckCharacters = false;
+            _xmlReader = XmlReader.Create(stream, ignore_charref_settings);
+            */
+        }
+        /*
+        public String TableToString(Table table)
+        {
+            XmlReader textReader = null;
+            textReader = XmlReader.Create(Path.Combine(table.ArchiveVersion.Path, "Tables", table.Folder, table.Folder + ".xml"));
+            String myString = "";
+            while (textReader.Read())
+            {
+                myString = myString + (textReader.ReadString());
+            }
+            Console.WriteLine("myString {0}", myString);
+            return myString;
+        }
+        */
+        
         /// <summary>
         /// Read rows of the table.
         /// </summary>
@@ -61,6 +81,7 @@ namespace HardHorn.Utility
                                     var xnull = xpost.Attribute(xmlnsxsi + "nil");
                                     bool.TryParse(xnull.Value, out isNull);
                                 }
+                                //Console.WriteLine("xpost {0}", xpost.Value);
                                 rows[row, col] = new Post(xpost.Value, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition);
                                 col++;
                             }
