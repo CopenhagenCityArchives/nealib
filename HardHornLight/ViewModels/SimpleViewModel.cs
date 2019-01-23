@@ -619,6 +619,7 @@ namespace HardHorn.ViewModels
         {
             using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
             {
+                dialog.Description = "Vælg roden af en arkiveringsversion, f. eks. AVID.KSA.1.1";
                 dialog.RootFolder = Environment.SpecialFolder.MyComputer;
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
