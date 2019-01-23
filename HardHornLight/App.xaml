@@ -6,6 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <util:NotificationTypeToStringConverter x:Key="NotificationTypeToStringConverter" />
+            <util:DivisionConverter x:Key="DivisionConverter" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
                     <local:AppBootstrapper x:Key="bootstrapper" />

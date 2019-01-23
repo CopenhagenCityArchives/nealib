@@ -4,11 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:libutil="clr-namespace:HardHorn.Utility;assembly=LibHardHorn"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:cal="http://www.caliburnproject.org"
         ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d"
         Title="{Binding WindowTitle}" Height="900" Width="1400"
         Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo ProgressState="{Binding ProgressState}">
+            <TaskbarItemInfo.ProgressValue>
+                <Binding Path="ProgressValue" Converter="{StaticResource DivisionConverter}">
+                    <Binding.ConverterParameter>
+                        <sys:Double>100</sys:Double>
+                    </Binding.ConverterParameter>
+                </Binding>
+            </TaskbarItemInfo.ProgressValue>
+        </TaskbarItemInfo>
+    </Window.TaskbarItemInfo>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />

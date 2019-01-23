@@ -139,6 +139,27 @@ namespace HardHorn.Utilities
         }
     }
 
+    public class DivisionConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double? val = value as double?;
+            double? param = parameter as double?;
+            if (!val.HasValue || !param.HasValue)
+                return null;
+            return val / param;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double? val = value as double?;
+            double? param = parameter as double?;
+            if (!val.HasValue || !param.HasValue)
+                return null;
+            return val * param;
+        }
+    }
+
     public class CellIsEmptyConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

@@ -63,6 +63,14 @@ namespace HardHorn.ViewModels
             private set { loadingArchiveVersion = value; NotifyOfPropertyChange("LoadingArchiveVersion"); }
         }
 
+
+        TaskbarItemProgressState progressState = TaskbarItemProgressState.None;
+        public TaskbarItemProgressState ProgressState
+        {
+            get { return progressState; }
+            private set { progressState = value; NotifyOfPropertyChange("ProgressState"); }
+        }
+
         public ObservableCollection<NotificationViewModel> Notifications { get; private set; }
         public Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>> AnalysisNotificationsMap { get; private set; }
         Dictionary<string, NotificationViewModel> ForeignKeyTestErrorNotificationsMap { get; set; }
@@ -592,11 +600,13 @@ namespace HardHorn.ViewModels
             catch (Exception ex)
             {
                 SetStatus("En undtagelse forekom under indlæsningen af arkiveringsversionen, med følgende besked: " + ex.Message, LogLevel.ERROR);
+                ProgressState = TaskbarItemProgressState.Error;
                 return;
             }
             finally
             {
                 LoadingArchiveVersion = false;
+                ProgressState = TaskbarItemProgressState.Normal;
             }
 
             var beginTime = DateTime.Now;
@@ -609,6 +619,8 @@ namespace HardHorn.ViewModels
                 await task.Run();
                 SetStatus($"{task.Name} udført.", LogLevel.SECTION);
             }
+
+            ProgressState = TaskbarItemProgressState.None;
 
             var elapsed = DateTime.Now - beginTime;
 
