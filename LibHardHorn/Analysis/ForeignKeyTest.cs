@@ -28,6 +28,8 @@ namespace HardHorn.Analysis
         private IEnumerator<ForeignKey> _foreignKeyEnumerator;
         private TableReader _tableReader;
 
+        private NotificationCallback Notify { get;set;}
+
         private Post[,] _rows;
 
         public int GetErrorCount(ForeignKey foreignKey)
@@ -45,10 +47,12 @@ namespace HardHorn.Analysis
             return new List<KeyValuePair<ForeignKeyValue, int>>(_errorMap[foreignKey].OrderBy(kv => kv.Value).Reverse());
         }
 
-        public ForeignKeyTest(IEnumerable<Table> tables)
+        public ForeignKeyTest(IEnumerable<Table> tables, NotificationCallback notify)
         {
             Tables = new List<Table>(tables);
             _tableEnumerator = Tables.GetEnumerator();
+
+            Notify = notify;
 
             _valueMap = new Dictionary<ForeignKey, ISet<ForeignKeyValue>>();
             _errorCountMap = new Dictionary<ForeignKey, int>();
@@ -182,6 +186,31 @@ namespace HardHorn.Analysis
                             _errorMap[foreignKey][key] = 1;
                         }
                     }
+                }
+            }
+
+            foreach (var foreignKey in _errorCountMap.Keys)
+            {
+                if (_errorCountMap[foreignKey] == 0)
+                    continue;
+
+                int blank = 0;
+                foreach (var fkeyValue in _errorMap[foreignKey].Keys)
+                {
+                    if (fkeyValue.Values.Any(post => post.IsNull))
+                    {
+                        blank += _errorMap[foreignKey][fkeyValue];
+                    }
+                }
+                
+                if (_errorCountMap[foreignKey] - blank > 0)
+                {
+                    Notify(new ForeignKeyTestErrorNotification(foreignKey, _errorCountMap[foreignKey] - blank));
+                }
+
+                if (blank > 0)
+                {
+                    Notify(new ForeignKeyTestBlankNotification(foreignKey, blank));
                 }
             }
 

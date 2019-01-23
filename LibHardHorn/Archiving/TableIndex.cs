@@ -83,7 +83,7 @@ namespace HardHorn.Archiving
                 {
                     if (!fkey.Initialize(tableIndex, table))
                     {
-                        notify?.Invoke(new ForeignKeyErrorNotification(fkey));
+                        notify?.Invoke(new ForeignKeyTypeErrorNotification(fkey));
                     }
                 }
             }

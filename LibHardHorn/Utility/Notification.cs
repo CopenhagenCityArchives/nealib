@@ -19,11 +19,19 @@ namespace HardHorn.Utility
     {
         XmlError,
         ColumnTypeError,
-        LoadingException,
-        AnalysisError,
         TableRowCountError,
-        ForeignKeyError,
+        ForeignKeyTypeError,
         ColumnParsing,
+        DataTypeSuggestion,
+        ForeignKeyTestError,
+        ForeignKeyTestBlank,
+        AnalysisErrorBlank,
+        AnalysisErrorFormat,
+        AnalysisErrorOverflow,
+        AnalysisErrorRegex,
+        AnalysisErrorUnderflow,
+        ParameterSuggestion,
+        DataTypeIllegalAlias
         Suggestion,  
         HtmlEntity
     }
@@ -34,23 +42,40 @@ namespace HardHorn.Utility
     public interface INotification
     {
         NotificationType Type { get; }
-        Severity Severity { get;  }
+        Severity Severity { get; }
         Column Column { get; }
         Table Table { get; }
-        string Header { get; }
         string Message { get; }
         int? Count { get; }
     }
 
-    // only function to check tables 
-    // include error check here?
+    public class DataTypeIllegalAliasNotification : INotification
+    {
+        public NotificationType Type { get { return NotificationType.DataTypeIllegalAlias; } }
+        public Severity Severity { get { return Severity.Hint; } }
+        public Column Column { get; private set; }
+        public Table Table { get { return Column.Table; } }
+        public string Message { get { return $"DataTypen '{DataTypeValue}' er et ulovligt alias for '{DataTypeUtility.ToString(DataType)}'."; } }
+        public int? Count { get { return null; } }
+        public AnalysisTestType TestType { get; private set; }
+        public string DataTypeValue { get; private set; }
+        public DataType DataType { get; private set; }
+
+        public DataTypeIllegalAliasNotification(Column column, string dataTypeValue, DataType dataType)
+        {
+            Column = column;
+            DataTypeValue = dataTypeValue;
+            DataType = dataType;
+        }
+    }
+
+
     public class AnalysisErrorNotification : INotification
     {
-        public NotificationType Type { get { return NotificationType.AnalysisError; } }
+        public NotificationType Type { get; private set; }
         public Severity Severity { get; private set; }
         public Column Column { get; private set; }
         public Table Table { get { return Column.Table; } }
-        public string Header { get; private set; }
         public string Message { get; private set; }
         public int? Count { get; private set; }
         public AnalysisTestType TestType { get; private set; }
@@ -60,6 +85,21 @@ namespace HardHorn.Utility
             TestType = test.Type;
             switch (TestType)
             {
+                case AnalysisTestType.BLANK:
+                    Type = NotificationType.AnalysisErrorBlank;
+                    break;
+                case AnalysisTestType.FORMAT:
+                    Type = NotificationType.AnalysisErrorFormat;
+                    break;
+                case AnalysisTestType.OVERFLOW:
+                    Type = NotificationType.AnalysisErrorOverflow;
+                    break;
+                case AnalysisTestType.REGEX:
+                    Type = NotificationType.AnalysisErrorRegex;
+                    break;
+                case AnalysisTestType.UNDERFLOW:
+                    Type = NotificationType.AnalysisErrorUnderflow;
+                    break;
                 case AnalysisTestType.HTML_TAG:
                     var htmlTest = (Test.HtmlEntity) test;
                     Message = htmlTest.Value;
@@ -88,7 +128,7 @@ namespace HardHorn.Utility
             }
 
             Severity = test.Type == AnalysisTestType.UNDERFLOW ? Severity.Hint : Severity.Error;
-            
+            Message = null;
             Column = column;
             Count = 1;
         }
@@ -117,14 +157,12 @@ namespace HardHorn.Utility
         public Severity Severity { get { return Severity.Error; } }
         public Column Column { get; private set; }
         public Table Table { get; private set; }
-        public string Header { get; private set; }
         public string Message { get; private set; }
         public int? Count { get { return null; } }
 
         public ColumnParsingErrorNotification(Table table, string message)
         {
             Table = Table;
-            Header = $"Feltindlæsningsfejl";
             Message = message;
         }
     }
@@ -135,13 +173,11 @@ namespace HardHorn.Utility
         public Severity Severity { get { return Severity.Error; } }
         public Column Column { get; private set; }
         public Table Table { get { return Column.Table; } }
-        public string Header { get; private set; }
         public string Message { get; private set; }
         public int? Count { get { return null; } }
 
         public ColumnTypeErrorNotification(Column column, string message)
         {
-            Header = $"Datatypefejl";
             Message = message;
             Column = column;
         }
@@ -153,32 +189,30 @@ namespace HardHorn.Utility
         public Severity Severity { get { return Severity.Error; } }
         public Column Column { get { return null; } }
         public Table Table { get; private set; }
-        public string Header { get; private set; }
         public string Message { get; private set; }
         public int? Count { get { return null; } }
 
         public TableRowCountNotification(Table table, int actualCount)
         {
             Table = table;
-            Header = $"Tabelrækkeantalsfejl";
             Message = $"{actualCount} rækker i {Table.Folder}, {table.Rows} rækker defineret i tableIndex";
         }
     }
 
-    public class ForeignKeyErrorNotification : INotification
+    public class ForeignKeyTypeErrorNotification : INotification
     {
-        public NotificationType Type { get { return NotificationType.ForeignKeyError; } }
+        public NotificationType Type { get { return NotificationType.ForeignKeyTypeError; } }
         public Severity Severity { get { return Severity.Error; } }
         public Column Column { get { return null; } }
         public Table Table { get; private set; }
-        public string Header { get { return "Fremmednøglefejl"; } }
         public string Message { get; private set; }
         public int? Count { get { return null; } }
 
-        public ForeignKeyErrorNotification(ForeignKey foreignKey)
+        public ForeignKeyTypeErrorNotification(ForeignKey foreignKey)
         {
             Table = foreignKey.Table;
-            Message = foreignKey.Name;
+            Reference typeErrorReference = foreignKey.References.First(reference => reference.Column.ParameterizedDataType.CompareTo(reference.ReferencedColumn.ParameterizedDataType) != 0);
+            Message = $"{foreignKey.Name} refererer {typeErrorReference.Column} til {typeErrorReference.ReferencedColumn} i {typeErrorReference.ReferencedColumn.Table}";
         }
     }
 
@@ -188,19 +222,18 @@ namespace HardHorn.Utility
         public Severity Severity { get { return Severity.Error; } }
         public Column Column { get { return null; } }
         public Table Table { get { return null; } }
-        public string Header { get { return "Xml-valideringsfejl"; } }
         public string Message { get; private set; }
         public int? Count { get { return null; } }
 
         public XmlErrorNotification(string message)
         {
-            Message = message;
+            Message = $"Xml-validering gav følgende meddelelse: {message}";
         }
     }
 
     public class SuggestionNotification : INotification
     {
-        public NotificationType Type { get { return NotificationType.Suggestion; } }
+        public NotificationType Type { get; private set; }
         public Severity Severity { get { return Severity.Hint; } }
         public Column Column { get; private set; }
         public Table Table { get { return Column.Table; } }
@@ -214,14 +247,54 @@ namespace HardHorn.Utility
 
             if (column.ParameterizedDataType.DataType == suggestion.DataType)
             {
-                Header = "Parameterforslag";
+                Type = NotificationType.ParameterSuggestion;
             }
             else
             {
-                Header = "Datatypeforslag";
+                Type = NotificationType.DataTypeSuggestion;
             }
 
             Message = suggestion.ToString();
+        }
+    }
+
+    public class ForeignKeyTestErrorNotification : INotification
+    {
+        public NotificationType Type { get { return NotificationType.ForeignKeyTestError; } }
+        public Severity Severity { get { return Severity.Error; } }
+        public Column Column { get { return null; } }
+        public Table Table { get; private set; }
+        public string Header { get; private set; }
+        public string Message { get; private set; }
+        public int? Count { get; private set; }
+        public ForeignKey ForeignKey { get; private set; }
+
+        public ForeignKeyTestErrorNotification(ForeignKey foreignKey, int count)
+        {
+            ForeignKey = foreignKey;
+            Table = foreignKey.Table;
+            Count = count;
+            Message = $"{foreignKey.Name} refererer til værdier der ikke findes i {foreignKey.ReferencedTable}";
+        }
+    }
+
+    public class ForeignKeyTestBlankNotification : INotification
+    {
+        public NotificationType Type { get { return NotificationType.ForeignKeyTestBlank; } }
+        public Severity Severity { get { return Severity.Hint; } }
+        public Column Column { get { return null; } }
+        public Table Table { get; private set; }
+        public string Header { get; private set; }
+        public string Message { get; private set; }
+        public int? Count { get; private set; }
+        public ForeignKey ForeignKey { get; private set; }
+
+        public ForeignKeyTestBlankNotification(ForeignKey foreignKey, int count)
+        {
+            ForeignKey = foreignKey;
+            Table = foreignKey.Table;
+            Count = count;
+            Message = $"Blanke (NULL-værdier) refereres i {foreignKey.Name} til {foreignKey.ReferencedTable}";
         }
     }
 }

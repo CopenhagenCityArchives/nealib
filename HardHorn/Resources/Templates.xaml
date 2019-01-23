@@ -19,6 +19,7 @@
     <util:KeyTestResultListToDataTable x:Key="KeyTestResultListToDataTable" />
     <util:ValuesToColumnItemsConverter x:Key="ValuesToColumnItemsConverter" />
     <util:ValuesToCategoryAxisConverter x:Key="ValuesToCategoryAxisConverter" />
+    <util:NotificationTypeToStringConverter x:Key="NotificationTypeToStringConverter" />
 
     <DataTemplate x:Key="ErrorViewTemplate">
         <StackPanel>

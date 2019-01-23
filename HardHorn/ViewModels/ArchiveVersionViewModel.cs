@@ -236,6 +236,8 @@ namespace HardHorn.ViewModels
         public Dictionary<string, TableViewModel> TableViewModelIndex { get; set; }
 
         Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>> AnalysisErrorNotificationIndex { get; set; }
+        Dictionary<string, NotificationViewModel> ForeignKeyTestErrorNotificationIndex { get; set; }
+        Dictionary<string, NotificationViewModel> ForeignKeyTestBlankNotificationIndex { get; set; }
         public ObservableCollection<NotificationViewModel> Notifications { get; set; }
         System.Timers.Timer Notifications_RefreshViewTimer = new System.Timers.Timer(1000);
 
@@ -276,6 +278,12 @@ namespace HardHorn.ViewModels
         {
             get { return notifications_ShowErrors; }
             set { notifications_ShowErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowHintsWhereErrors = true;
+        public bool Notifications_ShowHintsWhereErrors
+        {
+            get { return notifications_ShowHintsWhereErrors; }
+            set { notifications_ShowHintsWhereErrors = value; Notifications_RefreshViews(); }
         }
         bool notifications_ShowOverflow = true;
         public bool Notifications_ShowOverflow
@@ -319,6 +327,18 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowRepeatingChar; }
             set { notifications_ShowRepeatingChar = value; Notifications_RefreshViews(); }
         }
+        bool notifications_ShowForeignKeyTestErrors = true;
+        public bool Notifications_ShowForeignKeyTestErrors
+        {
+            get { return notifications_ShowForeignKeyTestErrors; }
+            set { notifications_ShowForeignKeyTestErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowForeignKeyTestBlanks = true;
+        public bool Notifications_ShowForeignKeyTestBlanks
+        {
+            get { return notifications_ShowForeignKeyTestBlanks; }
+            set { notifications_ShowForeignKeyTestBlanks = value; Notifications_RefreshViews(); }
+        }
         bool notifications_ShowParameterSuggestions = true;
         public bool Notifications_ShowParameterSuggestions
         {
@@ -349,11 +369,17 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowColumnTypeErrors; }
             set { notifications_ShowColumnTypeErrors = value; Notifications_RefreshViews(); }
         }
-        bool notifications_ShowForeignKeyErrors = true;
-        public bool Notifications_ShowForeignKeyErrors
+        bool notifications_ShowDataTypeIllegalAliasErrors = true;
+        public bool Notifications_ShowDataTypeIllegalAliasErrors
         {
-            get { return notifications_ShowForeignKeyErrors; }
-            set { notifications_ShowForeignKeyErrors = value; Notifications_RefreshViews(); }
+            get { return notifications_ShowDataTypeIllegalAliasErrors; }
+            set { notifications_ShowDataTypeIllegalAliasErrors = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowForeignKeyTypeErrors = true;
+        public bool Notifications_ShowForeignKeyTypeErrors
+        {
+            get { return notifications_ShowForeignKeyTypeErrors; }
+            set { notifications_ShowForeignKeyTypeErrors = value; Notifications_RefreshViews(); }
         }
         bool notifications_ShowTableRowCountErrors = true;
         public bool Notifications_ShowTableRowCountErrors
@@ -496,6 +522,8 @@ namespace HardHorn.ViewModels
         {
             TempName = tempName;
             AnalysisErrorNotificationIndex = new Dictionary<Column, Dictionary<AnalysisTestType, NotificationViewModel>>();
+            ForeignKeyTestErrorNotificationIndex = new Dictionary<string, NotificationViewModel>();
+            ForeignKeyTestBlankNotificationIndex = new Dictionary<string, NotificationViewModel>();
             Notifications = new ObservableCollection<NotificationViewModel>();
             Notifications.CollectionChanged += (o, a) => Notifications_RefreshViews();
             NotificationsViewSource = new CollectionViewSource() { Source = Notifications };
@@ -514,7 +542,7 @@ namespace HardHorn.ViewModels
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Table.FolderNumber", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Column.ColumnIdNumber", ListSortDirection.Ascending));
             NotificationsCategoryView.SortDescriptions.Add(new SortDescription("Message", ListSortDirection.Ascending));
-            NotificationsCategoryView.GroupDescriptions.Add(new PropertyGroupDescription("Header"));
+            NotificationsCategoryView.GroupDescriptions.Add(new PropertyGroupDescription("Type"));
             NotificationsCategoryView.Filter += Notifications_Filter;
             Notifications_RefreshViewTimer.Elapsed += Notifications_RefreshViewTimer_Elapsed;
             TableComparisons = new ObservableCollection<TableComparison>();
@@ -565,7 +593,11 @@ namespace HardHorn.ViewModels
             NotificationViewModel notificationViewModel = null;
             switch (notification.Type)
             {
-                case NotificationType.AnalysisError:
+                case NotificationType.AnalysisErrorBlank:
+                case NotificationType.AnalysisErrorOverflow:
+                case NotificationType.AnalysisErrorUnderflow:
+                case NotificationType.AnalysisErrorFormat:
+                case NotificationType.AnalysisErrorRegex:
                     if (!AnalysisErrorNotificationIndex.ContainsKey(notification.Column))
                     {
                         AnalysisErrorNotificationIndex[notification.Column] = new Dictionary<AnalysisTestType, NotificationViewModel>();
@@ -580,12 +612,32 @@ namespace HardHorn.ViewModels
                     }
                     else
                     {
-                        notificationViewModel = new NotificationViewModel(NotificationType.AnalysisError, notification.Severity);
-                        notificationViewModel.Message = notification.Message;
-                        notificationViewModel.Header = notification.Header;
-                        notificationViewModel.Column = notification.Column;
-                        notificationViewModel.Table = notification.Table;
+                        notificationViewModel = new NotificationViewModel(notification);
                         AnalysisErrorNotificationIndex[notification.Column][(notification as AnalysisErrorNotification).TestType] = notificationViewModel;
+                    }
+                    break;
+                case NotificationType.ForeignKeyTestError:
+                    var foreignKeyTestErrorNotification = notification as ForeignKeyTestErrorNotification;
+                    if (ForeignKeyTestErrorNotificationIndex.ContainsKey(foreignKeyTestErrorNotification.ForeignKey.Name))
+                    {
+                        ForeignKeyTestErrorNotificationIndex[foreignKeyTestErrorNotification.ForeignKey.Name].Count = foreignKeyTestErrorNotification.Count;
+                    }
+                    else
+                    {
+                        notificationViewModel = new NotificationViewModel(notification);
+                        ForeignKeyTestErrorNotificationIndex[foreignKeyTestErrorNotification.ForeignKey.Name] = notificationViewModel;
+                    }
+                    break;
+                case NotificationType.ForeignKeyTestBlank:
+                    var foreignKeyTestBlankNotification = notification as ForeignKeyTestBlankNotification;
+                    if (ForeignKeyTestBlankNotificationIndex.ContainsKey(foreignKeyTestBlankNotification.ForeignKey.Name))
+                    {
+                        ForeignKeyTestBlankNotificationIndex[foreignKeyTestBlankNotification.ForeignKey.Name].Count = foreignKeyTestBlankNotification.Count;
+                    }
+                    else
+                    {
+                        notificationViewModel = new NotificationViewModel(notification);
+                        ForeignKeyTestBlankNotificationIndex[foreignKeyTestBlankNotification.ForeignKey.Name] = notificationViewModel;
                     }
                     break;
                 default:
@@ -606,25 +658,25 @@ namespace HardHorn.ViewModels
         #region Methods
         private bool Notifications_Filter(object obj)
         {
-            var nvm = obj as NotificationViewModel;
+            var nvm = obj as NotificationViewModel; 
             bool includeBySeverity = (nvm.Severity == Severity.Hint && Notifications_ShowHints)
-                                  || (nvm.Severity == Severity.Error && Notifications_ShowErrors);
-            bool includeByNotificationType = (nvm.Header == "Test (OVERFLOW)" && Notifications_ShowOverflow)
-                || (nvm.Header == "Test (UNDERFLOW)" && Notifications_ShowUnderflow)
-                || (nvm.Header == "Test (FORMAT)" && Notifications_ShowFormat)
-                || (nvm.Header == "Test (BLANK)" && Notifications_ShowBlank)
-                || (nvm.Header == "Test (REGEX)" && Notifications_ShowRegex)
-                || (nvm.Header == "Test (UNALLOWED_KEYWORD)" && Notifications_ShowSuspiciousKeywords)
-                || (nvm.Header == "Test (ENTITY_CHAR_REF)" && Notifications_ShowCharEntityRef)
-                || (nvm.Header == "Test (REPEATING_CHAR)" && Notifications_ShowRepeatingChar)
-                || (nvm.Header == "Test (HTML_TAG)" && notifications_ShowHtmlEntity)
-                || (nvm.Header == "Parameterforslag" && Notifications_ShowParameterSuggestions)
-                || (nvm.Header == "Datatypeforslag" && Notifications_ShowDatatypeSuggestions)
-                || (nvm.Header == "Xml-valideringsfejl" && Notifications_ShowXmlValidationErrors)
-                || (nvm.Header == "Feltindlæsningsfejl" && Notifications_ShowColumnErrors)
-                || (nvm.Header == "Datatypefejl" && Notifications_ShowColumnTypeErrors)
-                || (nvm.Header == "Fremmednøglefejl" && Notifications_ShowForeignKeyErrors)
-                || (nvm.Header == "Tabelrækkeantalsfejl" && Notifications_ShowTableRowCountErrors);
+                                  || (nvm.Severity == Severity.Error && Notifications_ShowErrors)
+                                  || (nvm.Severity == Severity.Hint && Notifications_ShowHintsWhereErrors && AnalysisErrorNotificationIndex.ContainsKey(nvm.Column));
+            bool includeByNotificationType = (nvm.Type == NotificationType.AnalysisErrorOverflow && Notifications_ShowOverflow)
+                || (nvm.Type == NotificationType.AnalysisErrorUnderflow && Notifications_ShowUnderflow)
+                || (nvm.Type == NotificationType.AnalysisErrorFormat && Notifications_ShowFormat)
+                || (nvm.Type == NotificationType.AnalysisErrorBlank && Notifications_ShowBlank)
+                || (nvm.Type == NotificationType.AnalysisErrorRegex && Notifications_ShowRegex)
+                || (nvm.Type == NotificationType.ForeignKeyTestError && Notifications_ShowForeignKeyTestErrors)
+                || (nvm.Type == NotificationType.ForeignKeyTestBlank && Notifications_ShowForeignKeyTestBlanks)
+                || (nvm.Type == NotificationType.ParameterSuggestion && Notifications_ShowParameterSuggestions)
+                || (nvm.Type == NotificationType.DataTypeSuggestion && Notifications_ShowDatatypeSuggestions)
+                || (nvm.Type == NotificationType.XmlError && Notifications_ShowXmlValidationErrors)
+                || (nvm.Type == NotificationType.ColumnParsing && Notifications_ShowColumnErrors)
+                || (nvm.Type == NotificationType.ColumnTypeError && Notifications_ShowColumnTypeErrors)
+                || (nvm.Type == NotificationType.DataTypeIllegalAlias && Notifications_ShowDataTypeIllegalAliasErrors)
+                || (nvm.Type == NotificationType.ForeignKeyTypeError && Notifications_ShowForeignKeyTypeErrors)
+                || (nvm.Type == NotificationType.TableRowCountError && Notifications_ShowTableRowCountErrors);
 
             return includeBySeverity && includeByNotificationType;
         }
@@ -837,7 +889,7 @@ function addGlyph(table, columnIndex) {
                                         writer.WriteLine("<div style=\"display: table-row\">");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{(notification.Severity == Severity.Hint ? "<b style=\"background: yellow;\">!</b>" : "<b style=\"background: red; color: white;\">X</b>")}</div>");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Column?.ToString() ?? "-")}</div>");
-                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Header?.ToString() ?? "-")}</div>");
+                                        writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(Utilities.NotificationTypeToStringConverter.ConvertNotificationType(notification.Type)?.ToString() ?? "-")}</div>");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{notification.Count?.ToString() ?? "-"}</div>");
                                         writer.WriteLine($"<div style=\"display: table-cell; padding: 2pt;\">{HttpUtility.HtmlEncode(notification.Message?.ToString() ?? "-")}</div>");
                                         writer.WriteLine("</div>");
@@ -1226,7 +1278,7 @@ function addGlyph(table, columnIndex) {
 
             var tables = new List<TableViewModel>(tableViewModels.Cast<TableViewModel>()).Select(tvm => tvm.Table);
 
-            var keyTest = new ForeignKeyTest(tables);
+            var keyTest = new ForeignKeyTest(tables, HandleNotification);
 
             ForeignKeyTestResults.Clear();
 
@@ -1239,7 +1291,10 @@ function addGlyph(table, columnIndex) {
             var addResultProgress = new Progress<Tuple<Table, Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>>(tuple =>
             {
                 TableViewModelIndex[tuple.Item1.Name].KeyTestErrors |= tuple.Item2.Item2 > 0; // error count greater than 0
-                ForeignKeyTestResults.Add(tuple.Item2);
+                if (tuple.Item2.Item2 > 0)
+                {
+                    ForeignKeyTestResults.Add(tuple.Item2);
+                }
             }) as IProgress<Tuple<Table, Tuple<ForeignKey, int, int, IEnumerable<KeyValuePair<ForeignKeyValue, int>>>>>;
             var tableBusyProgress = new Progress<Table>(table => TableViewModelIndex[table.Name].KeyTestBusy = true) as IProgress<Table>;
             var tableDoneProgress = new Progress<Table>(table =>

@@ -114,6 +114,8 @@ namespace HardHorn.Analysis
         /// </summary>
         public bool BooleanFormat { get; private set; }
 
+        //private ulong[] CharOccurences;
+
         /// <summary>
         /// Construct a ColumnAlysis from a Column.
         /// </summary>
@@ -134,6 +136,10 @@ namespace HardHorn.Analysis
             FloatFormat = true;
             IntegerFormat = true;
             BooleanFormat = true;
+
+// CharOccurences = new ulong[16384];
+//            for (int i = 0; i < CharOccurences.Length; i++)
+//                CharOccurences[i] = 0;
 
             ErrorCount = 0;
             Tests = new List<Test>();
@@ -183,8 +189,15 @@ namespace HardHorn.Analysis
         /// Update the length measurements given the new post.
         /// </summary>
         /// <param name="post">A post</param>
-        public void UpdateLengthStatistics(Post post)
+        public void UpdateColumnStatistics(Post post)
         {
+            //if (Column.ParameterizedDataType.DataType == DataType.NATIONAL_CHARACTER_VARYING ||
+            //    Column.ParameterizedDataType.DataType == DataType.CHARACTER_VARYING ||
+            //    Column.ParameterizedDataType.DataType == DataType.NATIONAL_CHARACTER ||
+            //    Column.ParameterizedDataType.DataType == DataType.CHARACTER)
+            //    foreach (char c in post.Data)
+            //        CharOccurences[c]++;
+            
             bool allPreviousNull = AllNullSoFar;
 
             AllNullSoFar &= post.IsNull;

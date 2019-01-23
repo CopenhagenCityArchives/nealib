@@ -38,22 +38,22 @@ namespace HardHorn.Archiving
 
         public ForeignKeyValue GetValueFromRow(int row, Post[,] posts)
         {
-            var values = new List<string>();
+            var values = new List<Post>();
             foreach (var reference in References)
             {
                 int index = reference.Column.ColumnIdNumber - 1;
-                values.Add(posts[row, index].Data);
+                values.Add(posts[row, index]);
             }
             return new ForeignKeyValue(values.ToArray());
         }
 
         public ForeignKeyValue GetReferencedValueFromRow(int row, Post[,] posts)
         {
-            var values = new List<string>();
+            var values = new List<Post>();
             foreach (var reference in References)
             {
                 int index = reference.ReferencedColumn.ColumnIdNumber - 1;
-                values.Add(posts[row, index].Data);
+                values.Add(posts[row, index]);
             }
             return new ForeignKeyValue(values.ToArray());
         }
