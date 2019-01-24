@@ -596,8 +596,10 @@ namespace HardHorn.ViewModels
                 case NotificationType.AnalysisErrorBlank:
                 case NotificationType.AnalysisErrorOverflow:
                 case NotificationType.AnalysisErrorUnderflow:
-                case NotificationType.AnalysisErrorFormat:
+                //case NotificationType.AnalysisErrorFormat:
                 case NotificationType.AnalysisErrorRegex:
+                case NotificationType.AnalysisErrorRepeatingChar:
+                case NotificationType.AnalysisErrorUnallowedKeyword:
                     if (!AnalysisErrorNotificationIndex.ContainsKey(notification.Column))
                     {
                         AnalysisErrorNotificationIndex[notification.Column] = new Dictionary<AnalysisTestType, NotificationViewModel>();
@@ -609,7 +611,19 @@ namespace HardHorn.ViewModels
                     if (AnalysisErrorNotificationIndex[notification.Column].ContainsKey(testType))
                     {   // increment no of testType occurence in Index 
                         AnalysisErrorNotificationIndex[notification.Column][testType].Count++;
+                        if (notification.Type == NotificationType.AnalysisErrorUnallowedKeyword)
+                        {
+                            AnalysisErrorNotificationIndex[notification.Column][testType].Message = notification.Message;
+                        }
+                        if (notification.Type == NotificationType.AnalysisErrorRepeatingChar)
+                        {
+                            if (! (AnalysisErrorNotificationIndex[notification.Column][testType].Message.Contains(notification.Message)))
+                            {
+                                AnalysisErrorNotificationIndex[notification.Column][testType].Message += notification.Message;
+                            }
+                        }
                     }
+
                     else
                     {
                         notificationViewModel = new NotificationViewModel(notification);
@@ -676,7 +690,9 @@ namespace HardHorn.ViewModels
                 || (nvm.Type == NotificationType.ColumnTypeError && Notifications_ShowColumnTypeErrors)
                 || (nvm.Type == NotificationType.DataTypeIllegalAlias && Notifications_ShowDataTypeIllegalAliasErrors)
                 || (nvm.Type == NotificationType.ForeignKeyTypeError && Notifications_ShowForeignKeyTypeErrors)
-                || (nvm.Type == NotificationType.TableRowCountError && Notifications_ShowTableRowCountErrors);
+                || (nvm.Type == NotificationType.TableRowCountError && Notifications_ShowTableRowCountErrors)
+                || (nvm.Type == NotificationType.AnalysisErrorRepeatingChar && Notifications_ShowRepeatingChar)
+                || (nvm.Type == NotificationType.AnalysisErrorUnallowedKeyword && Notifications_ShowSuspiciousKeywords);
 
             return includeBySeverity && includeByNotificationType;
         }

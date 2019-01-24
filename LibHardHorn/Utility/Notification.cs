@@ -31,9 +31,10 @@ namespace HardHorn.Utility
         AnalysisErrorRegex,
         AnalysisErrorUnderflow,
         ParameterSuggestion,
-        DataTypeIllegalAlias
-        Suggestion,  
-        HtmlEntity
+        DataTypeIllegalAlias,
+        Suggestion,
+        AnalysisErrorRepeatingChar,
+        AnalysisErrorUnallowedKeyword
     }
 
     public delegate void NotificationCallback(INotification notification);
@@ -100,20 +101,10 @@ namespace HardHorn.Utility
                 case AnalysisTestType.UNDERFLOW:
                     Type = NotificationType.AnalysisErrorUnderflow;
                     break;
-                case AnalysisTestType.HTML_TAG:
-                    var htmlTest = (Test.HtmlEntity) test;
-                    Message = htmlTest.Value;
-                    Header = $"Test ({test.Type})";
-                    break;
-                case AnalysisTestType.ENTITY_CHAR_REF:
-                    var charrefTest = (Test.EntityCharRef) test;
-                    Message = charrefTest.CharRef;
-                    Header = $"Test ({test.Type})";
-                    break;
                 case AnalysisTestType.REPEATING_CHAR:
                     var repcharTest = (Test.RepeatingChar) test;
                     Message = repcharTest.CharRepeating;
-                    Header = $"Test ({test.Type})";
+                    Type = NotificationType.AnalysisErrorRepeatingChar;
                     break;
                 case AnalysisTestType.UNALLOWED_KEYWORD:
                     var keywordTest = (Test.SuspiciousKeyword)test;
@@ -123,33 +114,16 @@ namespace HardHorn.Utility
                         .Select(entry => entry.Key)
                         .ToList();
                     Message = keysFound.Count() == 0  ?  null : string.Join(" ", keysFound);
-                    Header = keysFound.Count() == 0 ? null : $"Test ({test.Type})";
+                    Type = NotificationType.AnalysisErrorUnallowedKeyword;
                     break;
             }
 
             Severity = test.Type == AnalysisTestType.UNDERFLOW ? Severity.Hint : Severity.Error;
-            Message = null;
             Column = column;
             Count = 1;
         }
     }
 
-    public class HtmlEntityErrorNotification : INotification
-    {
-        public NotificationType Type { get { return NotificationType.HtmlEntity; } }
-        public Severity Severity { get; }
-        public Column Column { get; private set; }
-        public Table Table { get; private set; }
-        public string Header { get; private set; }
-        public string Message { get; private set; }
-        public int? Count { get { return null; } }
-
-        public HtmlEntityErrorNotification(string message, Column column, Post post)
-        {
-            Header = "Fix this, some error";
-            Message = message;
-        }
-    }
 
     public class ColumnParsingErrorNotification : INotification
     {

@@ -24,7 +24,7 @@ namespace HardHorn.Analysis
         public static int[] months = new int[] { 31, 29, 31, 30, 31, 30, 31, 33, 30, 31, 30, 31 };
         //public static Regex numeric_char_ref = new Regex(@"^&(?:#([0-9]+)|#x([0-9a-fA-F]+))$", RegexOptions.Compiled);
         public static Regex entity_regex = new Regex(@"&(?!(amp;|apos;|lt;|gt;|quot;))[\w | #]*;", RegexOptions.Compiled);
-        public static Regex char_repeating_regex = new Regex(@"(.)\1{12,}", RegexOptions.Compiled);
+        public static Regex char_repeating_regex = new Regex(@"([^ ])\1{12,}", RegexOptions.Compiled);
         public static Regex html_opentag_regex = new Regex(@"<[\w]*>", RegexOptions.Compiled);
         public static Regex html_closetag_regex = new Regex(@"<\/[\w]*>", RegexOptions.Compiled);
 
@@ -78,8 +78,6 @@ namespace HardHorn.Analysis
             if (post.IsNull)
                 return Result.OKAY;
 
-            //To Do through HtmlNotification, fallback AnalysisError
-            // 
             var result = GetResult(post, column);
             if (result == Result.ERROR)
             {
@@ -261,7 +259,7 @@ namespace HardHorn.Analysis
             public override Result GetResult(Post post, Column column)
             {
                 ContainsKeywords(post.Data);
-                if (Keywords.LongCount() != 0)
+                if (Keywords.Values.Sum() != 0)
                     return Result.ERROR;
                     
                 else

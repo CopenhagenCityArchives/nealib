@@ -703,24 +703,35 @@ namespace LibHardHornTest
             INotification noti_kw = null;
             var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
 
-            Assert.AreNotEqual(noti_kw.Message, "");
+            Assert.AreNotEqual("", noti_kw.Message);
         }
 
         [TestMethod]
-        public void SuspiciosKeyword_nokeyword_testtype_notequal_unallowed_keyword()
+        public void SuspiciosKeyword_nokeyword_c10_column_resultokay()
         {
-            string assertText = "ad3aed2a - 20be - 11e3 - aa74 - 3cd92bf42f50";
+            string assertText = "2010-04-07T12:16:07.341+02:00";
 
             var test = new Test.SuspiciousKeyword();
             INotification noti_kw = null;
             var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
 
-            Assert.AreNotEqual($"Test ({AnalysisTestType.UNALLOWED_KEYWORD})", noti_kw.Header);
+            Assert.AreEqual(Test.Result.OKAY, kwTest);
         }
 
+        [TestMethod]
+        public void SuspiciosKeyword_nokeyword_c1_column_resultokay()
+        {
+            string assertText = "misholb";
+
+            var test = new Test.SuspiciousKeyword();
+            INotification noti_kw = null;
+            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+
+            Assert.AreEqual(Test.Result.OKAY, kwTest);
+        }
 
         [TestMethod]
-        public void SuspiciosKeyword_span_font_style_margin_resulterror()
+        public void SuspiciosKeyword_span_font_style_margin_messageupdate()
         {
             string assertText = "se nedenstående notat.p class=MsoNormal style=margin: 0cm 0cm 0pt 26.95pt; span style=font - family: Times New Roman;";
 
@@ -728,7 +739,7 @@ namespace LibHardHornTest
             INotification noti_kw = null;
             var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
 
-            Assert.AreEqual(kwTest, Test.Result.ERROR);
+            Assert.AreEqual("span font style margin", noti_kw.Message);
         }
 
         [TestMethod]
@@ -737,7 +748,7 @@ namespace LibHardHornTest
             var test = new Test.HtmlEntity();
             INotification noti_otag = null;
             var optag = test.Run(new Post("aeio<span>rgroi", false), null, myNoti => noti_otag = myNoti);
-            Assert.AreEqual(optag, Test.Result.ERROR);
+            Assert.AreEqual(Test.Result.ERROR, optag);
         }
 
         [TestMethod]
@@ -811,6 +822,16 @@ namespace LibHardHornTest
             var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ", false), null, myNotification => noti = myNotification);
             Assert.AreEqual(rep, Test.Result.ERROR);
         }
+
+        [TestMethod]
+        public void RepeatingChar_space_result_okay()
+        {
+            var test = new Test.RepeatingChar();
+            INotification noti = null;
+            var rep = test.Run(new Post("                              ", false), null, myNotification => noti = myNotification);
+            Assert.AreEqual(rep, Test.Result.OKAY);
+        }
+
 
         [TestMethod]
         public void RepeatingChar_ychar_update_message()

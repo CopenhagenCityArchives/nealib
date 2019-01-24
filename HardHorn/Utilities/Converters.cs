@@ -166,6 +166,10 @@ namespace HardHorn.Utilities
                     return "Fremmednøgletestfejl";
                 case NotificationType.ForeignKeyTestBlank:
                     return "Fremmednøgletestfejl med blanke værdier";
+                case NotificationType.AnalysisErrorRepeatingChar:
+                    return "Gentagne tegn";
+                case NotificationType.AnalysisErrorUnallowedKeyword:
+                    return "Html-lignende keywords";
                 default:
                     return null;
             }
