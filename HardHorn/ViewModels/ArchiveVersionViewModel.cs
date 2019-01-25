@@ -596,7 +596,7 @@ namespace HardHorn.ViewModels
                 case NotificationType.AnalysisErrorBlank:
                 case NotificationType.AnalysisErrorOverflow:
                 case NotificationType.AnalysisErrorUnderflow:
-                //case NotificationType.AnalysisErrorFormat:
+                case NotificationType.AnalysisErrorFormat:
                 case NotificationType.AnalysisErrorRegex:
                 case NotificationType.AnalysisErrorRepeatingChar:
                 case NotificationType.AnalysisErrorUnallowedKeyword:
