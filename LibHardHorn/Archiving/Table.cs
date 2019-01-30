@@ -243,7 +243,8 @@ namespace HardHorn.Archiving
             using (var reader = GetReader())
             {
                 Post[,] rows;
-                while (reader.Read(out rows) > 0)
+                int read = 0;
+                while ((read += reader.Read(out rows, read)) > 0)
                 {
 
                 }

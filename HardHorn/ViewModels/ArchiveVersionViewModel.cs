@@ -588,6 +588,7 @@ namespace HardHorn.ViewModels
         #endregion
 
         #region Callbacks
+        static Random random = new Random();
         public void HandleNotification(INotification notification)
         {
             NotificationViewModel notificationViewModel = null;
@@ -611,13 +612,22 @@ namespace HardHorn.ViewModels
                     if (AnalysisErrorNotificationIndex[notification.Column].ContainsKey(testType))
                     {   // increment no of testType occurence in Index 
                         AnalysisErrorNotificationIndex[notification.Column][testType].Count++;
+                        if (AnalysisErrorNotificationIndex[notification.Column][testType].Sample.Count < Analyzer.SampleSize)
+                        {
+                            AnalysisErrorNotificationIndex[notification.Column][testType].Sample.Add((notification as AnalysisErrorNotification).Post);
+                        }
+                        else if (random.Next((notification as AnalysisErrorNotification).Post.RowIndex) < Analyzer.SampleSize)
+                        {
+                            int index = random.Next(Analyzer.SampleSize);
+                            AnalysisErrorNotificationIndex[notification.Column][testType].Sample[index] = (notification as AnalysisErrorNotification).Post;
+                        }
                         if (notification.Type == NotificationType.AnalysisErrorUnallowedKeyword)
                         {
                             AnalysisErrorNotificationIndex[notification.Column][testType].Message = notification.Message;
                         }
                         if (notification.Type == NotificationType.AnalysisErrorRepeatingChar)
                         {
-                            if (! (AnalysisErrorNotificationIndex[notification.Column][testType].Message.Contains(notification.Message)))
+                            if (!(AnalysisErrorNotificationIndex[notification.Column][testType].Message.Contains(notification.Message)))
                             {
                                 AnalysisErrorNotificationIndex[notification.Column][testType].Message += notification.Message;
                             }
@@ -1003,7 +1013,7 @@ function addGlyph(table, columnIndex) {
                     int totalReplacements = 0;
                     do
                     {
-                        readRows = reader.Read(out readPosts);
+                        readRows = reader.Read(out readPosts, 10000, totalRows);
                         totalRows += readRows;
                         totalReplacements += replacer.Write(readPosts, readRows);
                         progress.Report(totalRows);

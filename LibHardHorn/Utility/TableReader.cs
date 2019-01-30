@@ -54,7 +54,7 @@ namespace HardHorn.Utility
         /// <param name="rows"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        public int Read(out Post[,] rows, int n = 100000)
+        public int Read(out Post[,] rows, int n = 100000, int offset = 0)
         {
             rows = new Post[n, _table.Columns.Count];
             int row = 0;
@@ -88,7 +88,7 @@ namespace HardHorn.Utility
                                     raw.Append(node.ToString());
                                 }
                                 var s = raw.ToString();
-                                rows[row, col] = new Post(s, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition);
+                                rows[row, col] = new Post(s, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition, row + offset);
                                 col++;
                             }
                         }

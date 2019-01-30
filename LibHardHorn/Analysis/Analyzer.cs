@@ -31,6 +31,8 @@ namespace HardHorn.Analysis
     /// </summary>
     public class Analyzer
     {
+        public static int SampleSize = 50;
+
         /// <summary>
         /// The archive version whose data will be analyzed.
         /// </summary>
@@ -122,7 +124,7 @@ namespace HardHorn.Analysis
             }
 
             Post[,] rows;
-            _readRows = _tableReader.Read(out rows, n);
+            _readRows = _tableReader.Read(out rows, n, TableDoneRows);
 
             // analyze the rows
             for (int i = 0; i < _readRows; i++)

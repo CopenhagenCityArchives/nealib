@@ -13,16 +13,15 @@ namespace HardHorn.Archiving
         public int? Position { get; set; }
         public bool IsNull { get; set; }
         public string Data { get; set; }
+        public int RowIndex { get; set; }
 
-        public Post()
-        { }
-
-        public Post(string data, bool isNull, int? line = null, int? position = null)
+        public Post(string data, bool isNull, int? line = null, int? position = null, int rowIndex = 0)
         {
             Line = line;
             Position = position;
             IsNull = isNull;
             Data = data;
+            RowIndex = rowIndex;
         }
 
         public override string ToString()

@@ -80,6 +80,7 @@ namespace HardHorn.Utility
         public string Message { get; private set; }
         public int? Count { get; private set; }
         public AnalysisTestType TestType { get; private set; }
+        public Post Post { get; private set; }
 
         public AnalysisErrorNotification(Test test, Column column, Post post)
         {
@@ -121,6 +122,7 @@ namespace HardHorn.Utility
             Severity = test.Type == AnalysisTestType.UNDERFLOW ? Severity.Hint : Severity.Error;
             Column = column;
             Count = 1;
+            Post = post;
         }
     }
 
