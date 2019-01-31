@@ -4,6 +4,7 @@ using HardHorn.Archiving;
 using HardHorn.Utility;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace HardHorn.ViewModels
         public Table Table { get; set; }
         public string Header { get; set; }
         public string Message { get; set; }
+        public ObservableCollection<Post> Sample { get; set; }
         public int? Count
         {
             get { return count; }
@@ -50,6 +52,11 @@ namespace HardHorn.ViewModels
             Column = notification.Column;
             Message = notification.Message;
             Count = notification.Count;
+            if (notification is AnalysisErrorNotification)
+            {
+                Sample = new ObservableCollection<Post>();
+                Sample.Add((notification as AnalysisErrorNotification).Post);
+            }
         }
 
         public NotificationViewModel(NotificationType type, Severity severity)
