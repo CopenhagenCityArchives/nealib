@@ -245,6 +245,7 @@ namespace HardHorn.Analysis
                 {"h3", 0},
                 {"display", 0},
             };
+
             public void ContainsKeywords(string HugeText)
             {
                 foreach (var key in Keywords.Keys.ToList())
@@ -258,8 +259,9 @@ namespace HardHorn.Analysis
 
             public override Result GetResult(Post post, Column column)
             {
+                var sumBefore = Keywords.Values.Sum();
                 ContainsKeywords(post.Data);
-                if (Keywords.Values.Sum() != 0)
+                if (Keywords.Values.Sum() > sumBefore)
                     return Result.ERROR;
                     
                 else
