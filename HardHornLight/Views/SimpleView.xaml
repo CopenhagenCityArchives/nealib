@@ -175,6 +175,8 @@
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowUnderflow}">Underudfyldelse</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Formateringsfejl</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowBlank}">Foran- eller efterstillede blanktegn</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowSuspiciousKeywords}">Ulovlige keywords</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowRepeatingChar}">Gentagne karakterer</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
                         <Label FontWeight="Bold">Fremmednøgletest</Label>
@@ -192,7 +194,7 @@
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowTableRowCountErrors}">Tabelrækkeantalsfejl</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnErrors}">Feltindlæsning</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnTypeErrors}">Datatypefejl</CheckBox>
-                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyErrors}">Fremmednøglefejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTypeErrors}">Fremmednøgledatatypefejl</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
                         <Label FontWeight="Bold">Eksportér</Label>
@@ -211,9 +213,35 @@
                         </TextBlock>
                     </Label.Content>
                 </Label>
+                <StackPanel DockPanel.Dock="Bottom">
+                    <Label FontWeight="Bold">Eksempler</Label>
+                    <DataGrid Height="200" ItemsSource="{Binding SelectedNotification.Sample}" AutoGenerateColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Række" IsReadOnly="True">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="RowIndex" Converter="{StaticResource AdditionConverter}">
+                                        <Binding.ConverterParameter>
+                                            <sys:Int32>1</sys:Int32>
+                                        </Binding.ConverterParameter>
+                                    </Binding>
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Data" IsReadOnly="True" Binding="{Binding Data}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <StackPanel.Style>
+                        <Style>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedNotification.Sample}" Value="{x:Null}">
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                </StackPanel>
                 <TabControl DockPanel.Dock="Bottom" SelectedIndex="{Binding Notifications_SelectedGroupingIndex}">
                     <TabItem Header="Tabelgruppering">
-                        <ListView ItemsSource="{Binding NotificationsView}">
+                        <ListView SelectedItem="{Binding SelectedNotification}" ItemsSource="{Binding NotificationsView}">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn>
@@ -254,7 +282,7 @@
                         </ListView>
                     </TabItem>
                     <TabItem Header="Kategorigruppering">
-                        <ListView ItemsSource="{Binding NotificationsCategoryView}">
+                        <ListView SelectedItem="{Binding SelectedNotification}" ItemsSource="{Binding NotificationsCategoryView}">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn>

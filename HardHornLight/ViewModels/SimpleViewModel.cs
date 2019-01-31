@@ -132,6 +132,18 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowRegex; }
             set { notifications_ShowRegex = value; Notifications_RefreshViews(); }
         }
+        bool notifications_ShowSuspiciousKeywords = true;
+        public bool Notifications_ShowSuspiciousKeywords
+        {
+            get { return notifications_ShowSuspiciousKeywords; }
+            set { notifications_ShowSuspiciousKeywords = value; Notifications_RefreshViews(); }
+        }
+        bool notifications_ShowRepeatingChar = true;
+        public bool Notifications_ShowRepeatingChar
+        {
+            get { return notifications_ShowRepeatingChar; }
+            set { notifications_ShowRepeatingChar = value; Notifications_RefreshViews(); }
+        }
         bool notifications_ShowForeignKeyTestErrors = true;
         public bool Notifications_ShowForeignKeyTestErrors
         {
@@ -204,6 +216,12 @@ namespace HardHorn.ViewModels
         public CollectionViewSource NotificationsCategoryViewSource { get; private set; }
         public ICollectionView NotificationsCategoryView { get; set; }
         public int Notifications_SelectedGroupingIndex { get; set; }
+        NotificationViewModel selectedNotification;
+        public NotificationViewModel SelectedNotification
+        {
+            get { return selectedNotification; }
+            set { selectedNotification = value; NotifyOfPropertyChange("SelectedNotification"); }
+        }
 
         public ObservableCollection<TaskViewModel> Tasks { get; private set; }
         public TaskViewModel CurrentTask { get; private set; }
@@ -261,6 +279,8 @@ namespace HardHorn.ViewModels
                 || (noti.Type == NotificationType.AnalysisErrorFormat && Notifications_ShowFormat)
                 || (noti.Type == NotificationType.AnalysisErrorBlank && Notifications_ShowBlank)
                 || (noti.Type == NotificationType.AnalysisErrorRegex && Notifications_ShowRegex)
+                || (noti.Type == NotificationType.AnalysisErrorUnallowedKeyword && Notifications_ShowSuspiciousKeywords)
+                || (noti.Type == NotificationType.AnalysisErrorRepeatingChar && Notifications_ShowRepeatingChar)
                 || (noti.Type == NotificationType.ForeignKeyTestError && Notifications_ShowForeignKeyTestErrors)
                 || (noti.Type == NotificationType.ForeignKeyTestBlank && Notifications_ShowForeignKeyTestBlanks)
                 || (noti.Type == NotificationType.ParameterSuggestion && Notifications_ShowParameterSuggestions)
@@ -283,6 +303,7 @@ namespace HardHorn.ViewModels
             }
         }
 
+        Random random = new Random();
         public void HandleNotification(INotification notification)
         {
             NotificationViewModel viewModel = null;
@@ -293,14 +314,37 @@ namespace HardHorn.ViewModels
                 case NotificationType.AnalysisErrorUnderflow:
                 case NotificationType.AnalysisErrorFormat:
                 case NotificationType.AnalysisErrorRegex:
+                case NotificationType.AnalysisErrorRepeatingChar:
+                case NotificationType.AnalysisErrorUnallowedKeyword:
                     if (!AnalysisNotificationsMap.ContainsKey(notification.Column))
                     {
                         AnalysisNotificationsMap[notification.Column] = new Dictionary<AnalysisTestType, NotificationViewModel>();
                     }
 
-                    if (AnalysisNotificationsMap[notification.Column].ContainsKey((notification as AnalysisErrorNotification).TestType))
+                    var testType = (notification as AnalysisErrorNotification).TestType;
+                    if (AnalysisNotificationsMap[notification.Column].ContainsKey(testType))
                     {
                         AnalysisNotificationsMap[notification.Column][(notification as AnalysisErrorNotification).TestType].Count++;
+                        if (AnalysisNotificationsMap[notification.Column][testType].Sample.Count < Analyzer.SampleSize)
+                        {
+                            AnalysisNotificationsMap[notification.Column][testType].Sample.Add((notification as AnalysisErrorNotification).Post);
+                        }
+                        else if (random.Next((notification as AnalysisErrorNotification).Post.RowIndex) < Analyzer.SampleSize)
+                        {
+                            int index = random.Next(Analyzer.SampleSize);
+                            AnalysisNotificationsMap[notification.Column][testType].Sample[index] = (notification as AnalysisErrorNotification).Post;
+                        }
+                        if (notification.Type == NotificationType.AnalysisErrorUnallowedKeyword)
+                        {
+                            AnalysisNotificationsMap[notification.Column][testType].Message = notification.Message;
+                        }
+                        if (notification.Type == NotificationType.AnalysisErrorRepeatingChar)
+                        {
+                            if (!(AnalysisNotificationsMap[notification.Column][testType].Message.Contains(notification.Message)))
+                            {
+                                AnalysisNotificationsMap[notification.Column][testType].Message += notification.Message;
+                            }
+                        }
                     }
                     else
                     {
@@ -477,11 +521,15 @@ namespace HardHorn.ViewModels
                                     ana.AddTest(column, new Test.Underflow());
                                     ana.AddTest(column, new Test.Overflow());
                                     ana.AddTest(column, new Test.Blank());
+                                    ana.AddTest(column, new Test.RepeatingChar());
+                                    ana.AddTest(column, new Test.SuspiciousKeyword());
                                     break;
                                 case DataType.CHARACTER_VARYING:
                                 case DataType.NATIONAL_CHARACTER_VARYING:
                                     ana.AddTest(column, new Test.Overflow());
                                     ana.AddTest(column, new Test.Blank());
+                                    ana.AddTest(column, new Test.SuspiciousKeyword());
+                                    ana.AddTest(column, new Test.RepeatingChar());
                                     break;
                                 case DataType.TIMESTAMP:
                                     ana.AddTest(column, Test.TimestampFormatTest());
