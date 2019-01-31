@@ -17,6 +17,31 @@ using HardHorn.Utility;
 
 namespace HardHorn.Utilities
 {
+    public class AdditionConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var num = value as int?;
+            var param = parameter as int?;
+            if (num.HasValue && param.HasValue)
+            {
+                return num.Value + param.Value;
+            }
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var num = value as int?;
+            var param = value as int?;
+            if (num.HasValue && param.HasValue)
+            {
+                return num.Value - param.Value;
+            }
+            return null;
+        }
+    }
+
     public class ValuesToCategoryAxisConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -103,6 +128,10 @@ namespace HardHorn.Utilities
                     return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.UNDERFLOW);
                 case NotificationType.AnalysisErrorRegex:
                     return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.REGEX);
+                case NotificationType.AnalysisErrorUnallowedKeyword:
+                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.UNALLOWED_KEYWORD);
+                case NotificationType.AnalysisErrorRepeatingChar:
+                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.REPEATING_CHAR);
                 case NotificationType.DataTypeIllegalAlias:
                     return "Ulovlig datatypeforkortelse";
                 case NotificationType.ColumnParsing:
@@ -374,6 +403,10 @@ namespace HardHorn.Utilities
                     return "Formateringsfejl";
                 case AnalysisTestType.REGEX:
                     return "Match af regulært udtryk";
+                case AnalysisTestType.UNALLOWED_KEYWORD:
+                    return "Ulovlige keywords";
+                case AnalysisTestType.REPEATING_CHAR:
+                    return "Gentagne karakterer";
                 default:
                     return string.Empty;
             }
