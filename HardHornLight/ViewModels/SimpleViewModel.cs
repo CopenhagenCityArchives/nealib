@@ -102,113 +102,254 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowHintsWhereErrors; }
             set { notifications_ShowHintsWhereErrors = value; Notifications_RefreshViews(); }
         }
+
+        public bool? Notifications_ShowCategoryAnalysis
+        {
+            get
+            {
+                if (Notifications_ShowOverflow
+                    && Notifications_ShowUnderflow
+                    && Notifications_ShowFormat
+                    && Notifications_ShowBlank
+                    && Notifications_ShowRegex
+                    && Notifications_ShowRepeatingChar
+                    && Notifications_ShowSuspiciousKeywords)
+                {
+                    return true;
+                }
+                else if (Notifications_ShowOverflow
+                    || Notifications_ShowUnderflow
+                    || Notifications_ShowFormat
+                    || Notifications_ShowBlank
+                    || Notifications_ShowRegex
+                    || Notifications_ShowRepeatingChar
+                    || Notifications_ShowSuspiciousKeywords)
+                {
+                    return null;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            set
+            {
+                if (value.HasValue)
+                {
+                    Notifications_ShowOverflow = value.Value;
+                    Notifications_ShowUnderflow = value.Value;
+                    Notifications_ShowFormat = value.Value;
+                    Notifications_ShowBlank = value.Value;
+                    Notifications_ShowRegex = value.Value;
+                    Notifications_ShowRepeatingChar = value.Value;
+                    Notifications_ShowSuspiciousKeywords = value.Value;
+                }
+                NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis");
+            }
+        }
         bool notifications_ShowOverflow = true;
         public bool Notifications_ShowOverflow
         {
             get { return notifications_ShowOverflow; }
-            set { notifications_ShowOverflow = value; Notifications_RefreshViews(); }
+            set { notifications_ShowOverflow = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowOverflow"); NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis"); }
         }
         bool notifications_ShowUnderflow = true;
         public bool Notifications_ShowUnderflow
         {
             get { return notifications_ShowUnderflow; }
-            set { notifications_ShowUnderflow = value; Notifications_RefreshViews(); }
+            set { notifications_ShowUnderflow = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowUnderflow"); NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis"); }
         }
         bool notifications_ShowFormat = true;
         public bool Notifications_ShowFormat
         {
             get { return notifications_ShowFormat; }
-            set { notifications_ShowFormat = value; Notifications_RefreshViews(); }
+            set { notifications_ShowFormat = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowFormat"); NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis"); }
         }
         bool notifications_ShowBlank = true;
         public bool Notifications_ShowBlank
         {
             get { return notifications_ShowBlank; }
-            set { notifications_ShowBlank = value; Notifications_RefreshViews(); }
+            set { notifications_ShowBlank = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowBlank"); NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis"); }
         }
         bool notifications_ShowRegex = true;
         public bool Notifications_ShowRegex
         {
             get { return notifications_ShowRegex; }
-            set { notifications_ShowRegex = value; Notifications_RefreshViews(); }
+            set { notifications_ShowRegex = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowRegex"); NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis"); }
         }
         bool notifications_ShowSuspiciousKeywords = true;
         public bool Notifications_ShowSuspiciousKeywords
         {
             get { return notifications_ShowSuspiciousKeywords; }
-            set { notifications_ShowSuspiciousKeywords = value; Notifications_RefreshViews(); }
+            set { notifications_ShowSuspiciousKeywords = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowSuspiciousKeywords"); NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis"); }
         }
         bool notifications_ShowRepeatingChar = true;
         public bool Notifications_ShowRepeatingChar
         {
             get { return notifications_ShowRepeatingChar; }
-            set { notifications_ShowRepeatingChar = value; Notifications_RefreshViews(); }
+            set { notifications_ShowRepeatingChar = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowRepeatingChar"); NotifyOfPropertyChange("Notifications_ShowCategoryAnalysis"); }
+        }
+
+        public bool? Notifications_ShowCategoryForeignKeyTest
+        {
+            get
+            {
+                if (Notifications_ShowForeignKeyTestErrors && Notifications_ShowForeignKeyTestBlanks)
+                {
+                    return true;
+                }
+                else if (Notifications_ShowForeignKeyTestErrors || Notifications_ShowForeignKeyTestBlanks)
+                {
+                    return null;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            set
+            {
+                if (value.HasValue)
+                {
+                    Notifications_ShowForeignKeyTestErrors = value.Value;
+                    Notifications_ShowForeignKeyTestBlanks = value.Value;
+                }
+                NotifyOfPropertyChange("Notifications_ShowCategoryForeignKeyTest");
+            }
         }
         bool notifications_ShowForeignKeyTestErrors = true;
         public bool Notifications_ShowForeignKeyTestErrors
         {
             get { return notifications_ShowForeignKeyTestErrors; }
-            set { notifications_ShowForeignKeyTestErrors = value; Notifications_RefreshViews(); }
-        }
-        bool notifications_ShowForeignKeyErrors = true;
-        public bool Notifications_ShowForeignKeyErrors
-        {
-            get { return notifications_ShowForeignKeyErrors; }
-            set { notifications_ShowForeignKeyErrors = value; Notifications_RefreshViews(); }
+            set { notifications_ShowForeignKeyTestErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowForeignKeyTestErrors"); NotifyOfPropertyChange("Notifications_ShowCategoryForeignKeyTest"); }
         }
         bool notifications_ShowForeignKeyTestBlanks = true;
         public bool Notifications_ShowForeignKeyTestBlanks
         {
             get { return notifications_ShowForeignKeyTestBlanks; }
-            set { notifications_ShowForeignKeyTestBlanks = value; Notifications_RefreshViews(); }
+            set { notifications_ShowForeignKeyTestBlanks = value; Notifications_RefreshViews(); ; NotifyOfPropertyChange("Notifications_ShowForeignKeyTestBlanks"); NotifyOfPropertyChange("Notifications_ShowCategoryForeignKeyTest"); }
+        }
+
+        public bool? Notifications_ShowCategorySuggestions
+        {
+            get
+            {
+                if (Notifications_ShowDatatypeSuggestions && Notifications_ShowParameterSuggestions)
+                {
+                    return true;
+                }
+                else if (Notifications_ShowDatatypeSuggestions || Notifications_ShowParameterSuggestions)
+                {
+                    return null;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            set
+            {
+                if (value.HasValue)
+                {
+                    Notifications_ShowDatatypeSuggestions = value.Value;
+                    Notifications_ShowParameterSuggestions = value.Value;
+                }
+                NotifyOfPropertyChange("Notifications_ShowCategorySuggestions");
+            }
         }
         bool notifications_ShowParameterSuggestions = true;
         public bool Notifications_ShowParameterSuggestions
         {
             get { return notifications_ShowParameterSuggestions; }
-            set { notifications_ShowParameterSuggestions = value; Notifications_RefreshViews(); }
+            set { notifications_ShowParameterSuggestions = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowParameterSuggestions"); NotifyOfPropertyChange("Notifications_ShowCategorySuggestions"); }
         }
         bool notifications_ShowDatatypeSuggestions = true;
         public bool Notifications_ShowDatatypeSuggestions
         {
             get { return notifications_ShowDatatypeSuggestions; }
-            set { notifications_ShowDatatypeSuggestions = value; Notifications_RefreshViews(); }
+            set { notifications_ShowDatatypeSuggestions = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowDatatypeSuggestions"); NotifyOfPropertyChange("Notifications_ShowCategorySuggestions"); }
+        }
+
+        public bool? Notifications_ShowCategoryStructure
+        {
+            get
+            {
+                if (Notifications_ShowXmlValidationErrors
+                    && Notifications_ShowDataTypeIllegalAliasErrors
+                    && Notifications_ShowColumnErrors
+                    && Notifications_ShowColumnTypeErrors
+                    && Notifications_ShowForeignKeyTypeErrors
+                    && Notifications_ShowTableRowCountErrors)
+                {
+                    return true;
+                }
+                else if (Notifications_ShowXmlValidationErrors
+                    || Notifications_ShowDataTypeIllegalAliasErrors
+                    || Notifications_ShowColumnErrors
+                    || Notifications_ShowColumnTypeErrors
+                    || Notifications_ShowForeignKeyTypeErrors
+                    || Notifications_ShowTableRowCountErrors)
+                {
+                    return null;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            set
+            {
+                if (value.HasValue)
+                {
+                    Notifications_ShowXmlValidationErrors = value.Value;
+                    Notifications_ShowDataTypeIllegalAliasErrors = value.Value;
+                    Notifications_ShowColumnErrors = value.Value;
+                    Notifications_ShowColumnTypeErrors = value.Value;
+                    Notifications_ShowForeignKeyTypeErrors = value.Value;
+                    Notifications_ShowTableRowCountErrors = value.Value;
+                }
+                NotifyOfPropertyChange("Notifications_ShowCategoryStructure");
+            }
         }
         bool notifications_ShowXmlValidationErrors = true;
         public bool Notifications_ShowXmlValidationErrors
         {
             get { return notifications_ShowXmlValidationErrors; }
-            set { notifications_ShowXmlValidationErrors = value; Notifications_RefreshViews(); }
+            set { notifications_ShowXmlValidationErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowXmlValidationErrors"); NotifyOfPropertyChange("Notifications_ShowCategoryStructure"); }
         }
         bool notifications_ShowColumnErrors = true;
         public bool Notifications_ShowColumnErrors
         {
             get { return notifications_ShowColumnErrors; }
-            set { notifications_ShowColumnErrors = value; Notifications_RefreshViews(); }
+            set { notifications_ShowColumnErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowColumnErrors"); NotifyOfPropertyChange("Notifications_ShowCategoryStructure"); }
         }
         bool notifications_ShowColumnTypeErrors = true;
         public bool Notifications_ShowColumnTypeErrors
         {
             get { return notifications_ShowColumnTypeErrors; }
-            set { notifications_ShowColumnTypeErrors = value; Notifications_RefreshViews(); }
+            set { notifications_ShowColumnTypeErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowColumnTypeErrors"); NotifyOfPropertyChange("Notifications_ShowCategoryStructure"); }
         }
         bool notifications_ShowDataTypeIllegalAliasErrors = true;
         public bool Notifications_ShowDataTypeIllegalAliasErrors
         {
             get { return notifications_ShowDataTypeIllegalAliasErrors; }
-            set { notifications_ShowDataTypeIllegalAliasErrors = value; Notifications_RefreshViews(); }
+            set { notifications_ShowDataTypeIllegalAliasErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowDataTypeIllegalAliasErrors"); NotifyOfPropertyChange("Notifications_ShowCategoryStructure"); }
         }
         bool notifications_ShowForeignKeyTypeErrors = true;
         public bool Notifications_ShowForeignKeyTypeErrors
         {
             get { return notifications_ShowForeignKeyTypeErrors; }
-            set { notifications_ShowForeignKeyTypeErrors = value; Notifications_RefreshViews(); }
+            set { notifications_ShowForeignKeyTypeErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowForeignKeyTypeErrors"); NotifyOfPropertyChange("Notifications_ShowCategoryStructure"); }
         }
         bool notifications_ShowTableRowCountErrors = true;
         public bool Notifications_ShowTableRowCountErrors
         {
             get { return notifications_ShowTableRowCountErrors; }
-            set { notifications_ShowTableRowCountErrors = value; Notifications_RefreshViews(); }
+            set { notifications_ShowTableRowCountErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowTableRowCountErrors"); NotifyOfPropertyChange("Notifications_ShowCategoryStructure"); }
         }
 
         public CollectionViewSource NotificationsViewSource { get; private set; }

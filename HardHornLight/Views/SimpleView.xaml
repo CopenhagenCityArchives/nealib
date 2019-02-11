@@ -170,7 +170,7 @@
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHintsWhereErrors}">Vis hints ved fejl</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
-                        <Label FontWeight="Bold">Testkategorier</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategoryAnalysis}" FontWeight="Bold">Analyse</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowOverflow}">Overskridelse</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowUnderflow}">Underudfyldelse</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowFormat}">Formateringsfejl</CheckBox>
@@ -179,22 +179,23 @@
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowRepeatingChar}">Gentagne karakterer</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
-                        <Label FontWeight="Bold">Fremmednøgletest</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategoryForeignKeyTest}" FontWeight="Bold">Fremmednøgletest</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestErrors}">Fremmednøglefejl</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestBlanks}">Blanke fremmednøgler</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
-                        <Label FontWeight="Bold">Forslag</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategorySuggestions}" FontWeight="Bold">Forslag</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowParameterSuggestions}">Parameterforslag</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowDatatypeSuggestions}">Datatypeforslag</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
-                        <Label FontWeight="Bold">Struktur</Label>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategoryStructure}" FontWeight="Bold">Struktur</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowXmlValidationErrors}">Xml-valideringsfejl</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowTableRowCountErrors}">Tabelrækkeantalsfejl</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnErrors}">Feltindlæsning</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowColumnTypeErrors}">Datatypefejl</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTypeErrors}">Fremmednøgledatatypefejl</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowDataTypeIllegalAliasErrors}">Ulovlige datatypealiasfejl</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
                         <Label FontWeight="Bold">Eksportér</Label>
