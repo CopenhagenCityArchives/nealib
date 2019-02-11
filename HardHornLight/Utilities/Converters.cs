@@ -385,6 +385,46 @@ namespace HardHorn.Utilities
         }
     }
 
+    public class NotificationViewModelToForeignKeyDataTable : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var notificationViewModel = value as ViewModels.NotificationViewModel;
+            if (notificationViewModel == null)
+                return null;
+
+            var foreignKey = notificationViewModel.ForeignKey;
+            var resultsList = notificationViewModel.ErrorValues;
+
+            if (foreignKey == null || resultsList == null)
+            {
+                return null;
+            }
+
+            var dataTable = new DataTable();
+            foreach (var reference in foreignKey.References)
+            {
+                var dataColumn = new DataColumn(string.Format("<{0}: {1}>", reference.Column.ColumnId, reference.ColumnName.Replace("_", "__")), typeof(Post));
+                dataTable.Columns.Add(dataColumn);
+            }
+            dataTable.Columns.Add(new DataColumn("Antal fejl", typeof(int)));
+
+            foreach (var result in resultsList)
+            {
+                var objs = new List<object>(result.Key.Values);
+                objs.Add(result.Value);
+                dataTable.Rows.Add(objs.ToArray());
+            }
+
+            return dataTable;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class AnalysisErrorTypeToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

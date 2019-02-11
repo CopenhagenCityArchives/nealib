@@ -10,7 +10,8 @@ namespace HardHorn.ViewModels
         bool running = false;
         bool done = false;
         bool errors = false;
-        System.Action action;
+        System.Action<object> action;
+        object parameter = null;
 
         public string Name { get; private set; }
         public bool Running { get { return running; } private set { running = value; NotifyOfPropertyChange("Running"); } }
@@ -18,7 +19,7 @@ namespace HardHorn.ViewModels
         public bool Errors { get { return errors; } private set { errors = value; NotifyOfPropertyChange("Errors"); } }
         public Exception Exception { get; private set; }
 
-        public TaskViewModel(string name, System.Action action)
+        public TaskViewModel(string name, System.Action<object> action, object parameter = null)
         {
             Name = name;
 
@@ -28,6 +29,7 @@ namespace HardHorn.ViewModels
             Exception = null;
 
             this.action = action;
+            this.parameter = parameter;
         }
 
         public async Task Run()
@@ -35,7 +37,7 @@ namespace HardHorn.ViewModels
             try
             {
                 Running = true;
-                await Task.Run(action);
+                await Task.Run(() => { action(this.parameter); });
                 Done = true;
             }
             catch (Exception ex)

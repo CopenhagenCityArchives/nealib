@@ -239,6 +239,24 @@
                         </Style>
                     </StackPanel.Style>
                 </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom">
+                    <Label FontWeight="Bold">Eksempler</Label>
+                    <DataGrid Height="200"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False" 
+                              DockPanel.Dock="Right"
+                              ItemsSource="{Binding SelectedNotification, Converter={StaticResource NotificationViewModelToForeignKeyDataTable}}">
+                    </DataGrid>
+                    <StackPanel.Style>
+                        <Style>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedNotification.ForeignKey}" Value="{x:Null}">
+                                    <Setter Property="StackPanel.Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                </StackPanel>
                 <TabControl DockPanel.Dock="Bottom" SelectedIndex="{Binding Notifications_SelectedGroupingIndex}">
                     <TabItem Header="Tabelgruppering">
                         <ListView SelectedItem="{Binding SelectedNotification}" ItemsSource="{Binding NotificationsView}">

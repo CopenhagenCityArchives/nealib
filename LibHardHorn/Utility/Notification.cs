@@ -34,7 +34,8 @@ namespace HardHorn.Utility
         DataTypeIllegalAlias,
         Suggestion,
         AnalysisErrorRepeatingChar,
-        AnalysisErrorUnallowedKeyword
+        AnalysisErrorUnallowedKeyword,
+        ForeignKeyReferencedTableMissing
     }
 
     public delegate void NotificationCallback(INotification notification);
@@ -249,13 +250,15 @@ namespace HardHorn.Utility
         public string Message { get; private set; }
         public int? Count { get; private set; }
         public ForeignKey ForeignKey { get; private set; }
+        public IDictionary<ForeignKeyValue, int> ErrorValues { get; private set; }
 
-        public ForeignKeyTestErrorNotification(ForeignKey foreignKey, int count)
+        public ForeignKeyTestErrorNotification(ForeignKey foreignKey, int count, IDictionary<ForeignKeyValue, int> errorValues)
         {
             ForeignKey = foreignKey;
             Table = foreignKey.Table;
             Count = count;
             Message = $"{foreignKey.Name} refererer til værdier der ikke findes i {foreignKey.ReferencedTable}";
+            ErrorValues = errorValues;
         }
     }
 
@@ -276,6 +279,25 @@ namespace HardHorn.Utility
             Table = foreignKey.Table;
             Count = count;
             Message = $"Blanke (NULL-værdier) refereres i {foreignKey.Name} til {foreignKey.ReferencedTable}";
+        }
+    }
+
+    public class ForeignKeyReferencedTableMissingNotification : INotification
+    {
+        public NotificationType Type { get { return NotificationType.ForeignKeyReferencedTableMissing; } }
+        public Severity Severity { get { return Severity.Error; } }
+        public Column Column { get { return null; } }
+        public Table Table { get; private set; }
+        public string Header { get; private set; }
+        public string Message { get; private set; }
+        public int? Count { get; private set; }
+        public ForeignKey ForeignKey { get; private set; }
+
+        public ForeignKeyReferencedTableMissingNotification(ForeignKey foreignKey)
+        {
+            Table = foreignKey.Table;
+            Message = $"{foreignKey.Name} referer til tabellen \"{foreignKey.ReferencedTableName}\", der ikke kan findes.";
+            ForeignKey = foreignKey;
         }
     }
 }

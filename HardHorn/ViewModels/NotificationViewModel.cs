@@ -23,6 +23,9 @@ namespace HardHorn.ViewModels
         public string Header { get; set; }
         public string Message { get; set; }
         public ObservableCollection<Post> Sample { get; set; }
+        public ForeignKey ForeignKey { get; set; }
+        IDictionary<ForeignKeyValue, int> errorValues;
+        public IDictionary<ForeignKeyValue, int> ErrorValues { get { return errorValues; } set { errorValues = value; NotifyOfPropertyChange("ErrorValues"); } }
 
         public int? Count
         {
@@ -58,6 +61,11 @@ namespace HardHorn.ViewModels
             {
                 Sample = new ObservableCollection<Post>();
                 Sample.Add((notification as AnalysisErrorNotification).Post);
+            }
+            else if (notification is ForeignKeyTestErrorNotification)
+            {
+                ForeignKey = (notification as ForeignKeyTestErrorNotification).ForeignKey;
+                ErrorValues = (notification as ForeignKeyTestErrorNotification).ErrorValues;
             }
         }
 

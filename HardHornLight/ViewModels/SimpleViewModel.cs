@@ -357,6 +357,7 @@ namespace HardHorn.ViewModels
                     if (ForeignKeyTestErrorNotificationsMap.ContainsKey(foreignKeyTestErrorNotification.ForeignKey.Name))
                     {
                         ForeignKeyTestErrorNotificationsMap[foreignKeyTestErrorNotification.ForeignKey.Name].Count = foreignKeyTestErrorNotification.Count;
+                        ForeignKeyTestErrorNotificationsMap[foreignKeyTestErrorNotification.ForeignKey.Name].ErrorValues = foreignKeyTestErrorNotification.ErrorValues;
                     }
                     else
                     {
@@ -569,7 +570,8 @@ namespace HardHorn.ViewModels
                 // Add analysis tasks
                 foreach (var table in av.Tables)
                 {
-                    Tasks.Add(new TaskViewModel($"Analyse af {table.Name}", () => {
+                    continue;
+                    Tasks.Add(new TaskViewModel($"Analyse af {table.Name}", _ => {
                         Analyzer.MoveNextTable();
                         Analyzer.InitializeTable();
                         taskTotalProgress.Report(Analyzer.TableRowCount);
@@ -591,16 +593,32 @@ namespace HardHorn.ViewModels
                 var keyTest = new ForeignKeyTest(av.Tables, HandleNotification);
                 ProgressKeyTestTotal = keyTest.TotalRowCount;
                 NotifyOfPropertyChange("ProgressKeyTestTotal");
+                int skippedTables = 0;
                 foreach (var table in av.Tables)
                 {
                     // Skip if no foreign keys.
                     if (table.ForeignKeys == null || table.ForeignKeys.Count == 0)
-                        continue;
-
-                    Tasks.Add(new TaskViewModel($"Fremmednøgletest af {table.Name}", () =>
                     {
+                        skippedTables++;
+                        continue;
+                    }
+
+                    Tasks.Add(new TaskViewModel($"Fremmednøgletest af {table.Name}", skipped =>
+                    {
+                        int? tablesSkipped = skipped as int?;
+                        if (!tablesSkipped.HasValue)
+                            throw new InvalidOperationException("Task error");
                         bool readNext = false;
+
+                        // move next for each task with no foreign keys
+                        while (tablesSkipped > 0) {
+                            keyTest.MoveNextTable();
+                            tablesSkipped--;
+                        }
+
+                        // move next for this task
                         keyTest.MoveNextTable();
+
                         keyTest.InitializeReferencedValueLoading();
 
                         taskTotalProgress.Report(keyTest.TableRowCount);
@@ -623,7 +641,9 @@ namespace HardHorn.ViewModels
                             taskProgress.Report(keyTest.TableDoneRows);
                             keyTestProgress.Report(keyTest.TotalDoneRows);
                         } while (readNext);
-                    }));
+                    }, skippedTables));
+
+                    skippedTables = 0;
                 }
 
                 // Add location to JumpList (recent files, etc.)

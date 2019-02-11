@@ -5,6 +5,7 @@
              xmlns:util="clr-namespace:HardHorn.Utilities">
     <Application.Resources>
         <ResourceDictionary>
+            <util:NotificationViewModelToForeignKeyDataTable x:Key="NotificationViewModelToForeignKeyDataTable" />
             <util:NotificationTypeToStringConverter x:Key="NotificationTypeToStringConverter" />
             <util:DivisionConverter x:Key="DivisionConverter" />
             <util:AdditionConverter x:Key="AdditionConverter" />

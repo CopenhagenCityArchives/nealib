@@ -31,7 +31,16 @@ namespace HardHorn.Archiving
         public void Initialize(TableIndex tableIndex, Table table, NotificationCallback notify)
         {
             Table = table;
-            ReferencedTable = tableIndex.Tables.First(t => t.Name.ToLower() == ReferencedTableName.ToLower());
+            //try
+            //{
+                ReferencedTable = tableIndex.Tables.First(t => t.Name.ToLower() == ReferencedTableName.ToLower());
+            //}
+            //catch (InvalidOperationException)
+            //{
+            //    notify(new ForeignKeyReferencedTableMissingNotification(this));
+             //   return;
+            //}
+
             foreach (var reference in References)
             {
                 reference.Initialize(this, notify);

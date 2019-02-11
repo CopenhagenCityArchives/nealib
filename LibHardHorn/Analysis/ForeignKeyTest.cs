@@ -20,9 +20,10 @@ namespace HardHorn.Analysis
 
         private int _readRows = 0;
 
-        private IDictionary<ForeignKey, ISet<ForeignKeyValue>> _valueMap;
-        private IDictionary<ForeignKey, int> _errorCountMap;
-        private IDictionary<ForeignKey, IDictionary<ForeignKeyValue, int>> _errorMap;
+        private IDictionary<ForeignKey, ISet<ForeignKeyValue>> valueMap;
+        private IDictionary<ForeignKey, int> errorCountMap;
+        private IDictionary<ForeignKey, int> blankCountMap;
+        private IDictionary<ForeignKey, IDictionary<ForeignKeyValue, int>> errorMap;
 
         private IEnumerator<Table> _tableEnumerator;
         private IEnumerator<ForeignKey> _foreignKeyEnumerator;
@@ -34,17 +35,17 @@ namespace HardHorn.Analysis
 
         public int GetErrorCount(ForeignKey foreignKey)
         {
-            return _errorCountMap[foreignKey];
+            return errorCountMap[foreignKey];
         }
 
         public int GetErrorTypeCount(ForeignKey foreignKey)
         {
-            return _errorMap[foreignKey].Count;
+            return errorMap[foreignKey].Count;
         }
 
         public IEnumerable<KeyValuePair<ForeignKeyValue, int>> GetOrderedErrorCounts(ForeignKey foreignKey)
         {
-            return new List<KeyValuePair<ForeignKeyValue, int>>(_errorMap[foreignKey].OrderBy(kv => kv.Value).Reverse());
+            return new List<KeyValuePair<ForeignKeyValue, int>>(errorMap[foreignKey].OrderBy(kv => kv.Value).Reverse());
         }
 
         public ForeignKeyTest(IEnumerable<Table> tables, NotificationCallback notify)
@@ -54,15 +55,17 @@ namespace HardHorn.Analysis
 
             Notify = notify;
 
-            _valueMap = new Dictionary<ForeignKey, ISet<ForeignKeyValue>>();
-            _errorCountMap = new Dictionary<ForeignKey, int>();
-            _errorMap = new Dictionary<ForeignKey, IDictionary<ForeignKeyValue, int>>();
+            valueMap = new Dictionary<ForeignKey, ISet<ForeignKeyValue>>();
+            errorCountMap = new Dictionary<ForeignKey, int>();
+            blankCountMap = new Dictionary<ForeignKey, int>();
+            errorMap = new Dictionary<ForeignKey, IDictionary<ForeignKeyValue, int>>();
             foreach (var table in Tables)
             {
                 foreach (var foreignKey in table.ForeignKeys)
                 {
-                    _errorCountMap[foreignKey] = 0;
-                    _errorMap[foreignKey] = new Dictionary<ForeignKeyValue, int>();
+                    blankCountMap[foreignKey] = 0;
+                    errorCountMap[foreignKey] = 0;
+                    errorMap[foreignKey] = new Dictionary<ForeignKeyValue, int>();
                 }
             }
 
@@ -109,10 +112,10 @@ namespace HardHorn.Analysis
 
         public void InitializeReferencedValueLoading()
         {
-            _valueMap.Clear();
+            valueMap.Clear();
             foreach (var foreignKey in CurrentTable.ForeignKeys)
             {
-                _valueMap[foreignKey] = new HashSet<ForeignKeyValue>();
+                valueMap[foreignKey] = new HashSet<ForeignKeyValue>();
             }
             if (_foreignKeyEnumerator != null)
             {
@@ -149,7 +152,7 @@ namespace HardHorn.Analysis
 
             for (int i = 0; i < _readRows; i++)
             {
-                _valueMap[CurrentForeignKey].Add(CurrentForeignKey.GetReferencedValueFromRow(i, _rows));
+                valueMap[CurrentForeignKey].Add(CurrentForeignKey.GetReferencedValueFromRow(i, _rows));
             }
 
             TableDoneRows += _readRows;
@@ -177,43 +180,38 @@ namespace HardHorn.Analysis
                 foreach (var foreignKey in CurrentTable.ForeignKeys)
                 {
                     var key = foreignKey.GetValueFromRow(i, _rows);
-                    if (!_valueMap[foreignKey].Contains(key))
+                    if (key.Values.Any(post => post.IsNull))
                     {
-                        _errorCountMap[foreignKey]++;
-                        if (_errorMap[foreignKey].ContainsKey(key))
+                        blankCountMap[foreignKey]++;
+                    }
+                    else if (!valueMap[foreignKey].Contains(key))
+                    {
+                        errorCountMap[foreignKey]++;
+                        if (errorMap[foreignKey].ContainsKey(key))
                         {
-                            _errorMap[foreignKey][key]++;
+                            errorMap[foreignKey][key]++;
                         }
                         else
                         {
-                            _errorMap[foreignKey][key] = 1;
+                            errorMap[foreignKey][key] = 1;
                         }
                     }
                 }
             }
 
-            foreach (var foreignKey in _errorCountMap.Keys)
+            foreach (var foreignKey in errorCountMap.Keys)
             {
-                if (_errorCountMap[foreignKey] == 0)
+                if (errorCountMap[foreignKey] == 0)
                     continue;
 
-                int blank = 0;
-                foreach (var fkeyValue in _errorMap[foreignKey].Keys)
+                if (errorCountMap[foreignKey] > 0)
                 {
-                    if (fkeyValue.Values.Any(post => post.IsNull))
-                    {
-                        blank += _errorMap[foreignKey][fkeyValue];
-                    }
-                }
-                
-                if (_errorCountMap[foreignKey] - blank > 0)
-                {
-                    Notify(new ForeignKeyTestErrorNotification(foreignKey, _errorCountMap[foreignKey] - blank));
+                    Notify(new ForeignKeyTestErrorNotification(foreignKey, errorCountMap[foreignKey], errorMap[foreignKey]));
                 }
 
-                if (blank > 0)
+                if (blankCountMap[foreignKey] > 0)
                 {
-                    Notify(new ForeignKeyTestBlankNotification(foreignKey, blank));
+                    Notify(new ForeignKeyTestBlankNotification(foreignKey, blankCountMap[foreignKey]));
                 }
             }
 
