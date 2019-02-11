@@ -570,7 +570,6 @@ namespace HardHorn.ViewModels
                 // Add analysis tasks
                 foreach (var table in av.Tables)
                 {
-                    continue;
                     Tasks.Add(new TaskViewModel($"Analyse af {table.Name}", _ => {
                         Analyzer.MoveNextTable();
                         Analyzer.InitializeTable();
