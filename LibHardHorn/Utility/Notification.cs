@@ -86,6 +86,7 @@ namespace HardHorn.Utility
         public AnalysisErrorNotification(Test test, Column column, Post post)
         {
             TestType = test.Type;
+            Severity = Severity.Error;
             switch (TestType)
             {
                 case AnalysisTestType.BLANK:
@@ -107,13 +108,16 @@ namespace HardHorn.Utility
                 case AnalysisTestType.UNDERFLOW:
                     Type = NotificationType.AnalysisErrorUnderflow;
                     Message = "Data når ikke den minimale længde defineret af datatypen.";
+                    Severity = Severity.Hint;
                     break;
                 case AnalysisTestType.REPEATING_CHAR:
+                    Severity = Severity.Hint;
                     var repcharTest = (Test.RepeatingChar) test;
                     Message = repcharTest.CharRepeating;
                     Type = NotificationType.AnalysisErrorRepeatingChar;
                     break;
                 case AnalysisTestType.UNALLOWED_KEYWORD:
+                    Severity = Severity.Hint;
                     var keywordTest = (Test.SuspiciousKeyword)test;
                     var entriesFound = keywordTest.Keywords;//.Where(pair => !pair.Value.Equals(0));
                     var keysFound = keywordTest.Keywords
@@ -125,7 +129,6 @@ namespace HardHorn.Utility
                     break;
             }
 
-            Severity = test.Type == AnalysisTestType.UNDERFLOW ? Severity.Hint : Severity.Error;
             Column = column;
             Count = 1;
             Post = post;
