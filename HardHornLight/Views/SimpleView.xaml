@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:libutil="clr-namespace:HardHorn.Utility;assembly=LibHardHorn"
+        xmlns:util="clr-namespace:HardHorn.Utilities"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:cal="http://www.caliburnproject.org"
         ResizeMode="CanResizeWithGrip"
@@ -278,7 +279,10 @@
                 </StackPanel>
                 <TabControl DockPanel.Dock="Bottom" SelectedIndex="{Binding Notifications_SelectedGroupingIndex}">
                     <TabItem Header="Tabelgruppering">
-                        <ListView SelectedItem="{Binding SelectedNotification}" ItemsSource="{Binding NotificationsView}">
+                        <ListView SelectedItem="{Binding SelectedNotification}"
+                                  ItemsSource="{Binding NotificationsView}"
+                                  util:AttachedProperties.AutoSort="True"
+                                  util:AttachedProperties.ShowSortGlyph="True">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn>
@@ -299,10 +303,18 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Width="200" Header="Felt" DisplayMemberBinding="{Binding Column}" />
-                                    <GridViewColumn Width="150" Header="Kategori" DisplayMemberBinding="{Binding Type, Converter={StaticResource NotificationTypeToStringConverter}}" />
-                                    <GridViewColumn Width="70" Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
-                                    <GridViewColumn Width="800" Header="Besked" DisplayMemberBinding="{Binding Message}" />
+                                    <GridViewColumn Width="200" DisplayMemberBinding="{Binding Column}" util:AttachedProperties.PropertyName="Column.ColumnIdNumber">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Felt" /></GridViewColumnHeader>
+                                    </GridViewColumn>
+                                    <GridViewColumn Width="150" DisplayMemberBinding="{Binding Type, Converter={StaticResource NotificationTypeToStringConverter}}" util:AttachedProperties.PropertyName="Type">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Kategori" /></GridViewColumnHeader>
+                                    </GridViewColumn>
+                                    <GridViewColumn Width="60" DisplayMemberBinding="{Binding Count}" util:AttachedProperties.PropertyName="Count">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Antal" /></GridViewColumnHeader>
+                                    </GridViewColumn>
+                                    <GridViewColumn Width="600" DisplayMemberBinding="{Binding Message}" util:AttachedProperties.PropertyName="Message">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Besked" /></GridViewColumnHeader>
+                                    </GridViewColumn>
                                 </GridView>
                             </ListView.View>
                             <ListView.GroupStyle>
@@ -319,7 +331,9 @@
                         </ListView>
                     </TabItem>
                     <TabItem Header="Kategorigruppering">
-                        <ListView SelectedItem="{Binding SelectedNotification}" ItemsSource="{Binding NotificationsCategoryView}">
+                        <ListView SelectedItem="{Binding SelectedNotification}" ItemsSource="{Binding NotificationsCategoryView}"
+                                  util:AttachedProperties.AutoSort="True"
+                                  util:AttachedProperties.ShowSortGlyph="True">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn>
@@ -340,10 +354,18 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Width="200" Header="Tabel" DisplayMemberBinding="{Binding Table}" />
-                                    <GridViewColumn Width="200" Header="Felt" DisplayMemberBinding="{Binding Column}" />
-                                    <GridViewColumn Width="70" Header="Forekomster" DisplayMemberBinding="{Binding Count}" />
-                                    <GridViewColumn Width="800" Header="Besked" DisplayMemberBinding="{Binding Message}" />
+                                    <GridViewColumn Width="200" util:AttachedProperties.PropertyName="Table.Folder" DisplayMemberBinding="{Binding Table}">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Tabel" /></GridViewColumnHeader>
+                                    </GridViewColumn>
+                                    <GridViewColumn Width="200" util:AttachedProperties.PropertyName="Column.ColumnIdNumber" DisplayMemberBinding="{Binding Column}">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Felt" /></GridViewColumnHeader>
+                                    </GridViewColumn>
+                                    <GridViewColumn Width="70" util:AttachedProperties.PropertyName="Count" DisplayMemberBinding="{Binding Count}">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Antal" /></GridViewColumnHeader>
+                                    </GridViewColumn>
+                                    <GridViewColumn Width="800" util:AttachedProperties.PropertyName="Message" DisplayMemberBinding="{Binding Message}">
+                                        <GridViewColumnHeader HorizontalContentAlignment="Left"><TextBlock Text="Besked" /></GridViewColumnHeader>
+                                    </GridViewColumn>
                                 </GridView>
                             </ListView.View>
                             <ListView.GroupStyle>

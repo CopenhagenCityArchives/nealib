@@ -63,7 +63,6 @@ namespace HardHorn.ViewModels
             private set { loadingArchiveVersion = value; NotifyOfPropertyChange("LoadingArchiveVersion"); }
         }
 
-
         TaskbarItemProgressState progressState = TaskbarItemProgressState.None;
         public TaskbarItemProgressState ProgressState
         {
