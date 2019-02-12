@@ -215,9 +215,9 @@
                     </Label.Content>
                 </Label>
                 <StackPanel DockPanel.Dock="Bottom">
-                    <Label FontWeight="Bold">Eksempler</Label>
-                    <DataGrid x:Name="ExamplesDataGrid" Height="200" ItemsSource="{Binding SelectedNotification.Sample}" AutoGenerateColumns="False"
-                              cal:Message.Attach="[Event SelectionChanged] = [Action ExamplesSelectionChanged($eventArgs)]">
+                    <Label FontWeight="Bold">Stikprøve</Label>
+                    <DataGrid Height="200" ItemsSource="{Binding SelectedNotification.Sample}" AutoGenerateColumns="False"
+                              cal:Message.Attach="[Event SelectionChanged] = [Action AnalysisErrorSamplesSelectionChanged($eventArgs)]">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Række" IsReadOnly="True">
                                 <DataGridTextColumn.Binding>
@@ -232,8 +232,10 @@
                         </DataGrid.Columns>
                         <DataGrid.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="Kopier" cal:Message.Attach="Copy('false')" />
-                                <MenuItem Header="Kopier med kolonneoverskrifter" cal:Message.Attach="Copy('true')"></MenuItem>
+                                <MenuItem Header="Kopier" cal:Message.Attach="CopyAnalysisErrorSamples('false', 'false')" />
+                                <MenuItem Header="Kopier citeret" cal:Message.Attach="CopyAnalysisErrorSamples('false', 'true')" />
+                                <MenuItem Header="Kopier med overskrifter" cal:Message.Attach="CopyAnalysisErrorSamples('true', 'false')"></MenuItem>
+                                <MenuItem Header="Kopier citeret med overskrifter" cal:Message.Attach="CopyAnalysisErrorSamples('true', 'true')"></MenuItem>
                             </ContextMenu>
                         </DataGrid.ContextMenu>
                     </DataGrid>
@@ -253,7 +255,16 @@
                               CanUserAddRows="False"
                               CanUserDeleteRows="False" 
                               DockPanel.Dock="Right"
+                              cal:Message.Attach="[Event SelectionChanged] = [Action ForeignKeyTestErrorSamplesSelectionChanged($eventArgs)]"
                               ItemsSource="{Binding SelectedNotification, Converter={StaticResource NotificationViewModelToForeignKeyDataTable}}">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Kopier" cal:Message.Attach="CopyForeignKeyTestErrorSamples('false', 'false')" />
+                                <MenuItem Header="Kopier citeret" cal:Message.Attach="CopyForeignKeyTestErrorSamples('false', 'true')" />
+                                <MenuItem Header="Kopier med overskrifter" cal:Message.Attach="CopyForeignKeyTestErrorSamples('true', 'false')"></MenuItem>
+                                <MenuItem Header="Kopier citeret med overskrifter" cal:Message.Attach="CopyForeignKeyTestErrorSamples('true', 'true')"></MenuItem>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
                     </DataGrid>
                     <StackPanel.Style>
                         <Style>

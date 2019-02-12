@@ -371,6 +371,11 @@ namespace HardHorn.ViewModels
         public long ProgressAnalysisTotal { get; private set; }
         public double ProgressValue { get; private set; }
         public double ProgressValueTask { get; private set; }
+
+        bool skipAnalysis = false;
+
+        List<Post> AnalysisErrorSamplesSelection = new List<Post>();
+        List<System.Data.DataRowView> ForeignKeyTestErrorSamplesSelection = new List<System.Data.DataRowView>();
         #endregion
 
         #region Constructors
@@ -404,6 +409,11 @@ namespace HardHorn.ViewModels
             if (args.Length == 2 && Directory.Exists(args[1]))
             {
                 LoadLocation(args[1]);
+            }
+
+            if (args.Contains("--skip-analysis"))
+            {
+                skipAnalysis = true;
             }
         }
         #endregion
@@ -709,25 +719,26 @@ namespace HardHorn.ViewModels
                     SetStatus($"Indlæsning er fuldført, med fejl. Fejlkategorier: {NotificationsCategoryView.Groups.Count}, antal fejl: {Notifications.Count}", LogLevel.ERROR);
 
                 // Add analysis tasks
-                foreach (var table in av.Tables)
-                {
-                    Tasks.Add(new TaskViewModel($"Analyse af {table.Name}", _ => {
-                        Analyzer.MoveNextTable();
-                        Analyzer.InitializeTable();
-                        taskTotalProgress.Report(Analyzer.TableRowCount);
-                        taskProgress.Report(0);
+                if (!skipAnalysis)
+                    foreach (var table in av.Tables)
+                    {
+                        Tasks.Add(new TaskViewModel($"Analyse af {table.Name}", _ => {
+                            Analyzer.MoveNextTable();
+                            Analyzer.InitializeTable();
+                            taskTotalProgress.Report(Analyzer.TableRowCount);
+                            taskProgress.Report(0);
 
-                        bool readNext = false;
-                        int chunk = 10000;
-                        do
-                        {
-                            readNext = Analyzer.AnalyzeRows(chunk);
-                            taskProgress.Report(Analyzer.TableDoneRows);
-                            analysisProgress.Report(Analyzer.TotalDoneRows);
-                        }
-                        while (readNext);
-                    }));
-                }
+                            bool readNext = false;
+                            int chunk = 10000;
+                            do
+                            {
+                                readNext = Analyzer.AnalyzeRows(chunk);
+                                taskProgress.Report(Analyzer.TableDoneRows);
+                                analysisProgress.Report(Analyzer.TotalDoneRows);
+                            }
+                            while (readNext);
+                        }));
+                    }
 
                 // Add key test tasks
                 var keyTest = new ForeignKeyTest(av.Tables, HandleNotification);
@@ -832,28 +843,79 @@ namespace HardHorn.ViewModels
             }
         }
 
-        List<object> ExamplesSelected = new List<object>();
-
-        public void ExamplesSelectionChanged(SelectionChangedEventArgs eventArgs)
+        public void AnalysisErrorSamplesSelectionChanged(SelectionChangedEventArgs eventArgs)
         {
-            ExamplesSelected.AddRange(eventArgs.AddedItems.Cast<object>());
-            foreach (var item in eventArgs.RemovedItems.Cast<object>())
+            AnalysisErrorSamplesSelection.AddRange(eventArgs.AddedItems.Cast<Post>());
+            foreach (var item in eventArgs.RemovedItems.Cast<Post>())
             {
-                ExamplesSelected.Remove(item);
+                AnalysisErrorSamplesSelection.Remove(item);
             }
         }
 
-        public void Copy(bool copyHeaders)
+        public void CopyAnalysisErrorSamples(bool headers, bool quoted)
         {
             string copy = string.Empty;
-            if (copyHeaders)
+            if (headers)
             {
-                copy = "Række\tData\n";
+                if (quoted)
+                    copy = "\"Række\"\t\"Data\"\n";
+                else
+                    copy = "Række\tData\n";
             }
-            foreach (Post post in ExamplesSelected)
+            foreach (Post post in AnalysisErrorSamplesSelection)
             {
-                copy += $"{post.RowIndex + 1}\t{post.Data}\n";
+                if (quoted)
+                    copy += $"\"{post.RowIndex + 1}\"\t\"{post.Data}\"\n";
+                else
+                    copy += $"{post.RowIndex + 1}\t{post.Data}\n";
             }
+            Clipboard.SetText(copy);
+        }
+
+        public void ForeignKeyTestErrorSamplesSelectionChanged(SelectionChangedEventArgs eventArgs)
+        {
+            ForeignKeyTestErrorSamplesSelection.AddRange(eventArgs.AddedItems.Cast<System.Data.DataRowView>());
+            foreach (var item in eventArgs.RemovedItems.Cast<System.Data.DataRowView>())
+            {
+                ForeignKeyTestErrorSamplesSelection.Remove(item);
+            }
+        }
+
+        public void CopyForeignKeyTestErrorSamples(bool headers, bool quoted)
+        {
+            if (SelectedNotification.Type != NotificationType.ForeignKeyTestError)
+                return;
+
+            var foreignKey = SelectedNotification.ForeignKey;
+
+            string copy = string.Empty;
+            if (headers)
+            {
+                if (quoted)
+                    copy = string.Join("\t", foreignKey.References.Select(refe => "\"" + refe.Column.ToString() + "\"")) + "\t\"Antal fejl\"\n";
+                else
+                    copy = string.Join("\t", foreignKey.References.Select(refe => refe.Column.ToString())) + "\tAntal fejl\n";
+            }
+
+            foreach (var rowView in ForeignKeyTestErrorSamplesSelection)
+            {
+                var items = new List<string>();
+                int i;
+                for (i = 0; i < foreignKey.References.Count; i++)
+                {
+                    var post = rowView[i] as Post;
+                    if (quoted)
+                        items.Add("\"" + post.Data + "\"");
+                    else
+                        items.Add(post.Data);
+                }
+                if (quoted)
+                    items.Add("\"" + (rowView[i] as int?).Value.ToString() + "\"");
+                else
+                    items.Add((rowView[i] as int?).Value.ToString());
+                copy += string.Join("\t", items) + "\n";
+            }
+
             Clipboard.SetText(copy);
         }
 
