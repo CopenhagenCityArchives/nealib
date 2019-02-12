@@ -229,6 +229,7 @@
                                     </Binding>
                                 </DataGridTextColumn.Binding>
                             </DataGridTextColumn>
+                            <DataGridTextColumn Header="Længde" IsReadOnly="True" Binding="{Binding Data, Converter={StaticResource StringToLengthConverter}}"/>
                             <DataGridTextColumn Header="Data" IsReadOnly="True" Binding="{Binding Data}" />
                         </DataGrid.Columns>
                         <DataGrid.ContextMenu>

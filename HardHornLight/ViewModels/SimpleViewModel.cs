@@ -857,16 +857,16 @@ namespace HardHorn.ViewModels
             if (headers)
             {
                 if (quoted)
-                    copy = "\"Række\"\t\"Data\"\n";
+                    copy = "\"Række\"\t\"Længde\"\t\"Data\"\n";
                 else
-                    copy = "Række\tData\n";
+                    copy = "Række\tLængde\tData\n";
             }
             foreach (Post post in AnalysisErrorSamplesSelection)
             {
                 if (quoted)
-                    copy += $"\"{post.RowIndex + 1}\"\t\"{post.Data}\"\n";
+                    copy += $"\"{post.RowIndex + 1}\"\t\"{post.Data.Length}\"\t\"{post.Data}\"\n";
                 else
-                    copy += $"{post.RowIndex + 1}\t{post.Data}\n";
+                    copy += $"{post.RowIndex + 1}\t{post.Data.Length}\t{post.Data}\n";
             }
             Clipboard.SetText(copy);
         }
