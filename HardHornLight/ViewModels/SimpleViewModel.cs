@@ -786,22 +786,6 @@ namespace HardHorn.ViewModels
                     skippedTables = 0;
                 }
 
-                // Add location to JumpList (recent files, etc.)
-                var jumpList = JumpList.GetJumpList(Application.Current);
-                string title = Path.GetFileName(location);
-                string programLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
-
-                var recent = new JumpTask
-                {
-                    ApplicationPath = programLocation,
-                    Arguments = location,
-                    Description = location,
-                    IconResourcePath = programLocation,
-                    Title = title
-                };
-
-                JumpList.AddToRecentCategory(recent);
-
                 ArchiveVersion = av;
                 Analyzer = analyzer;
             }
