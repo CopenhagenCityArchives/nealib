@@ -216,7 +216,8 @@
                 </Label>
                 <StackPanel DockPanel.Dock="Bottom">
                     <Label FontWeight="Bold">Eksempler</Label>
-                    <DataGrid Height="200" ItemsSource="{Binding SelectedNotification.Sample}" AutoGenerateColumns="False">
+                    <DataGrid x:Name="ExamplesDataGrid" Height="200" ItemsSource="{Binding SelectedNotification.Sample}" AutoGenerateColumns="False"
+                              cal:Message.Attach="[Event SelectionChanged] = [Action ExamplesSelectionChanged($eventArgs)]">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Række" IsReadOnly="True">
                                 <DataGridTextColumn.Binding>
@@ -229,6 +230,12 @@
                             </DataGridTextColumn>
                             <DataGridTextColumn Header="Data" IsReadOnly="True" Binding="{Binding Data}" />
                         </DataGrid.Columns>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Kopier" cal:Message.Attach="Copy('false')" />
+                                <MenuItem Header="Kopier med kolonneoverskrifter" cal:Message.Attach="Copy('true')"></MenuItem>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
                     </DataGrid>
                     <StackPanel.Style>
                         <Style>

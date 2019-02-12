@@ -832,6 +832,31 @@ namespace HardHorn.ViewModels
             }
         }
 
+        List<object> ExamplesSelected = new List<object>();
+
+        public void ExamplesSelectionChanged(SelectionChangedEventArgs eventArgs)
+        {
+            ExamplesSelected.AddRange(eventArgs.AddedItems.Cast<object>());
+            foreach (var item in eventArgs.RemovedItems.Cast<object>())
+            {
+                ExamplesSelected.Remove(item);
+            }
+        }
+
+        public void Copy(bool copyHeaders)
+        {
+            string copy = string.Empty;
+            if (copyHeaders)
+            {
+                copy = "Række\tData\n";
+            }
+            foreach (Post post in ExamplesSelected)
+            {
+                copy += $"{post.RowIndex + 1}\t{post.Data}\n";
+            }
+            Clipboard.SetText(copy);
+        }
+
         public void Notifications_ExportHTML()
         {
             using (var dialog = new System.Windows.Forms.SaveFileDialog())
