@@ -113,7 +113,10 @@ namespace HardHorn.Utility
                 case AnalysisTestType.REPEATING_CHAR:
                     Severity = Severity.Hint;
                     var repcharTest = (Test.RepeatingChar) test;
-                    Message = repcharTest.CharRepeating;
+                    var strB = new StringBuilder();
+                    foreach (KeyValuePair<string, int> pair in repcharTest.Maximum)
+                        strB.AppendFormat($"{pair.Key}({pair.Value}).");
+                    Message = strB.ToString(); 
                     Type = NotificationType.AnalysisErrorRepeatingChar;
                     break;
                 case AnalysisTestType.UNALLOWED_KEYWORD:

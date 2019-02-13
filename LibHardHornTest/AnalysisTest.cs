@@ -7,6 +7,7 @@ using LibHardHornTest.Utilities;
 using System.Text.RegularExpressions;
 using System.Linq;
 using HardHorn.Utility;
+using System.Text;
 
 namespace LibHardHornTest
 {
@@ -681,9 +682,9 @@ namespace LibHardHornTest
                     new Post("", true));
             }
         }
-        //string assertText = System.IO.File.ReadAllText(@"W:\Xml-tag\assertText.txt");
+        
         [TestMethod]
-        public void SuspiciosKeyword_nokeyword_message_isnull()
+        public void SuspiciosKeyword_nokeyword_resultokay()
         {
             string assertText = "ad3aed2a - 20be - 11e3 - aa74 - 3cd92bf42f50";
 
@@ -691,7 +692,7 @@ namespace LibHardHornTest
             INotification noti_kw = null;
             var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
 
-            Assert.IsNull(noti_kw.Message);
+            Assert.AreEqual(Test.Result.OKAY, kwTest);
         }
 
         [TestMethod]
@@ -703,8 +704,9 @@ namespace LibHardHornTest
             INotification noti_kw = null;
             var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
 
-            Assert.AreNotEqual("", noti_kw.Message);
+            Assert.IsNull(noti_kw);
         }
+ 
 
         [TestMethod]
         public void SuspiciosKeyword_nokeyword_c10_column_resultokay()
@@ -728,6 +730,56 @@ namespace LibHardHornTest
             var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
 
             Assert.AreEqual(Test.Result.OKAY, kwTest);
+        }
+
+        [TestMethod]
+        public void SuspiciosKeyword_skraldespand_resultokay()
+        {
+            string assertText = "skraldespand ";
+
+            var test = new Test.SuspiciousKeyword();
+            INotification noti_kw = null;
+            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+
+            Assert.AreEqual(Test.Result.OKAY, kwTest);
+        }
+
+        [TestMethod]
+        public void SuspiciosKeyword_span_resulterror()
+        {
+            string assertText = "?span!";
+
+            var test = new Test.SuspiciousKeyword();
+            INotification noti_kw = null;
+            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+
+            Assert.AreEqual(Test.Result.ERROR, kwTest);
+        }
+
+        [TestMethod]
+        public void SuspiciousKeyword_embracedin_anglebrackets_resulterror()
+        {
+            string assertText = "<div>";
+
+            var test = new Test.SuspiciousKeyword();
+            INotification noti_kw = null;
+            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+
+            Assert.AreEqual(Test.Result.ERROR, kwTest);
+
+        }
+
+        [TestMethod]
+        public void SuspiciousKeyword_spandende_resulterror()
+        {
+            string assertText = " spandende";
+
+            var test = new Test.SuspiciousKeyword();
+            INotification noti_kw = null;
+            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+
+            Assert.AreEqual(Test.Result.OKAY, kwTest);
+
         }
 
         [TestMethod]
@@ -824,7 +876,7 @@ namespace LibHardHornTest
         }
 
         [TestMethod]
-        public void RepeatingChar_space_result_okay()
+        public void RepeatingChar_spaceignored_result_okay()
         {
             var test = new Test.RepeatingChar();
             INotification noti = null;
@@ -839,9 +891,17 @@ namespace LibHardHornTest
             var test = new Test.RepeatingChar();
             INotification noti = null;
             var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ", false), null, myNotification => noti = myNotification);
-            Assert.AreEqual("ÿ", noti.Message);
+            Assert.AreEqual("ÿ(33).", noti.Message);
         }
 
+        [TestMethod]
+        public void RepeatingChar_ychar_update_message_longestonly()
+        {
+            var test = new Test.RepeatingChar();
+            INotification noti = null;
+            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿ cccccccccccccc bbbbbbbbbbbbbbb ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ ccccccccccccc bbbbbbbbbbbb bbbbbbbbbbbbbbbbbbb", false), null, myNotification => noti = myNotification);
+            Assert.AreEqual("ÿ(26).c(14).b(19).", noti.Message);
+        }
 
         [TestMethod]
         public void NotificationsTest()

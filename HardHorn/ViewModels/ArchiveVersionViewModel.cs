@@ -625,10 +625,7 @@ namespace HardHorn.ViewModels
                         }
                         if (notification.Type == NotificationType.AnalysisErrorRepeatingChar)
                         {
-                            if (!(AnalysisErrorNotificationIndex[notification.Column][testType].Message.Contains(notification.Message)))
-                            {
-                                AnalysisErrorNotificationIndex[notification.Column][testType].Message += notification.Message;
-                            }
+                            AnalysisErrorNotificationIndex[notification.Column][testType].Message = notification.Message;
                         }
                     }
 

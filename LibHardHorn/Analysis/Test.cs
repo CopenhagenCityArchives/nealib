@@ -248,13 +248,26 @@ namespace HardHorn.Analysis
 
             public void ContainsKeywords(string HugeText)
             {
-                foreach (var key in Keywords.Keys.ToList())
-                {
-                    if (HugeText.Contains(key))
+                Keywords.Keys.ToList().ForEach(x => Keywords[x] = 0);
+                    foreach (var key in Keywords.Keys.ToList())
                     {
-                        Keywords[key] += 1;
+                        
+                        if (HugeText.Contains(key))
+                        {
+                            int keyInd = HugeText.IndexOf(key);
+                            int indBeforeKey = keyInd - 1;
+                            int indAfterKey = keyInd + key.Length;
+                            bool isLetterBef = Char.IsLetter(HugeText[indBeforeKey]);
+                            bool isLetterAft = Char.IsLetter(HugeText[indAfterKey]);
+
+                            // keyword is not part of compound word
+                            if ( !(isLetterBef || isLetterAft) )
+                            {
+                                Keywords[key] += 1;
+                            }
+                        }
                     }
-                }
+                
             }
 
             public override Result GetResult(Post post, Column column)
@@ -303,15 +316,26 @@ namespace HardHorn.Analysis
             public override AnalysisTestType Type { get { return AnalysisTestType.REPEATING_CHAR; } }
 
             public string CharRepeating { get; set; }
+            public Dictionary<string, int> Maximum = new Dictionary<string, int>();
 
             public override Result GetResult(Post post, Column column)
             {
-                Match match;
+                MatchCollection matches = char_repeating_regex.Matches(post.Data);
                 
-                match = char_repeating_regex.Match(post.Data);
-                if (match.Success)
+                if (matches.Count != 0)
                 {
-                    CharRepeating = match.Groups[1].ToString();
+                    foreach(Match match in matches)
+                    {
+                        CharRepeating = match.Groups[1].ToString();
+                        int ind = match.Index;
+                        var matchLen = match.Value.Length;
+                      
+                        if (!Maximum.ContainsKey(CharRepeating))
+                            Maximum.Add(CharRepeating, matchLen);
+                        else
+                            if (matchLen > Maximum[CharRepeating])
+                            Maximum[CharRepeating] = matchLen;
+                    }
                     return Result.ERROR;
                 }
                 return Result.OKAY;
