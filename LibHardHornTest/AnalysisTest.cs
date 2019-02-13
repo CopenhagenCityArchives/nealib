@@ -706,7 +706,24 @@ namespace LibHardHornTest
 
             Assert.IsNull(noti_kw);
         }
- 
+
+        [TestMethod]
+        public void SuspiciousKeyword_multipost_result_okay()
+        {
+            string assertText = "<div>";
+            string assertText2 = "2010 - 04 - 07T12: 16:07.341 + 02:00";
+            string assertText3 = "table ";
+
+            var test = new Test.SuspiciousKeyword();
+            var kw_test = test.Run(new Post(assertText, false), null, null);
+            var kw_test2 = test.Run(new Post(assertText2, false), null, null);
+            var kw_test3 = test.Run(new Post(assertText3, false), null, null);
+
+            Assert.AreEqual(Test.Result.ERROR, kw_test);
+            Assert.AreEqual(Test.Result.OKAY, kw_test2);
+            Assert.AreEqual(Test.Result.ERROR, kw_test3);
+
+        }
 
         [TestMethod]
         public void SuspiciosKeyword_nokeyword_c10_column_resultokay()

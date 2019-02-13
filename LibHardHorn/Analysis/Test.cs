@@ -248,26 +248,25 @@ namespace HardHorn.Analysis
 
             public void ContainsKeywords(string HugeText)
             {
-                Keywords.Keys.ToList().ForEach(x => Keywords[x] = 0);
-                    foreach (var key in Keywords.Keys.ToList())
+                //Keywords.Keys.ToList().ForEach(x => Keywords[x] = 0);
+                foreach (var key in Keywords.Keys.ToList())
+                {
+                    int keyInd = HugeText.IndexOf(key);
+                    if (keyInd != -1)
                     {
-                        
-                        if (HugeText.Contains(key))
-                        {
-                            int keyInd = HugeText.IndexOf(key);
-                            int indBeforeKey = keyInd - 1;
-                            int indAfterKey = keyInd + key.Length;
-                            bool isLetterBef = Char.IsLetter(HugeText[indBeforeKey]);
-                            bool isLetterAft = Char.IsLetter(HugeText[indAfterKey]);
+                        int indBeforeKey = keyInd - 1;
+                        int indAfterKey = keyInd + key.Length;
+                    
+                        bool notLetterBef = indBeforeKey < 0 || ! Char.IsLetter(HugeText[indBeforeKey]);
+                        bool notLetterAft = indAfterKey > HugeText.Length || ! Char.IsLetter(HugeText[indAfterKey]);
 
-                            // keyword is not part of compound word
-                            if ( !(isLetterBef || isLetterAft) )
-                            {
-                                Keywords[key] += 1;
-                            }
+                        // keyword is not part of compound word
+                        if (notLetterAft && notLetterBef)
+                        {
+                            Keywords[key] += 1;
                         }
                     }
-                
+                }
             }
 
             public override Result GetResult(Post post, Column column)

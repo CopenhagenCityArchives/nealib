@@ -58,10 +58,10 @@
     <ApplicationIcon>icon_512.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>A85D1CC6BCE93BE89ED5314CC4E89E6A286825B4</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>BA306CBE8B008EC322D73F619C1665FEDF06BF00</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>HardHorn_1_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>HardHorn_2_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
