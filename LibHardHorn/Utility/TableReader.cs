@@ -54,10 +54,11 @@ namespace HardHorn.Utility
         /// <param name="rows"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        public int Read(out Post[,] rows, int n = 100000, int offset = 0)
+        public int Read(out Post[,] rows, int n = 100000, int offset = 0, bool readRaw = false)
         {
             rows = new Post[n, _table.Columns.Count];
             int row = 0;
+            string data;
 
             while (row < n && _xmlReader.Read())
             {
@@ -82,13 +83,21 @@ namespace HardHorn.Utility
                                     bool.TryParse(xnull.Value, out isNull);
                                 }
 
-                                System.Text.StringBuilder raw = new System.Text.StringBuilder();
-                                foreach (var node in xpost.Nodes())
+                                if (readRaw)
                                 {
-                                    raw.Append(node.ToString());
+                                    System.Text.StringBuilder raw = new System.Text.StringBuilder();
+                                    foreach (var node in xpost.Nodes())
+                                    {
+                                        raw.Append(node.ToString());
+                                    }
+                                    data = raw.ToString();
                                 }
-                                var s = raw.ToString();
-                                rows[row, col] = new Post(s, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition, row + offset);
+                                else
+                                {
+                                    data = xpost.Value;
+                                }
+
+                                rows[row, col] = new Post(data, isNull, xmlInfo.LineNumber, xmlInfo.LinePosition, row + offset);
                                 col++;
                             }
                         }
