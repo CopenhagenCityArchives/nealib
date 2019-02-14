@@ -741,6 +741,11 @@ namespace HardHorn.ViewModels
                                 analysisProgress.Report(Analyzer.TotalDoneRows);
                             }
                             while (readNext);
+
+                            foreach (var report in Analyzer.TestHierachy[Analyzer.CurrentTable].Values)
+                            {
+                                report.SuggestType(HandleNotification);
+                            }
                         }));
                     }
 
@@ -923,13 +928,37 @@ namespace HardHorn.ViewModels
             Clipboard.SetText(copy);
         }
 
+        public void ExportTableIndex(bool onlySuggestionsWhereError)
+        {
+            using (var dialog = new System.Windows.Forms.SaveFileDialog())
+            {
+                dialog.Filter = "Xml|*.xml|Alle filtyper|*.*";
+                dialog.FileName = "tableIndex.xml";
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    SetStatus($"Eksporterer opdateret tabelindeks til '{dialog.FileName}'.");
+                    using (var stream = dialog.OpenFile())
+                    {
+                        using (var xmlWriter = System.Xml.XmlWriter.Create(stream, new System.Xml.XmlWriterSettings() { Indent = true }))
+                        {
+                            TableIndex fromSuggestions = Analyzer.CreateTableIndexFromSuggestions(onlySuggestionsWhereError);
+                            var xml = fromSuggestions.ToXml(false);
+                            xml.WriteTo(xmlWriter);
+                        }
+                    }
+                }
+            }
+
+
+        }
+
         public void Notifications_ExportHTML()
         {
             var now = DateTime.Now;
             using (var dialog = new System.Windows.Forms.SaveFileDialog())
             {
                 dialog.Filter = "Html|*.html|Alle filtyper|*.*";
-                dialog.FileName = $"HardHorn_{ArchiveVersion.Id}_{now.ToString("yyyy-MM-dd_HH-mm-ss")}.html";
+                dialog.FileName = $"NEAAnalyzer_{ArchiveVersion.Id}_{now.ToString("yyyy-MM-dd_HH-mm-ss")}.html";
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     SetStatus($"Eksporterer {NotificationCount} ud af {Notifications.Count} notifikationer til '{dialog.FileName}'.");

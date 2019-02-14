@@ -200,7 +200,9 @@
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
                         <Label FontWeight="Bold">Eksportér</Label>
-                        <Button Margin="5" Padding="5" cal:Message.Attach="Notifications_ExportHTML()">Som HTML-fil...</Button>
+                        <Button Margin="5" Padding="5" cal:Message.Attach="Notifications_ExportHTML()">HTML-rapport...</Button>
+                        <Button Margin="5" Padding="5" cal:Message.Attach="ExportTableIndex('false')">Tabelindeks, med forslag anvendt...</Button>
+                        <Button Margin="5" Padding="5" cal:Message.Attach="ExportTableIndex('true')">Tabelindeks, med forslag ved fejl anvendt...</Button>
                     </StackPanel>
                 </WrapPanel>
                 <Label DockPanel.Dock="Top">

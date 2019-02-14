@@ -192,5 +192,48 @@ namespace HardHorn.Analysis
 
             return false;
         }
+
+        /// <summary>
+        /// Creates a new table index based on the old, with suggestions added.
+        /// </summary>
+        /// <returns></returns>
+        public TableIndex CreateTableIndexFromSuggestions(bool applyOnlyWhereError)
+        {
+            var newTables = new List<Table>();
+            foreach (var table in ArchiveVersion.Tables)
+            {
+                var newColumns = new List<Column>();
+                foreach (var column in table.Columns)
+                {
+                    var suggestion = TestHierachy[table][column].SuggestedType;
+                    bool include = !applyOnlyWhereError;
+                    if (applyOnlyWhereError)
+                    {
+                        include = TestHierachy[table][column].Tests.Any(t => t.Type == AnalysisTestType.FORMAT || t.Type == AnalysisTestType.OVERFLOW && t.ErrorCount > 0);
+                    }
+
+                    if (include && suggestion != null)
+                    {
+                        newColumns.Add(new Column(table,
+                            column.Name,
+                            suggestion,
+                            column.DataTypeOriginal,
+                            column.Nullable,
+                            column.Description,
+                            column.ColumnId,
+                            column.ColumnIdNumber,
+                            column.DefaultValue,
+                            column.FunctionalDescription));
+                    }
+                    else
+                    {
+                        newColumns.Add(column);
+                    }
+                }
+                newTables.Add(new Table(table.Name, table.Folder, table.Rows, table.Description, newColumns, table.PrimaryKey, table.ForeignKeys));
+            }
+            var tableIndex = ArchiveVersion.TableIndex;
+            return new TableIndex(tableIndex.Version, tableIndex.DBName, tableIndex.DatabaseProduct, newTables, tableIndex.Views);
+        }
     }
 }
