@@ -252,7 +252,7 @@
                     </StackPanel.Style>
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Bottom">
-                    <Label FontWeight="Bold">Eksempler</Label>
+                    <Label FontWeight="Bold">Stikprøve</Label>
                     <DataGrid Height="200"
                               CanUserAddRows="False"
                               CanUserDeleteRows="False" 
