@@ -38,7 +38,7 @@ namespace HardHorn.ViewModels
         {
             get
             {
-                return $"{(ArchiveVersion != null ? ArchiveVersion.Id + " - " : string.Empty)}HardHorn Light";
+                return $"{(ArchiveVersion != null ? ArchiveVersion.Id + " - " : string.Empty)}NEA Analyzer";
             }
         }
 
