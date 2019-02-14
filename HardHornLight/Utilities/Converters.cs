@@ -116,55 +116,12 @@ namespace HardHorn.Utilities
                 return null;
             }
 
-            switch (type.Value)
-            {
-                case NotificationType.AnalysisErrorBlank:
-                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.BLANK);
-                case NotificationType.AnalysisErrorFormat:
-                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.FORMAT);
-                case NotificationType.AnalysisErrorOverflow:
-                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.OVERFLOW);
-                case NotificationType.AnalysisErrorUnderflow:
-                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.UNDERFLOW);
-                case NotificationType.AnalysisErrorRegex:
-                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.REGEX);
-                case NotificationType.AnalysisErrorUnallowedKeyword:
-                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.UNALLOWED_KEYWORD);
-                case NotificationType.AnalysisErrorRepeatingChar:
-                    return AnalysisErrorTypeToStringConverter.ConvertErrorType(AnalysisTestType.REPEATING_CHAR);
-                case NotificationType.DataTypeIllegalAlias:
-                    return "Ulovlig datatypeforkortelse";
-                case NotificationType.ColumnParsing:
-                    return "Feltindlæsningsfejl";
-                case NotificationType.ColumnTypeError:
-                    return "Datatypefejl";
-                case NotificationType.TableRowCountError:
-                    return "Tabelrækkeantalsfejl";
-                case NotificationType.ForeignKeyTypeError:
-                    return "Fremmednøgledatatypefejl";
-                case NotificationType.XmlError:
-                    return "Xml-valideringsfejl";
-                case NotificationType.ParameterSuggestion:
-                    return "Parameterforslag";
-                case NotificationType.DataTypeSuggestion:
-                    return "Datatypeforslag";
-                case NotificationType.ForeignKeyTestError:
-                    return "Fremmednøgletestfejl";
-                case NotificationType.ForeignKeyTestBlank:
-                    return "Fremmednøgletestfejl med blanke værdier";
-                default:
-                    return null;
-            }
+            return NotificationsUtility.NotificationTypeToString(type.Value);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
-        }
-
-        public static string ConvertNotificationType(NotificationType type)
-        {
-            return (new NotificationTypeToStringConverter()).Convert(type, typeof(string), null, CultureInfo.CurrentCulture) as string;
         }
     }
 
@@ -446,37 +403,16 @@ namespace HardHorn.Utilities
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var error = value as AnalysisTestType?;
-
-            switch (error)
-            {
-                case AnalysisTestType.UNDERFLOW:
-                    return "Underudfyldelse";
-                case AnalysisTestType.OVERFLOW:
-                    return "Overskridelse";
-                case AnalysisTestType.BLANK:
-                    return "Foran- eller efterstillede blanktegn";
-                case AnalysisTestType.FORMAT:
-                    return "Formateringsfejl";
-                case AnalysisTestType.REGEX:
-                    return "Match af regulært udtryk";
-                case AnalysisTestType.UNALLOWED_KEYWORD:
-                    return "Ulovlige keywords";
-                case AnalysisTestType.REPEATING_CHAR:
-                    return "Gentagne karakterer";
-                default:
-                    return string.Empty;
-            }
+            var testType = value as AnalysisTestType?;
+            if (testType.HasValue)
+                return AnalysisUtility.AnalysisTestTypeToString(testType.Value);
+            else
+                return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
-        }
-
-        public static string ConvertErrorType(AnalysisTestType type)
-        {
-            return (new AnalysisErrorTypeToStringConverter()).Convert(type, typeof(string), null, CultureInfo.CurrentCulture) as string;
         }
     }
 

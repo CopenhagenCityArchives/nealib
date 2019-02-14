@@ -45,20 +45,21 @@
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analysis\AnalysisTestType.cs" />
     <Compile Include="Analysis\ColumnAnalysis.cs" />
     <Compile Include="Analysis\ForeignKeyTest.cs" />
+    <Compile Include="Utility\Analysis.cs" />
     <Compile Include="Utility\Notification.cs" />
     <Compile Include="Analysis\Test.cs" />
     <Compile Include="Archiving\ArchiveVersion.cs" />
@@ -79,12 +80,9 @@
     <Compile Include="Statistics\Statistics.cs" />
     <Compile Include="Archiving\Table.cs" />
     <Compile Include="Archiving\TableIndex.cs" />
-    <Compile Include="Utility\ColumnComparison.cs" />
+    <Compile Include="Utility\Comparison.cs" />
     <Compile Include="Utility\DataTypeUtility.cs" />
-    <Compile Include="Utility\ForeignKeyComparison.cs" />
-    <Compile Include="Utility\ReferenceComparison.cs" />
     <Compile Include="Utility\ReplacementOperation.cs" />
-    <Compile Include="Utility\TableComparison.cs" />
     <Compile Include="Utility\TableReader.cs" />
     <Compile Include="Utility\TableReplacer.cs" />
   </ItemGroup>

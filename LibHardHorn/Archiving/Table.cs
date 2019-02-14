@@ -99,7 +99,7 @@ namespace HardHorn.Archiving
                     //if (callback != null)
                     //    callback(ex);
                 }
-                catch (ColumnParsingException ex)
+                catch (ColumnParsingException)
                 {
                     var column = new Column(table, "__Ugyldig_Kolonne" + (dummyCount++).ToString() + "__", ParameterizedDataType.GetUndefined(), null, false, "", "", 0, null, null);
                     (table.Columns as List<Column>).Add(column);
