@@ -475,10 +475,10 @@ if (table.sortAscending) {
 table.children[0].children[columnIndex].appendChild(glyph);
 }
 </script>");
-            writer.WriteLine($"<title>{archiveVersion.Id} - HardHorn Log</title>");
+            writer.WriteLine($"<title>{archiveVersion.Id} - NEA Analyzer Log</title>");
             writer.WriteLine("</head>");
             writer.WriteLine("<body style=\"font-family: verdana, sans-serif;\">");
-            writer.WriteLine($"<h1>{archiveVersion.Id} - HardHorn Log</h1>");
+            writer.WriteLine($"<h1>{archiveVersion.Id} - NEA Analyzer Log</h1>");
             writer.WriteLine($"<p><strong>Tidspunkt:</strong> {now}</p>");
             writer.WriteLine("<h2 id=\"oversigt\">Oversigt</h2>");
             writer.WriteLine("<ul>");
