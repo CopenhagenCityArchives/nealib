@@ -168,7 +168,6 @@
                         <Label FontWeight="Bold">Alvorlighed</Label>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHints}">Vis hints</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowErrors}">Vis fejl</CheckBox>
-                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowHintsWhereErrors}">Vis hints ved fejl</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategoryAnalysis}" FontWeight="Bold">Analyse</CheckBox>
@@ -188,6 +187,7 @@
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategorySuggestions}" FontWeight="Bold">Forslag</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowParameterSuggestions}">Parameterforslag</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowDatatypeSuggestions}">Datatypeforslag</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowSuggestionsWhereErrors}">Vis forslag ved fejl</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategoryStructure}" FontWeight="Bold">Struktur</CheckBox>
