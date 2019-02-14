@@ -95,11 +95,11 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowErrors; }
             set { notifications_ShowErrors = value; Notifications_RefreshViews(); }
         }
-        bool notifications_ShowHintsWhereErrors = true;
-        public bool Notifications_ShowHintsWhereErrors
+        bool notifications_ShowSuggestionsWhereErrors = true;
+        public bool Notifications_ShowSuggestionsWhereErrors
         {
-            get { return notifications_ShowHintsWhereErrors; }
-            set { notifications_ShowHintsWhereErrors = value; Notifications_RefreshViews(); }
+            get { return notifications_ShowSuggestionsWhereErrors; }
+            set { notifications_ShowSuggestionsWhereErrors = value; Notifications_RefreshViews(); }
         }
 
         public bool? Notifications_ShowCategoryAnalysis
@@ -235,11 +235,11 @@ namespace HardHorn.ViewModels
         {
             get
             {
-                if (Notifications_ShowDatatypeSuggestions && Notifications_ShowParameterSuggestions)
+                if (Notifications_ShowDatatypeSuggestions && Notifications_ShowParameterSuggestions && Notifications_ShowSuggestionsWhereErrors)
                 {
                     return true;
                 }
-                else if (Notifications_ShowDatatypeSuggestions || Notifications_ShowParameterSuggestions)
+                else if (Notifications_ShowDatatypeSuggestions || Notifications_ShowParameterSuggestions || Notifications_ShowSuggestionsWhereErrors)
                 {
                     return null;
                 }
@@ -255,6 +255,7 @@ namespace HardHorn.ViewModels
                 {
                     Notifications_ShowDatatypeSuggestions = value.Value;
                     Notifications_ShowParameterSuggestions = value.Value;
+                    Notifications_ShowSuggestionsWhereErrors = value.Value;
                 }
                 NotifyOfPropertyChange("Notifications_ShowCategorySuggestions");
             }
@@ -422,8 +423,7 @@ namespace HardHorn.ViewModels
         {
             var noti = obj as INotification;
             bool includeBySeverity = (noti.Severity == Severity.Hint && Notifications_ShowHints)
-                                  || (noti.Severity == Severity.Error && Notifications_ShowErrors)
-                                  || (noti.Severity == Severity.Hint && Notifications_ShowHintsWhereErrors && AnalysisNotificationsMap.ContainsKey(noti.Column));
+                                  || (noti.Severity == Severity.Error && Notifications_ShowErrors);
             bool includeByNotificationType = (noti.Type == NotificationType.AnalysisErrorOverflow && Notifications_ShowOverflow)
                 || (noti.Type == NotificationType.AnalysisErrorUnderflow && Notifications_ShowUnderflow)
                 || (noti.Type == NotificationType.AnalysisErrorFormat && Notifications_ShowFormat)
@@ -441,7 +441,11 @@ namespace HardHorn.ViewModels
                 || (noti.Type == NotificationType.DataTypeIllegalAlias && Notifications_ShowDataTypeIllegalAliasErrors)
                 || (noti.Type == NotificationType.ForeignKeyTypeError && Notifications_ShowForeignKeyTypeErrors)
                 || (noti.Type == NotificationType.TableRowCountError && Notifications_ShowTableRowCountErrors);
-            return includeBySeverity && includeByNotificationType;
+            bool includeSuggestionsWhereErrors =
+                (noti.Type == NotificationType.DataTypeSuggestion || noti.Type == NotificationType.ParameterSuggestion)
+                && AnalysisNotificationsMap.ContainsKey(noti.Column)
+                && (AnalysisNotificationsMap[noti.Column].ContainsKey(AnalysisTestType.FORMAT) || AnalysisNotificationsMap[noti.Column].ContainsKey(AnalysisTestType.OVERFLOW));
+            return includeSuggestionsWhereErrors || (includeBySeverity && includeByNotificationType);
         }
 
         public void SetStatus(string msg, LogLevel level = LogLevel.NORMAL)
@@ -672,15 +676,15 @@ namespace HardHorn.ViewModels
                                     ana.AddTest(column, new Test.Underflow());
                                     ana.AddTest(column, new Test.Overflow());
                                     ana.AddTest(column, new Test.Blank());
-                                    ana.AddTest(column, new Test.RepeatingChar());
-                                    ana.AddTest(column, new Test.SuspiciousKeyword());
+                                    //ana.AddTest(column, new Test.RepeatingChar());
+                                    //ana.AddTest(column, new Test.SuspiciousKeyword());
                                     break;
                                 case DataType.CHARACTER_VARYING:
                                 case DataType.NATIONAL_CHARACTER_VARYING:
                                     ana.AddTest(column, new Test.Overflow());
                                     ana.AddTest(column, new Test.Blank());
-                                    ana.AddTest(column, new Test.SuspiciousKeyword());
-                                    ana.AddTest(column, new Test.RepeatingChar());
+                                    //ana.AddTest(column, new Test.SuspiciousKeyword());
+                                    //ana.AddTest(column, new Test.RepeatingChar());
                                     break;
                                 case DataType.TIMESTAMP:
                                     ana.AddTest(column, Test.TimestampFormatTest());
