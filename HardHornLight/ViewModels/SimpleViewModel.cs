@@ -95,12 +95,6 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowErrors; }
             set { notifications_ShowErrors = value; Notifications_RefreshViews(); }
         }
-        bool notifications_ShowSuggestionsWhereErrors = true;
-        public bool Notifications_ShowSuggestionsWhereErrors
-        {
-            get { return notifications_ShowSuggestionsWhereErrors; }
-            set { notifications_ShowSuggestionsWhereErrors = value; Notifications_RefreshViews(); }
-        }
 
         public bool? Notifications_ShowCategoryAnalysis
         {
@@ -228,7 +222,7 @@ namespace HardHorn.ViewModels
         public bool Notifications_ShowForeignKeyTestBlanks
         {
             get { return notifications_ShowForeignKeyTestBlanks; }
-            set { notifications_ShowForeignKeyTestBlanks = value; Notifications_RefreshViews(); ; NotifyOfPropertyChange("Notifications_ShowForeignKeyTestBlanks"); NotifyOfPropertyChange("Notifications_ShowCategoryForeignKeyTest"); }
+            set { notifications_ShowForeignKeyTestBlanks = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowForeignKeyTestBlanks"); NotifyOfPropertyChange("Notifications_ShowCategoryForeignKeyTest"); }
         }
 
         public bool? Notifications_ShowCategorySuggestions
@@ -272,6 +266,13 @@ namespace HardHorn.ViewModels
             get { return notifications_ShowDatatypeSuggestions; }
             set { notifications_ShowDatatypeSuggestions = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowDatatypeSuggestions"); NotifyOfPropertyChange("Notifications_ShowCategorySuggestions"); }
         }
+        bool notifications_ShowSuggestionsWhereErrors = true;
+        public bool Notifications_ShowSuggestionsWhereErrors
+        {
+            get { return notifications_ShowSuggestionsWhereErrors; }
+            set { notifications_ShowSuggestionsWhereErrors = value; Notifications_RefreshViews(); NotifyOfPropertyChange("Notifications_ShowSuggestionsWhereErrors"); NotifyOfPropertyChange("Notifications_ShowCategorySuggestions"); }
+        }
+
 
         public bool? Notifications_ShowCategoryStructure
         {
