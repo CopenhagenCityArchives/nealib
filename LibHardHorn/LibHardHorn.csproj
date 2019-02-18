@@ -59,6 +59,7 @@
     <Compile Include="Analysis\AnalysisTestType.cs" />
     <Compile Include="Analysis\ColumnAnalysis.cs" />
     <Compile Include="Analysis\ForeignKeyTest.cs" />
+    <Compile Include="Archiving\TiffMetadata.cs" />
     <Compile Include="Utility\Analysis.cs" />
     <Compile Include="Utility\Notification.cs" />
     <Compile Include="Analysis\Test.cs" />
