@@ -222,7 +222,7 @@
                     <DataGrid Height="200" ItemsSource="{Binding SelectedNotification.Sample}" AutoGenerateColumns="False"
                               cal:Message.Attach="[Event SelectionChanged] = [Action AnalysisErrorSamplesSelectionChanged($eventArgs)]">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Række" IsReadOnly="True">
+                            <DataGridTextColumn Header="Række" IsReadOnly="True" SortDirection="Ascending">
                                 <DataGridTextColumn.Binding>
                                     <Binding Path="RowIndex" Converter="{StaticResource AdditionConverter}">
                                         <Binding.ConverterParameter>
