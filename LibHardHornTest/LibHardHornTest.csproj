@@ -69,6 +69,7 @@
     <Compile Include="ForeignKeyTestTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TableTest.cs" />
+    <Compile Include="TiffTest.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -98,6 +99,8 @@
     <Content Include="TestResources\AVID.TEST.1.1\Indices\tableIndex.xml" />
     <Content Include="TestResources\AVID.TEST.1.1\Tables\table1\table1.xml" />
     <Content Include="TestResources\AVID.TEST.1.1\Tables\table2\table2.xml" />
+    <Content Include="TestResources\test2.tif" />
+    <Content Include="TestResources\test.tif" />
   </ItemGroup>
   <ItemGroup>
     <None Include="TestResources\AVID.OVERFLOW.1.1\Schemas\standard\archiveIndex.xsd">
