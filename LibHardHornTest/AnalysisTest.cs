@@ -767,8 +767,7 @@ namespace LibHardHornTest
             string assertText = "?span!";
 
             var test = new Test.SuspiciousKeyword();
-            INotification noti_kw = null;
-            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+            var kwTest = test.Run(new Post(assertText, false), null, null);
 
             Assert.AreEqual(Test.Result.ERROR, kwTest);
         }
@@ -779,15 +778,14 @@ namespace LibHardHornTest
             string assertText = "<div>";
 
             var test = new Test.SuspiciousKeyword();
-            INotification noti_kw = null;
-            var kwTest = test.Run(new Post(assertText, false), null, myNoti => noti_kw = myNoti);
+            var kwTest = test.Run(new Post(assertText, false), null, null);
 
             Assert.AreEqual(Test.Result.ERROR, kwTest);
 
         }
 
         [TestMethod]
-        public void SuspiciousKeyword_spandende_resulterror()
+        public void SuspiciousKeyword_spandende_resultokay()
         {
             string assertText = " spandende";
 

@@ -90,6 +90,7 @@ namespace HardHorn.Utility
         {
             TestType = test.Type;
             Severity = Severity.Error;
+
             switch (TestType)
             {
                 case AnalysisTestType.BLANK:
@@ -114,12 +115,35 @@ namespace HardHorn.Utility
                     Severity = Severity.Hint;
                     break;
                 case AnalysisTestType.REPEATING_CHAR:
+                    uint col_treshold = column.ParameterizedDataType.Parameter.Length * 100 / 95;
                     Severity = Severity.Hint;
                     var repcharTest = (Test.RepeatingChar) test;
-                    var strB = new StringBuilder();
+                 
+                    SortedList<string, int> critical = new SortedList<string, int>();
+                    SortedList<string, int> rest = new SortedList<string, int>();
+
                     foreach (KeyValuePair<string, int> pair in repcharTest.Maximum)
-                        strB.AppendFormat($"{pair.Key}({pair.Value}).");
-                    Message = strB.ToString(); 
+                    {
+                        if (pair.Value > col_treshold)
+                            critical.Add(pair.Key, pair.Value);
+                        else
+                            rest.Add(pair.Key, pair.Value);
+                    }
+                    Message = "";
+                    if (critical.Any())
+                    {
+                        var strB = new StringBuilder();
+                        foreach (KeyValuePair<string, int> pair in critical)
+                            strB.AppendFormat($"{pair.Key}({pair.Value}).");
+                        Message += "Over threshold length: " + strB.ToString();
+                    }
+                    if (rest.Any())
+                    {
+                        var strB = new StringBuilder();
+                        foreach (KeyValuePair<string, int> pair in rest)
+                            strB.AppendFormat($"{pair.Key}({pair.Value}).");
+                        Message += " List: " + strB.ToString();
+                    }
                     Type = NotificationType.AnalysisErrorRepeatingChar;
                     break;
                 case AnalysisTestType.UNALLOWED_KEYWORD:
