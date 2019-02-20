@@ -12,7 +12,7 @@ namespace LibHardHornTest
         [DeploymentItem(@"..\..\TestResources", @"TestResources")]
         public void TestTiffLoad()
         {
-            var tiff = Tiff.Open(@"TestResources\test2.tif");
+            var tiff = Tiff.Open(@"TestResources\tiff\2.tif");
             Assert.AreEqual(ByteOrder.LittleEndian, tiff.ByteOrder);
 
             uint offset = tiff.FirstImageFileDirectoryOffset;
