@@ -17,13 +17,28 @@ namespace LibHardHornTest
 
             uint offset = tiff.FirstImageFileDirectoryOffset;
             ImageFileDirectory ifd;
-            do
+            while ((ifd = tiff.ReadNextImageFileDirectory()) != null)
             {
-                ifd = tiff.ReadImageFileDirectory(offset);
-                if (ifd.NextImageFileDirectoryOffset.HasValue)
-                    offset = ifd.NextImageFileDirectoryOffset.Value;
-
-            } while (!ifd.LastImageFileDirectory);
+                Console.WriteLine(ifd.ToString());
+                foreach (var entry in ifd.Entries.Values)
+                {
+                    Console.WriteLine($"\t{entry.ToString()}");
+                    if (entry.IsValueReference())
+                    {
+                        var value = tiff.ReadImageFileDirectoryEntryReferencedValue(entry);
+                        if (value.GetType().IsArray)
+                        {
+                            Console.WriteLine($"\t\tReferenced Values={string.Join(", ", (Array)value)}");
+                        }
+                        else
+                            Console.WriteLine($"\t\tReferenced Value={value.ToString()}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"\t\tValue={entry.Value}");
+                    }
+                }
+            }
         }
     }
 }

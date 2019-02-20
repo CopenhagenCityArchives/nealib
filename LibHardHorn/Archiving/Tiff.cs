@@ -52,7 +52,7 @@ namespace HardHorn.Archiving
         /// <summary>
         /// The entries in this directory.
         /// </summary>
-        public IReadOnlyList<ImageFileDirectoryEntry> Entries { get; private set; }
+        public IReadOnlyDictionary<ushort, ImageFileDirectoryEntry> Entries { get; private set; }
 
         /// <summary>
         /// The offset to the next image file directory, if there is one.
@@ -62,7 +62,7 @@ namespace HardHorn.Archiving
         /// <summary>
         /// True, if this is the last image file directory, false if it is not.
         /// </summary>
-        public bool LastImageFileDirectory { get { return !NextImageFileDirectoryOffset.HasValue; } }
+        public bool IsLastImageFileDirectory { get { return !NextImageFileDirectoryOffset.HasValue; } }
 
         /// <summary>
         /// Construct an image file directory object.
@@ -73,7 +73,7 @@ namespace HardHorn.Archiving
         public ImageFileDirectory(uint offset, uint count, IEnumerable<ImageFileDirectoryEntry> entries, uint nextIfdOffset)
         {
             Count = count;
-            Entries = new List<ImageFileDirectoryEntry>(entries);
+            Entries = entries.ToDictionary(entry => entry.Tag.Code);
             if (nextIfdOffset == 0)
                 NextImageFileDirectoryOffset = null;
             else
@@ -97,17 +97,34 @@ namespace HardHorn.Archiving
         public TiffTag Tag { get; private set; }
 
         /// <summary>
-        /// The type of the data in the field.
+        /// The type of the data in the field, if it is a valid type. Otherwise no value.
         /// </summary>
-        public TiffType FieldType { get; private set; }
+        public TiffType? FieldType { get; private set; }
 
         /// <summary>
         /// The number of values in the field.
         /// </summary>
         public uint Count { get; private set; }
 
-        byte[] Value;
+        /// <summary>
+        /// Contains the value of the entry if and only if it is contained directly in
+        /// the entry. Otherwise it is null.
+        /// </summary>
+        public object Value { get; private set; }
 
+        /// <summary>
+        /// Has a value that is the offset in the file of the value if and only if it is
+        /// a reference. Otherwise it does not have a value.
+        /// </summary>
+        public uint? Offset { get; private set; }
+
+        /// <summary>
+        /// Construct an image file directory entry.
+        /// </summary>
+        /// <param name="tag">The code value of the tag.</param>
+        /// <param name="fieldType">The code value of the field type.</param>
+        /// <param name="count">The amount of values related to this entry.</param>
+        /// <param name="value">The value or offset to the value of this entry.</param>
         public ImageFileDirectoryEntry(ushort tag, ushort fieldType, uint count, byte[] value)
         {
             Count = count;
@@ -115,57 +132,34 @@ namespace HardHorn.Archiving
 
             if (TiffTag.TiffTags.ContainsKey(tag))
                 Tag = TiffTag.TiffTags[tag];
+            else
+                Tag = new TiffTag(TiffTagNamespace.Unknown, tag, "Unknown tag", string.Empty);
 
             if (Enum.IsDefined(typeof(TiffType), fieldType))
                 FieldType = (TiffType)fieldType;
-        }
 
-        /// <summary>
-        /// Retrieves the value of this entry. If it is a referenced value, the reference will be followed and read.
-        /// </summary>
-        /// <param name="stream">The Tiff file stream.</param>
-        /// <returns></returns>
-        public object GetValue(Stream stream)
-        {
             if (IsValueReference())
-            {
-                uint offset = BitConverter.ToUInt32(Value, 0);
-                stream.Seek(offset, SeekOrigin.Begin);
-                return null;
-            }
+                ReadOffset(value);
             else
-            {
-                switch (FieldType)
-                {
-                    case TiffType.BYTE:
-                        return Value[0];
-                    case TiffType.ASCII:
-                        return (char)Value[0];
-                    case TiffType.SBYTE:
-                        return (sbyte)Value[0];
-                    case TiffType.UNDEFINED:
-                        return (object)Value[0];
-                    case TiffType.SHORT:
-                        return BitConverter.ToUInt16(Value, 0);
-                    case TiffType.SSHORT:
-                        return BitConverter.ToInt16(Value, 0);
-                    case TiffType.LONG:
-                        return BitConverter.ToUInt32(Value, 0);
-                    case TiffType.SLONG:
-                        return BitConverter.ToInt32(Value, 0);
-                    case TiffType.FLOAT:
-                        return BitConverter.ToSingle(Value, 0);
-                    default:
-                        throw new InvalidOperationException();
-                }
-            }
+                ReadValueDirectly(value);
         }
 
         /// <summary>
         /// Check if the the value in the IFD entry is a reference, or the actual value.
         /// </summary>
         /// <returns>'True', if the </returns>
+        /// <exception cref="System.InvalidOperationException">If the field type is not set.</exception>
         public bool IsValueReference()
+        {
+            return SizeOf() > 4;
+        }
+
+        /// <summary>
+        /// Get the size in bytes of the entry value.
+        /// </summary>
+        /// <returns>The size in bytes of the entry value.</returns>
+        /// <exception cref="System.InvalidOperationException">If the field type is not set.</exception>
+        public uint SizeOf()
         {
             uint size;
 
@@ -195,7 +189,53 @@ namespace HardHorn.Archiving
                     throw new InvalidOperationException();
             }
 
-            return size * Count > 4;
+            return size * Count;
+        }
+
+        /// <summary>
+        /// Reads the value directly.
+        /// </summary>
+        /// <param name="value"></param>
+        void ReadValueDirectly(byte[] value)
+        {
+            switch (FieldType)
+            {
+                case TiffType.BYTE:
+                    Value = value[0];
+                    break;
+                case TiffType.ASCII:
+                    Value = (char)value[0];
+                    break;
+                case TiffType.SBYTE:
+                    Value = (sbyte)value[0];
+                    break;
+                case TiffType.UNDEFINED:
+                    Value = value[0];
+                    break;
+                case TiffType.SHORT:
+                    Value = BitConverter.ToUInt16(value, 0);
+                    break;
+                case TiffType.SSHORT:
+                    Value = BitConverter.ToInt16(value, 0);
+                    break;
+                case TiffType.LONG:
+                    Value = BitConverter.ToUInt32(value, 0);
+                    break;
+                case TiffType.SLONG:
+                    Value = BitConverter.ToInt32(value, 0);
+                    break;
+                case TiffType.FLOAT:
+                    Value = BitConverter.ToSingle(value, 0);
+                    break;
+                default:
+                    Value = null;
+                    break;
+            }
+        }
+
+        void ReadOffset(byte[] value)
+        {
+            Offset = BitConverter.ToUInt32(value, 0);
         }
 
         public override string ToString()
@@ -247,7 +287,7 @@ namespace HardHorn.Archiving
         }
 
         /// <summary>
-        /// Read the image file directory at the given <paramref name="offset"/>, and add it to the collection of directories in the file.
+        /// Read the image file directory at the given <paramref name="offset"/>.
         /// </summary>
         /// <param name="offset">The offset of the image file directory.</param>
         /// <returns>The image file directory.</returns>
@@ -265,6 +305,29 @@ namespace HardHorn.Archiving
             }
             var nextIfdOffset = ReadValue(4, BitConverter.ToUInt32);
             var ifd = new ImageFileDirectory(offset, count, entries, nextIfdOffset);
+
+            return ifd;
+        }
+
+        /// <summary>
+        /// Read the next image file directory if there is one, and add it to the internal collection.
+        /// </summary>
+        /// <returns>The next image file directory if there is one, or null.</returns>
+        public ImageFileDirectory ReadNextImageFileDirectory()
+        {
+            ImageFileDirectory ifd;
+            if (ImageFileDirectories.Count == 0)
+            {
+                ifd = ReadImageFileDirectory(FirstImageFileDirectoryOffset);
+            }
+            else if (!imageFileDirectories.Last().IsLastImageFileDirectory)
+            {
+                ifd = ReadImageFileDirectory(imageFileDirectories.Last().NextImageFileDirectoryOffset.Value);
+            }
+            else
+            {
+                return null;
+            }
 
             imageFileDirectories.Add(ifd);
             return ifd;
@@ -287,6 +350,79 @@ namespace HardHorn.Archiving
                 throw new InvalidOperationException();
 
             return new ImageFileDirectoryEntry(tag, fieldType, count, value);
+        }
+
+        /// <summary>
+        /// Retrieves the value of this entry. If it is a referenced value, the reference will be followed and read.
+        /// </summary>
+        /// <param name="stream">The Tiff file stream.</param>
+        /// <returns></returns>
+        public object ReadImageFileDirectoryEntryReferencedValue(ImageFileDirectoryEntry entry)
+        {
+            if (entry.Offset.HasValue && entry.FieldType.HasValue)
+            {
+                stream.Seek(entry.Offset.Value, SeekOrigin.Begin);
+                switch (entry.FieldType)
+                {
+                    case TiffType.ASCII:
+                        return ReadValue((int)entry.SizeOf(), (byte[] buf) =>
+                        {
+                            List<string> res = new List<string>();
+                            var builder = new StringBuilder();
+                            for (int i = 0; i < buf.Length; i++)
+                            {
+                                if (buf[i] == 0)
+                                {
+                                    res.Add(builder.ToString());
+                                    if (i < buf.Length)
+                                        builder = new StringBuilder();
+                                }
+                                else
+                                    builder.Append((char)buf[i]);
+                            }
+                            return res.ToArray();
+
+                        });
+                    case TiffType.BYTE:
+                        return ReadValue((int)entry.SizeOf(), (byte[] buf) => buf);
+                    case TiffType.DOUBLE:
+                        return ReadValues(8, entry.Count, BitConverter.ToDouble);
+                    case TiffType.FLOAT:
+                        return ReadValues(4, entry.Count, BitConverter.ToSingle);
+                    case TiffType.LONG:
+                        return ReadValues(4, entry.Count, BitConverter.ToUInt32);
+                    case TiffType.RATIONAL:
+                        return ReadValues(8, entry.Count, (byte[] buf, int index) =>
+                        {
+                            uint[] rational = new uint[2];
+                            rational[0] = BitConverter.ToUInt32(buf, index);
+                            rational[1] = BitConverter.ToUInt32(buf, index + 4);
+                            return rational;
+                        });
+                    case TiffType.SBYTE:
+                        return ReadValues(1, entry.Count, (byte[] buf, int index) => (sbyte)buf[index]);
+                    case TiffType.SHORT:
+                        return ReadValues(2, entry.Count, BitConverter.ToUInt16);
+                    case TiffType.SLONG:
+                        return ReadValues(4, entry.Count, BitConverter.ToInt32);
+                    case TiffType.SRATIONAL:
+                        return ReadValues(8, entry.Count, (byte[] buf, int index) =>
+                        {
+                            int[] rational = new int[2];
+                            rational[0] = BitConverter.ToInt32(buf, index);
+                            rational[1] = BitConverter.ToInt32(buf, index + 4);
+                            return rational;
+                        });
+                    case TiffType.SSHORT:
+                        return ReadValues(2, entry.Count, BitConverter.ToInt16);
+                    case TiffType.UNDEFINED:
+                        return ReadValue((int)entry.SizeOf(), (byte[] buf) => buf);
+                    default:
+                        return null;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -335,13 +471,61 @@ namespace HardHorn.Archiving
         }
 
         /// <summary>
-        /// If the endian-ness of the system and the file do not match, reverse the byte buffer.
+        /// Reads 'count' bytes from the stream, and converts them with the given
+        /// converter function.
+        /// </summary>
+        /// <param name="count">The number of bytes to read.</param>
+        /// <returns>The converted value.</returns>
+        T ReadValue<T>(int count, Func<byte[], T> converter)
+        {
+            byte[] buffer = new byte[count];
+            if (stream.Read(buffer, 0, count) != count)
+                throw new InvalidOperationException();
+            HandleByteOrder(buffer);
+            return converter(buffer);
+        }
+
+        /// <summary>
+        /// Reads <paramref name="count"/> values of size <paramref name="size"/> from the stream, and
+        /// convert them with <paramref name="converter"/>.
+        /// </summary>
+        /// <param name="count">The number of bytes to read.</param>
+        /// <returns>The converted value.</returns>
+        T[] ReadValues<T>(uint size, uint count, Func<byte[], int, T> converter)
+        {
+            T[] res = new T[count];
+            byte[] buffer = new byte[count * size];
+            if (stream.Read(buffer, 0, (int)(count * size)) != count * size)
+                throw new InvalidOperationException();
+            for (uint i = 0; i < count; i++)
+            {
+                HandleByteOrder(buffer, (int)(i * size), (int)size);
+                res[i] = converter(buffer, (int)(i * size));
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// If the endian-ness of the system and the file do not match, reverse the array <paramref name="buffer"/>.
         /// </summary>
         /// <param name="buffer">The buffer whose bytes will be handled.</param>
         void HandleByteOrder(byte[] buffer)
         {
             if (byteOrderMismatch)
                 Array.Reverse(buffer);
+        }
+
+        /// <summary>
+        /// If the endian-ness of the system and the file do not match, reverse the sub-array
+        /// of <paramref name="buffer"/> starting at <paramref name="index"/> with length <paramref name="length"/>
+        /// </summary>
+        /// <param name="buffer">The array of bytes.</param>
+        /// <param name="index">The start index of the sub-array.</param>
+        /// <param name="length">The length of sub-array.</param>
+        void HandleByteOrder(byte[] buffer, int index, int length)
+        {
+            if (byteOrderMismatch)
+                Array.Reverse(buffer, index, length);
         }
 
         /// <summary>
