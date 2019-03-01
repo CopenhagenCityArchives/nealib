@@ -55,97 +55,98 @@ namespace HardHorn.Resources
                     " > tr:nth-child(even) { background: #ffffff;}\r\n\t.samples-table > tbody > tr:nth-" +
                     "child(odd) > td:nth-child(even) { background: #f6f6f6;}\r\n\t.samples-table > tbody" +
                     " > tr:nth-child(even) > td:nth-child(odd) { background: #fdfdfd;}\r\n\t.header-acti" +
-                    "ons {font-weight: normal; font-size: 0.8em;}\r\n</style>\r\n<script>\r\n\tfunction togg" +
-                    "leSamples(sender, sampleRow) {\r\n\t\tif (sampleRow.style.display === \'none\')\r\n\t\t{\r\n" +
-                    "\t\t\tsampleRow.style.display = \'table-row\';\r\n\t\t\tsender.classList = \"expander expan" +
-                    "ded\";\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tsampleRow.style.display = \'none\';\r\n\t\t\tsender.classLi" +
-                    "st = \"expander collapsed\";\r\n\t\t}\r\n\t}\r\n\r\n\tfunction expandAll(container)\r\n\t{\r\n\t\tvar" +
-                    " elems = Array.prototype.slice.call(container.getElementsByClassName(\'collapsed\'" +
-                    "));\r\n\t\tfor (var i = 0; i < elems.length; i++) {\r\n\t\t\telems[i].onclick();\r\n\t\t}\r\n\t}" +
-                    "\r\n\r\n\tfunction collapseAll(container)\r\n\t{\r\n\t\tvar elems = Array.prototype.slice.ca" +
-                    "ll(container.getElementsByClassName(\'expanded\'));\r\n\t\tfor (var i = 0; i < elems.l" +
-                    "ength; i++) {\r\n\t\t\telems[i].onclick();\r\n\t\t}\r\n\t}\r\n\r\n\tfunction sortBy(sender, table" +
-                    ", sortColumnIndex) {\r\n\t\tvar sortTypeElem = table.children[0].children[0].childre" +
-                    "n[sortColumnIndex].getElementsByTagName(\'strong\')[0];\r\n\t\tvar sortType = \'\';\r\n\t\ti" +
-                    "f (sortTypeElem != undefined) {\r\n\t\t\tsortType = sortTypeElem.innerText;\r\n\t\t}\r\n\t\tv" +
-                    "ar rows = [];\r\n\t\tvar trs = table.children[1].children;\r\n\t\tfor (var i = 0; i < tr" +
-                    "s.length; i++) {\r\n\t\t\tif (trs[i].classList == \"samplerow\")\r\n\t\t\t{\r\n\t\t\t\trows[rows.l" +
-                    "ength-1].sampleRow = trs[i];\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\trows.push(trs[i]);\r\n\t\t\t}\r" +
-                    "\n\t\t}\r\n\t\tvar glyphs = table.getElementsByClassName(\'sort\');\r\n\t\tfor (var i = 0; i " +
-                    "< glyphs.length; i++) {\r\n\t\t\tglyphs[i].remove();\r\n\t\t}\r\n\t\tif (table.lastSortType =" +
-                    "= sortType) {\r\n\t\t\ttable.sortAscending = !table.sortAscending;\r\n\t\t\trows.reverse()" +
-                    ";\r\n\t\t} else {\r\n\t\t\ttable.sortAscending = true;\r\n\t\t\ttable.lastSortType = sortType;" +
-                    "\r\n\t\t\trows.sort(getSortFunc(sortType, sortColumnIndex)); \r\n\t\t}\r\n\t\taddGlyph(table," +
-                    " sortColumnIndex);\r\n\t\treaddRows(rows);\r\n\t}\r\n\r\n\tfunction getSortFunc(sortType, so" +
-                    "rtColumnIndex) {\r\n\tswitch (sortType) {\r\n\t\tcase \'Felt\':\r\n\t\t\treturn function(row1," +
-                    " row2) {\r\n\t\t\t\tvar idx = sortColumnIndex;\r\n\t\t\t\tvar field1 = row1.children[idx].in" +
-                    "nerText;\r\n\t\t\t\tvar field2 = row2.children[idx].innerText;\r\n\t\t\t\tif (field1 == \'-\')" +
-                    " {\r\n\t\t\t\t\treturn -1;\r\n\t\t\t\t}\r\n\t\t\t\tif (field2 == \'-\') {\r\n\t\t\t\t\treturn 1;\r\n\t\t\t\t}\r\n\t\t\t" +
-                    "\tvar f1 = parseInt(field1.substr(2, field1.indexOf(\':\')-2));\r\n\t\t\t\tvar f2 = parse" +
-                    "Int(field2.substr(2, field2.indexOf(\':\')-2));\r\n\t\t\t\treturn f1-f2;\r\n\t\t\t};\r\n\t\t\tbrea" +
-                    "k;\r\n\t\tcase \'Tabel\':\r\n\t\t\treturn function(row1, row2) {\r\n\t\t\t\tvar idx = sortColumnI" +
-                    "ndex;\r\n\t\t\t\tvar field1 = row1.children[idx].innerText;\r\n\t\t\t\tvar field2 = row2.chi" +
-                    "ldren[idx].innerText;\r\n\t\t\t\tif (field1 == \'-\') {\r\n\t\t\t\t\treturn -1;\r\n\t\t\t\t}\r\n\t\t\t\tif " +
-                    "(field2 == \'-\') {\r\n\t\t\t\t\treturn 1;\r\n\t\t\t\t}\r\n\t\t\t\tvar f1 = parseInt(field1.substr(6," +
-                    " field1.indexOf(\':\')-6));\r\n\t\t\t\tvar f2 = parseInt(field2.substr(6, field2.indexOf" +
-                    "(\':\')-6));\r\n\t\t\t\treturn f1-f2;\r\n\t\t\t};\r\n\t\t\tbreak;\r\n\t\tcase \'Række\':\r\n\t\tcase \'Antal\'" +
-                    ":\r\n\t\tcase \'Forekomster\':\r\n\t\t\treturn function(row1, row2) {\r\n\t\t\t\tvar idx = sortCo" +
-                    "lumnIndex;\r\n\t\t\t\tvar field1 = row1.children[idx].innerText;\r\n\t\t\t\tvar field2 = row" +
-                    "2.children[idx].innerText;\r\n\t\t\t\tif (field1 == \'-\') {\r\n\t\t\t\t\treturn -1;\r\n\t\t\t\t}\r\n\t\t" +
-                    "\t\tif (field2 == \'-\') {\r\n\t\t\t\t\treturn 1;\r\n\t\t\t\t}\r\n\t\t\t\treturn parseInt(field1) - par" +
-                    "seInt(field2);\r\n\t\t\t};\r\n\t\t\tbreak;\r\n\t\tdefault:\r\n\t\t\treturn function(row1, row2) {\r\n" +
-                    "\t\t\t\tvar idx = sortColumnIndex;\r\n\t\t\t\tvar field1 = row1.children[idx].innerText;\r\n" +
-                    "\t\t\t\tvar field2 = row2.children[idx].innerText;\r\n\t\t\t\tif (field1 == \'-\') {\r\n\t\t\t\t\tr" +
-                    "eturn -1;\r\n\t\t\t\t}\r\n\t\t\t\tif (field2 == \'-\') {\r\n\t\t\t\t\treturn 1;\r\n\t\t\t\t}\r\n\t\t\t\treturn fi" +
-                    "eld1.localeCompare(field2);\r\n\t\t\t};\r\n\t\t\tbreak;\r\n\t\t}\r\n\t}\r\n\r\n\tfunction readdRows(ro" +
-                    "ws) {\r\n\t\tfor (var i = 0; i < rows.length; i++) {\r\n\t\t\tvar parent = rows[i].parent" +
-                    "Node;\r\n\t\t\tvar detached = parent.removeChild(rows[i]);\r\n\t\t\tif (detached.sampleRow" +
-                    ")\r\n\t\t\t{\r\n\t\t\t\tparent.removeChild(detached.sampleRow);\r\n\t\t\t}\r\n\t\t\tif (i % 2 == 0) {" +
-                    "\r\n\t\t\t\tdetached.classList.replace(\'even\', \'odd\');\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tdetac" +
-                    "hed.classList.replace(\'odd\', \'even\');\r\n\t\t\t}\r\n\t\t\tparent.appendChild(detached); \r\n" +
-                    "\t\t\tif (detached.sampleRow)\r\n\t\t\t{\r\n\t\t\t\tparent.appendChild(detached.sampleRow);\r\n\t" +
-                    "\t\t}\r\n\t\t}\r\n\t}\r\n\r\n\tfunction addGlyph(table, columnIndex) {\r\n\t\tvar glyph = document" +
-                    ".createElement(\'span\');\r\n\t\tglyph.classList.add(\'sort\');\r\n\t\tif (table.sortAscendi" +
-                    "ng) {\r\n\t\t\tglyph.classList.add(\'asc\');\r\n\t\t} else {\r\n\t\t\tglyph.classList.add(\'desc\'" +
-                    ");\r\n\t\t}\r\n\t\ttable.children[0].children[0].children[columnIndex].appendChild(glyph" +
-                    ");\r\n\t}\r\n</script>\r\n<title>");
+                    "ons {font-weight: normal; font-size: 0.8em;}\r\n\tspan.data:before, span.data:after" +
+                    " {\r\n\t\tcontent: \"\\\"\";\r\n\t\tcolor: gray;\r\n\t\tfont-weight: bold;\r\n\t}\r\n</style>\r\n<scrip" +
+                    "t>\r\n\tfunction toggleSamples(sender, sampleRow) {\r\n\t\tif (sampleRow.style.display " +
+                    "=== \'none\')\r\n\t\t{\r\n\t\t\tsampleRow.style.display = \'table-row\';\r\n\t\t\tsender.classList" +
+                    " = \"expander expanded\";\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tsampleRow.style.display = \'none\';\r" +
+                    "\n\t\t\tsender.classList = \"expander collapsed\";\r\n\t\t}\r\n\t}\r\n\r\n\tfunction expandAll(con" +
+                    "tainer)\r\n\t{\r\n\t\tvar elems = Array.prototype.slice.call(container.getElementsByCla" +
+                    "ssName(\'collapsed\'));\r\n\t\tfor (var i = 0; i < elems.length; i++) {\r\n\t\t\telems[i].o" +
+                    "nclick();\r\n\t\t}\r\n\t}\r\n\r\n\tfunction collapseAll(container)\r\n\t{\r\n\t\tvar elems = Array." +
+                    "prototype.slice.call(container.getElementsByClassName(\'expanded\'));\r\n\t\tfor (var " +
+                    "i = 0; i < elems.length; i++) {\r\n\t\t\telems[i].onclick();\r\n\t\t}\r\n\t}\r\n\r\n\tfunction so" +
+                    "rtBy(sender, table, sortColumnIndex) {\r\n\t\tvar sortTypeElem = table.children[0].c" +
+                    "hildren[0].children[sortColumnIndex].getElementsByTagName(\'strong\')[0];\r\n\t\tvar s" +
+                    "ortType = \'\';\r\n\t\tif (sortTypeElem != undefined) {\r\n\t\t\tsortType = sortTypeElem.in" +
+                    "nerText;\r\n\t\t}\r\n\t\tvar rows = [];\r\n\t\tvar trs = table.children[1].children;\r\n\t\tfor " +
+                    "(var i = 0; i < trs.length; i++) {\r\n\t\t\tif (trs[i].classList == \"samplerow\")\r\n\t\t\t" +
+                    "{\r\n\t\t\t\trows[rows.length-1].sampleRow = trs[i];\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\trows.pu" +
+                    "sh(trs[i]);\r\n\t\t\t}\r\n\t\t}\r\n\t\tvar glyphs = table.getElementsByClassName(\'sort\');\r\n\t\t" +
+                    "for (var i = 0; i < glyphs.length; i++) {\r\n\t\t\tglyphs[i].remove();\r\n\t\t}\r\n\t\tif (ta" +
+                    "ble.lastSortType == sortType) {\r\n\t\t\ttable.sortAscending = !table.sortAscending;\r" +
+                    "\n\t\t\trows.reverse();\r\n\t\t} else {\r\n\t\t\ttable.sortAscending = true;\r\n\t\t\ttable.lastSo" +
+                    "rtType = sortType;\r\n\t\t\trows.sort(getSortFunc(sortType, sortColumnIndex)); \r\n\t\t}\r" +
+                    "\n\t\taddGlyph(table, sortColumnIndex);\r\n\t\treaddRows(rows);\r\n\t}\r\n\r\n\tfunction getSor" +
+                    "tFunc(sortType, sortColumnIndex) {\r\n\tswitch (sortType) {\r\n\t\tcase \'Felt\':\r\n\t\t\tret" +
+                    "urn function(row1, row2) {\r\n\t\t\t\tvar idx = sortColumnIndex;\r\n\t\t\t\tvar field1 = row" +
+                    "1.children[idx].innerText;\r\n\t\t\t\tvar field2 = row2.children[idx].innerText;\r\n\t\t\t\t" +
+                    "if (field1 == \'-\') {\r\n\t\t\t\t\treturn -1;\r\n\t\t\t\t}\r\n\t\t\t\tif (field2 == \'-\') {\r\n\t\t\t\t\tret" +
+                    "urn 1;\r\n\t\t\t\t}\r\n\t\t\t\tvar f1 = parseInt(field1.substr(2, field1.indexOf(\':\')-2));\r\n" +
+                    "\t\t\t\tvar f2 = parseInt(field2.substr(2, field2.indexOf(\':\')-2));\r\n\t\t\t\treturn f1-f" +
+                    "2;\r\n\t\t\t};\r\n\t\t\tbreak;\r\n\t\tcase \'Tabel\':\r\n\t\t\treturn function(row1, row2) {\r\n\t\t\t\tvar" +
+                    " idx = sortColumnIndex;\r\n\t\t\t\tvar field1 = row1.children[idx].innerText;\r\n\t\t\t\tvar" +
+                    " field2 = row2.children[idx].innerText;\r\n\t\t\t\tif (field1 == \'-\') {\r\n\t\t\t\t\treturn -" +
+                    "1;\r\n\t\t\t\t}\r\n\t\t\t\tif (field2 == \'-\') {\r\n\t\t\t\t\treturn 1;\r\n\t\t\t\t}\r\n\t\t\t\tvar f1 = parseIn" +
+                    "t(field1.substr(6, field1.indexOf(\':\')-6));\r\n\t\t\t\tvar f2 = parseInt(field2.substr" +
+                    "(6, field2.indexOf(\':\')-6));\r\n\t\t\t\treturn f1-f2;\r\n\t\t\t};\r\n\t\t\tbreak;\r\n\t\tcase \'Række" +
+                    "\':\r\n\t\tcase \'Antal\':\r\n\t\tcase \'Længde\':\r\n\t\t\treturn function(row1, row2) {\r\n\t\t\t\tvar" +
+                    " idx = sortColumnIndex;\r\n\t\t\t\tvar field1 = row1.children[idx].innerText;\r\n\t\t\t\tvar" +
+                    " field2 = row2.children[idx].innerText;\r\n\t\t\t\tif (field1 == \'-\') {\r\n\t\t\t\t\treturn -" +
+                    "1;\r\n\t\t\t\t}\r\n\t\t\t\tif (field2 == \'-\') {\r\n\t\t\t\t\treturn 1;\r\n\t\t\t\t}\r\n\t\t\t\treturn parseInt(" +
+                    "field1) - parseInt(field2);\r\n\t\t\t};\r\n\t\t\tbreak;\r\n\t\tdefault:\r\n\t\t\treturn function(ro" +
+                    "w1, row2) {\r\n\t\t\t\tvar idx = sortColumnIndex;\r\n\t\t\t\tvar field1 = row1.children[idx]" +
+                    ".innerText;\r\n\t\t\t\tvar field2 = row2.children[idx].innerText;\r\n\t\t\t\tif (field1 == \'" +
+                    "-\') {\r\n\t\t\t\t\treturn -1;\r\n\t\t\t\t}\r\n\t\t\t\tif (field2 == \'-\') {\r\n\t\t\t\t\treturn 1;\r\n\t\t\t\t}\r\n" +
+                    "\t\t\t\treturn field1.localeCompare(field2);\r\n\t\t\t};\r\n\t\t\tbreak;\r\n\t\t}\r\n\t}\r\n\r\n\tfunction" +
+                    " readdRows(rows) {\r\n\t\tfor (var i = 0; i < rows.length; i++) {\r\n\t\t\tvar parent = r" +
+                    "ows[i].parentNode;\r\n\t\t\tvar detached = parent.removeChild(rows[i]);\r\n\t\t\tif (detac" +
+                    "hed.sampleRow)\r\n\t\t\t{\r\n\t\t\t\tparent.removeChild(detached.sampleRow);\r\n\t\t\t}\r\n\t\t\tif (" +
+                    "i % 2 == 0) {\r\n\t\t\t\tdetached.classList.replace(\'even\', \'odd\');\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t" +
+                    "\t{\r\n\t\t\t\tdetached.classList.replace(\'odd\', \'even\');\r\n\t\t\t}\r\n\t\t\tparent.appendChild(" +
+                    "detached); \r\n\t\t\tif (detached.sampleRow)\r\n\t\t\t{\r\n\t\t\t\tparent.appendChild(detached.s" +
+                    "ampleRow);\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n\r\n\tfunction addGlyph(table, columnIndex) {\r\n\t\tvar gly" +
+                    "ph = document.createElement(\'span\');\r\n\t\tglyph.classList.add(\'sort\');\r\n\t\tif (tabl" +
+                    "e.sortAscending) {\r\n\t\t\tglyph.classList.add(\'asc\');\r\n\t\t} else {\r\n\t\t\tglyph.classLi" +
+                    "st.add(\'desc\');\r\n\t\t}\r\n\t\ttable.children[0].children[0].children[columnIndex].appe" +
+                    "ndChild(glyph);\r\n\t}\r\n</script>\r\n<title>");
             
-            #line 209 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 214 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(ArchiveVersion.Id));
             
             #line default
             #line hidden
             this.Write(" - ");
             
-            #line 209 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 214 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(System.Reflection.Assembly.GetExecutingAssembly().GetName().Name));
             
             #line default
             #line hidden
             this.Write(" Log</title>\r\n</head>\r\n<body style=\"font-family: verdana, sans-serif;\">\r\n<h1>");
             
-            #line 212 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 217 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(ArchiveVersion.Id));
             
             #line default
             #line hidden
             this.Write(" - ");
             
-            #line 212 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 217 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(System.Reflection.Assembly.GetExecutingAssembly().GetName().Name));
             
             #line default
             #line hidden
             this.Write(" Log</h1>\r\n<p><strong>Tidspunkt:</strong> ");
             
-            #line 213 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 218 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(DateTime.Now));
             
             #line default
             #line hidden
             this.Write("</p>\r\n<h2 id=\"oversigt\">Oversigt</h2>\r\n<ul>\r\n");
             
-            #line 216 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 221 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 foreach (CollectionViewGroup group in NotificationGroups)
 {
@@ -156,28 +157,28 @@ foreach (CollectionViewGroup group in NotificationGroups)
             #line hidden
             this.Write("    <li><a href=\"#");
             
-            #line 221 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 226 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
             
             #line default
             #line hidden
             this.Write("\">");
             
-            #line 221 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 226 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
             
             #line default
             #line hidden
             this.Write(" (");
             
-            #line 221 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 226 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(group.ItemCount));
             
             #line default
             #line hidden
             this.Write(" punkter)</a></li>\r\n");
             
-            #line 222 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 227 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 }
 
@@ -186,25 +187,32 @@ foreach (CollectionViewGroup group in NotificationGroups)
             #line hidden
             this.Write("</ul>\r\n<h2>Rapport</h2>\r\n");
             
-            #line 227 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 232 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 foreach (CollectionViewGroup group in NotificationGroups)
 {
-	string groupNameEncoded = HttpUtility.HtmlEncode(group.Name);
+	string groupNameEncoded;
+	if (GroupByTables) {
+		groupNameEncoded = HttpUtility.HtmlEncode(group.Name);
+	}
+	else
+	{
+		groupNameEncoded = HttpUtility.HtmlEncode(NotificationsUtility.NotificationTypeToString((NotificationType)group.Name));
+	}
 
             
             #line default
             #line hidden
             this.Write("    <div id=\"");
             
-            #line 232 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 244 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
             
             #line default
             #line hidden
             this.Write("\">\r\n        <h3>\r\n\t\t\t");
             
-            #line 234 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 246 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
             
             #line default
@@ -212,7 +220,7 @@ foreach (CollectionViewGroup group in NotificationGroups)
             this.Write("&nbsp;<span class=\"header-actions\"><a href=\"#oversigt\">[til oversigt]</a> <a href" +
                     "=\"javascript:void(0)\" onclick=\"expandAll(document.getElementById(\'");
             
-            #line 234 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 246 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
             
             #line default
@@ -220,7 +228,7 @@ foreach (CollectionViewGroup group in NotificationGroups)
             this.Write("\'))\">[udvid eksempler]</a> <a href=\"javascript:void(0)\" onclick=\"collapseAll(docu" +
                     "ment.getElementById(\'");
             
-            #line 234 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 246 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
             
             #line default
@@ -228,14 +236,14 @@ foreach (CollectionViewGroup group in NotificationGroups)
             this.Write("\'))\">[sammenfold eksempler]</a></span>\r\n\t\t</h3>\r\n        <table class=\"notificati" +
                     "ons-table\" id=\"");
             
-            #line 236 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 248 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
             
             #line default
             #line hidden
             this.Write("_table\">\r\n\t\t\t<thead>\r\n");
             
-            #line 238 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 250 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	OutputNotificationHeaderRow(groupNameEncoded);
 
@@ -244,7 +252,7 @@ foreach (CollectionViewGroup group in NotificationGroups)
             #line hidden
             this.Write("\t\t\t</thead>\r\n\t\t\t<tbody>\r\n");
             
-            #line 243 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 255 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	int index = 0;
 	foreach (INotification notification in group.Items)
@@ -257,7 +265,7 @@ foreach (CollectionViewGroup group in NotificationGroups)
             #line hidden
             this.Write("\t\t\t</tbody>\r\n\t\t</table>\r\n\t</div>\r\n");
             
-            #line 253 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+            #line 265 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 }
 
@@ -268,7 +276,7 @@ foreach (CollectionViewGroup group in NotificationGroups)
             return this.GenerationEnvironment.ToString();
         }
         
-        #line 259 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 271 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 private void OutputNotificationHeaderRow(string groupNameEncoded)
 {
@@ -277,7 +285,7 @@ private void OutputNotificationHeaderRow(string groupNameEncoded)
         #line default
         #line hidden
         
-        #line 262 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 274 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t<tr>\r\n\t\t\t\t<th></th>\r\n\t\t\t\t<th class=\"sortable\" onclick=\"sortBy(this, document.g" +
         "etElementById(\'");
 
@@ -285,21 +293,21 @@ this.Write("\t\t\t<tr>\r\n\t\t\t\t<th></th>\r\n\t\t\t\t<th class=\"sortable\" on
         #line default
         #line hidden
         
-        #line 265 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 277 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
 
         
         #line default
         #line hidden
         
-        #line 265 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 277 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_table\'), 1)\"></th>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 266 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 278 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	if (!GroupByTables)
 	{
@@ -308,28 +316,28 @@ this.Write("_table\'), 1)\"></th>\r\n");
         #line default
         #line hidden
         
-        #line 269 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 281 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<th class=\"sortable\" onclick=\"sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 270 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 282 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
 
         
         #line default
         #line hidden
         
-        #line 270 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 282 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_table\'), 2)\">\r\n\t\t\t\t\t<strong>Tabel</strong>\r\n\t\t\t\t</th>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 273 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 285 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 
@@ -337,28 +345,28 @@ this.Write("_table\'), 2)\">\r\n\t\t\t\t\t<strong>Tabel</strong>\r\n\t\t\t\t</th
         #line default
         #line hidden
         
-        #line 275 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 287 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<th class=\"sortable\" onclick=\"sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 276 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 288 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
 
         
         #line default
         #line hidden
         
-        #line 276 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 288 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_table\'), 2)\">\r\n\t\t\t\t\t<strong>Felt</strong>\r\n\t\t\t\t</th>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 279 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 291 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	if (GroupByTables)
 	{
@@ -367,28 +375,28 @@ this.Write("_table\'), 2)\">\r\n\t\t\t\t\t<strong>Felt</strong>\r\n\t\t\t\t</th>
         #line default
         #line hidden
         
-        #line 282 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 294 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<th class=\"sortable\" onclick=\"sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 283 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 295 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
 
         
         #line default
         #line hidden
         
-        #line 283 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 295 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_table\'), 3)\">\r\n\t\t\t\t\t<strong>Kategori</strong>\r\n\t\t\t\t</th>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 286 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 298 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 
@@ -396,43 +404,43 @@ this.Write("_table\'), 3)\">\r\n\t\t\t\t\t<strong>Kategori</strong>\r\n\t\t\t\t<
         #line default
         #line hidden
         
-        #line 288 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 300 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<th class=\"sortable\" onclick=\"sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 289 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 301 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
 
         
         #line default
         #line hidden
         
-        #line 289 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
-this.Write("_table\'), 4)\">\r\n\t\t\t\t\t<strong>Forekomster</strong>\r\n\t\t\t\t</th>\r\n\t\t\t\t<th class=\"sort" +
-        "able\" onclick=\"sortBy(this, document.getElementById(\'");
+        #line 301 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("_table\'), 4)\">\r\n\t\t\t\t\t<strong>Antal</strong>\r\n\t\t\t\t</th>\r\n\t\t\t\t<th class=\"sortable\" " +
+        "onclick=\"sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 292 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 304 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(groupNameEncoded));
 
         
         #line default
         #line hidden
         
-        #line 292 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 304 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_table\'), 5)\">\r\n\t\t\t\t\t<strong>Besked</strong>\r\n\t\t\t\t</th>\r\n\t\t\t</tr>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 296 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 308 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 }
 
@@ -445,14 +453,14 @@ private void OutputNotificationRow(INotification notification, bool even)
         #line default
         #line hidden
         
-        #line 303 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 315 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t<tr class=\"even\">\r\n");
 
         
         #line default
         #line hidden
         
-        #line 305 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 317 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	} 
 	else 
@@ -462,14 +470,14 @@ this.Write("\t\t\t<tr class=\"even\">\r\n");
         #line default
         #line hidden
         
-        #line 309 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 321 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t<tr class=\"odd\">\r\n");
 
         
         #line default
         #line hidden
         
-        #line 311 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 323 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 	if (AnalysisErrorSamples.ContainsKey(notification))
@@ -479,7 +487,7 @@ this.Write("\t\t\t<tr class=\"odd\">\r\n");
         #line default
         #line hidden
         
-        #line 315 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 327 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td class=\"expander expanded\" onclick=\"toggleSamples(this, document.getElemen" +
         "tById(\'");
 
@@ -487,49 +495,49 @@ this.Write("\t\t\t\t<td class=\"expander expanded\" onclick=\"toggleSamples(this
         #line default
         #line hidden
         
-        #line 316 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 328 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Table.Folder));
 
         
         #line default
         #line hidden
         
-        #line 316 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 328 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 316 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 328 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Column.ColumnId));
 
         
         #line default
         #line hidden
         
-        #line 316 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 328 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 316 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 328 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Type));
 
         
         #line default
         #line hidden
         
-        #line 316 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 328 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_samplerow\'))\"><span></span></td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 317 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 329 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 	else if (notification.Type == NotificationType.ForeignKeyTestError)
@@ -540,7 +548,7 @@ this.Write("_samplerow\'))\"><span></span></td>\r\n");
         #line default
         #line hidden
         
-        #line 322 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 334 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td class=\"expander expanded\" onclick=\"toggleSamples(this, document.getElemen" +
         "tById(\'");
 
@@ -548,21 +556,21 @@ this.Write("\t\t\t\t<td class=\"expander expanded\" onclick=\"toggleSamples(this
         #line default
         #line hidden
         
-        #line 323 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 335 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(fkey.Name));
 
         
         #line default
         #line hidden
         
-        #line 323 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 335 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_samplerow\'))\"><span></span></td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 324 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 336 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 	else
@@ -572,14 +580,14 @@ this.Write("_samplerow\'))\"><span></span></td>\r\n");
         #line default
         #line hidden
         
-        #line 328 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 340 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td></td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 330 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 342 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 
@@ -587,14 +595,14 @@ this.Write("\t\t\t\t<td></td>\r\n");
         #line default
         #line hidden
         
-        #line 332 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 344 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 334 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 346 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	if (notification.Severity == Severity.Hint)
 	{
@@ -603,14 +611,14 @@ this.Write("\t\t\t\t<td>\r\n");
         #line default
         #line hidden
         
-        #line 337 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 349 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t<b style=\"background: yellow;\">!</b>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 339 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 351 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 	else 
@@ -620,14 +628,14 @@ this.Write("\t\t\t\t\t<b style=\"background: yellow;\">!</b>\r\n");
         #line default
         #line hidden
         
-        #line 343 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 355 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t<b style=\"background: red; color: white;\">X</b>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 345 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 357 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 
@@ -635,14 +643,14 @@ this.Write("\t\t\t\t\t<b style=\"background: red; color: white;\">X</b>\r\n");
         #line default
         #line hidden
         
-        #line 347 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 359 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t</td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 349 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 361 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	if (!GroupByTables)
 	{
@@ -651,28 +659,28 @@ this.Write("\t\t\t\t</td>\r\n");
         #line default
         #line hidden
         
-        #line 352 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 364 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td>\r\n\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 354 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 366 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(HttpUtility.HtmlEncode(notification.Table?.ToString() ?? "-")));
 
         
         #line default
         #line hidden
         
-        #line 354 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 366 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\r\n\t\t\t\t</td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 356 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 368 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 
@@ -680,28 +688,28 @@ this.Write("\r\n\t\t\t\t</td>\r\n");
         #line default
         #line hidden
         
-        #line 358 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 370 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td>\r\n\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 360 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 372 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(HttpUtility.HtmlEncode(notification.Column?.ToString() ?? "-")));
 
         
         #line default
         #line hidden
         
-        #line 360 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 372 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\r\n\t\t\t\t</td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 362 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 374 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	if (GroupByTables)
 	{
@@ -710,28 +718,28 @@ this.Write("\r\n\t\t\t\t</td>\r\n");
         #line default
         #line hidden
         
-        #line 365 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 377 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td>\r\n\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 367 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 379 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(HttpUtility.HtmlEncode(NotificationsUtility.NotificationTypeToString(notification.Type)?.ToString() ?? "-")));
 
         
         #line default
         #line hidden
         
-        #line 367 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 379 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\r\n\t\t\t\t</td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 369 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 381 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	}
 
@@ -739,42 +747,42 @@ this.Write("\r\n\t\t\t\t</td>\r\n");
         #line default
         #line hidden
         
-        #line 371 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 383 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t<td>\r\n\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 373 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 385 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Count?.ToString() ?? "-"));
 
         
         #line default
         #line hidden
         
-        #line 373 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 385 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\r\n\t\t\t\t</td>\r\n\t\t\t\t<td>\r\n\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 376 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 388 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(HttpUtility.HtmlEncode(notification.Message?.ToString() ?? "-")));
 
         
         #line default
         #line hidden
         
-        #line 376 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 388 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\r\n\t\t\t\t</td>\r\n            </tr>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 379 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 391 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	switch (notification.Type)
 	{
@@ -801,49 +809,49 @@ private void OutputAnalysisSamples(INotification notification)
         #line default
         #line hidden
         
-        #line 400 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 412 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("            <tr id=\"");
 
         
         #line default
         #line hidden
         
-        #line 401 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 413 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Table.Folder));
 
         
         #line default
         #line hidden
         
-        #line 401 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 413 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 401 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 413 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Column.ColumnId));
 
         
         #line default
         #line hidden
         
-        #line 401 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 413 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 401 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 413 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Type));
 
         
         #line default
         #line hidden
         
-        #line 401 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 413 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_samplerow\" class=\"samplerow\">\r\n\t\t\t\t<td colspan=\"6\">\r\n\t\t\t\t<table class=\"samples-t" +
         "able\" id=\"");
 
@@ -851,136 +859,179 @@ this.Write("_samplerow\" class=\"samplerow\">\r\n\t\t\t\t<td colspan=\"6\">\r\n\
         #line default
         #line hidden
         
-        #line 403 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 415 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Table.Folder));
 
         
         #line default
         #line hidden
         
-        #line 403 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 415 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 403 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 415 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Column.ColumnId));
 
         
         #line default
         #line hidden
         
-        #line 403 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 415 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 403 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 415 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Type));
 
         
         #line default
         #line hidden
         
-        #line 403 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
-this.Write("_samplerow_table\">\r\n\t\t\t\t\t<thead>\r\n\t\t\t\t\t<tr>\r\n\t\t\t\t\t\t\r\n\t\t\t\t\t\t<th class=\"sortable\" o" +
-        "nclick=\"sortBy(this, document.getElementById(\'");
+        #line 415 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("_samplerow_table\">\r\n\t\t\t\t\t<thead>\r\n\t\t\t\t\t<tr>\r\n\t\t\t\t\t\t<th class=\"sortable\" onclick=\"" +
+        "sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 407 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 418 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Table.Folder));
 
         
         #line default
         #line hidden
         
-        #line 407 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 418 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 407 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 418 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Column.ColumnId));
 
         
         #line default
         #line hidden
         
-        #line 407 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 418 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 407 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 418 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Type));
 
         
         #line default
         #line hidden
         
-        #line 407 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
-this.Write("_samplerow_table\'), 0)\">\r\n\t\t\t\t\t\t\t<strong>Række</strong>\r\n\t\t\t\t\t\t</th>\r\n\t\t\t\t\t\t</th " +
-        "onclick=\"sortBy(this, document.getElementById(\'");
+        #line 418 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("_samplerow_table\'), 0)\">\r\n\t\t\t\t\t\t\t<strong>Række</strong>\r\n\t\t\t\t\t\t</th>\r\n\t\t\t\t\t\t<th c" +
+        "lass=\"sortable\" onclick=\"sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 410 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 421 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Table.Folder));
 
         
         #line default
         #line hidden
         
-        #line 410 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 421 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 410 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 421 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Column.ColumnId));
 
         
         #line default
         #line hidden
         
-        #line 410 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 421 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_");
 
         
         #line default
         #line hidden
         
-        #line 410 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 421 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(notification.Type));
 
         
         #line default
         #line hidden
         
-        #line 410 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
-this.Write("_samplerow_table\'), 0)\">\r\n\t\t\t\t\t\t\t<strong>Data</strong>\r\n\t\t\t\t\t\t</th>\r\n\t\t\t\t\t</tr>\r\n" +
+        #line 421 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("_samplerow_table\'), 1)\">\r\n\t\t\t\t\t\t\t<strong>Længde</strong>\r\n\t\t\t\t\t\t</th>\r\n\t\t\t\t\t\t<th " +
+        "class=\"sortable\" onclick=\"sortBy(this, document.getElementById(\'");
+
+        
+        #line default
+        #line hidden
+        
+        #line 424 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write(this.ToStringHelper.ToStringWithCulture(notification.Table.Folder));
+
+        
+        #line default
+        #line hidden
+        
+        #line 424 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("_");
+
+        
+        #line default
+        #line hidden
+        
+        #line 424 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write(this.ToStringHelper.ToStringWithCulture(notification.Column.ColumnId));
+
+        
+        #line default
+        #line hidden
+        
+        #line 424 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("_");
+
+        
+        #line default
+        #line hidden
+        
+        #line 424 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write(this.ToStringHelper.ToStringWithCulture(notification.Type));
+
+        
+        #line default
+        #line hidden
+        
+        #line 424 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("_samplerow_table\'), 2)\">\r\n\t\t\t\t\t\t\t<strong>Data</strong>\r\n\t\t\t\t\t\t</th>\r\n\t\t\t\t\t</tr>\r\n" +
         "\t\t\t\t\t</thead>\r\n\t\t\t\t\t<tbody>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 416 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 430 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	foreach (var post in AnalysisErrorSamples[notification])
 	{
@@ -989,42 +1040,56 @@ this.Write("_samplerow_table\'), 0)\">\r\n\t\t\t\t\t\t\t<strong>Data</strong>\r\
         #line default
         #line hidden
         
-        #line 419 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 433 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t<tr>\r\n\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 422 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 436 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(post.RowIndex + 1));
 
         
         #line default
         #line hidden
         
-        #line 422 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
-this.Write("\r\n\t\t\t\t\t\t</td>\r\n\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t\t<p class=\"data\">");
+        #line 436 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("\r\n\t\t\t\t\t\t</td>\r\n\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 425 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 439 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write(this.ToStringHelper.ToStringWithCulture(post.Data.Length));
+
+        
+        #line default
+        #line hidden
+        
+        #line 439 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("\r\n\t\t\t\t\t\t</td>\r\n\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t\t<span class=\"data\">");
+
+        
+        #line default
+        #line hidden
+        
+        #line 442 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(post.Data));
 
         
         #line default
         #line hidden
         
-        #line 425 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
-this.Write("</p>\r\n\t\t\t\t\t\t</td>\r\n\t\t\t\t\t</tr>\r\n");
+        #line 442 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+this.Write("</span>\r\n\t\t\t\t\t\t</td>\r\n\t\t\t\t\t</tr>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 428 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 445 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	} // foreach post
 
@@ -1032,14 +1097,14 @@ this.Write("</p>\r\n\t\t\t\t\t\t</td>\r\n\t\t\t\t\t</tr>\r\n");
         #line default
         #line hidden
         
-        #line 430 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 447 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t</tbody>\r\n\t\t\t\t</table>\r\n\t\t\t\t</td>\r\n            </tr>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 435 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 452 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 }
 
@@ -1052,21 +1117,21 @@ private void OutputForeignKeyTestErrorSamples(INotification notification)
         #line default
         #line hidden
         
-        #line 442 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 459 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("            <tr id=\"");
 
         
         #line default
         #line hidden
         
-        #line 443 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 460 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(fkey.Name));
 
         
         #line default
         #line hidden
         
-        #line 443 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 460 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_samplerow\" class=\"samplerow\">\r\n\t\t\t\t<td colspan=\"6\">\r\n\t\t\t\t\t<table class=\"samples-" +
         "table\" id=\"");
 
@@ -1074,14 +1139,14 @@ this.Write("_samplerow\" class=\"samplerow\">\r\n\t\t\t\t<td colspan=\"6\">\r\n\
         #line default
         #line hidden
         
-        #line 445 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 462 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(fkey.Name));
 
         
         #line default
         #line hidden
         
-        #line 445 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 462 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_samplerow_table\">\r\n\t\t\t\t\t\t<thead>\r\n\t\t\t\t\t\t<tr>\r\n\t\t\t\t\t\t\t<th class=\"sortable\" onclic" +
         "k=\"sortBy(this, document.getElementById(\'");
 
@@ -1089,21 +1154,21 @@ this.Write("_samplerow_table\">\r\n\t\t\t\t\t\t<thead>\r\n\t\t\t\t\t\t<tr>\r\n\t
         #line default
         #line hidden
         
-        #line 448 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 465 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(fkey.Name));
 
         
         #line default
         #line hidden
         
-        #line 448 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 465 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_samplerow_table\'), 0)\">\r\n\t\t\t\t\t\t\t\t<strong>Antal</strong>\r\n\t\t\t\t\t\t\t</th>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 451 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 468 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 		int colidx = 1;
 		foreach (var reference in fkey.References)
@@ -1113,56 +1178,56 @@ this.Write("_samplerow_table\'), 0)\">\r\n\t\t\t\t\t\t\t\t<strong>Antal</strong>
         #line default
         #line hidden
         
-        #line 455 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 472 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t\t<th class=\"sortable\" onclick=\"sortBy(this, document.getElementById(\'");
 
         
         #line default
         #line hidden
         
-        #line 456 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 473 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(fkey.Name));
 
         
         #line default
         #line hidden
         
-        #line 456 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 473 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("_samplerow_table\'), ");
 
         
         #line default
         #line hidden
         
-        #line 456 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 473 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(colidx));
 
         
         #line default
         #line hidden
         
-        #line 456 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 473 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(")\">\r\n\t\t\t\t\t\t\t\t<strong>");
 
         
         #line default
         #line hidden
         
-        #line 457 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 474 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(HttpUtility.HtmlEncode(reference.Column.Name)));
 
         
         #line default
         #line hidden
         
-        #line 457 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 474 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("</strong>\r\n\t\t\t\t\t\t\t</th>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 459 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 476 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 			colidx++;
 		}
@@ -1171,14 +1236,14 @@ this.Write("</strong>\r\n\t\t\t\t\t\t\t</th>\r\n");
         #line default
         #line hidden
         
-        #line 462 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 479 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t</tr>\r\n\t\t\t\t\t\t</thead>\r\n\t\t\t\t\t\t<tbody>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 466 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 483 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 
 	foreach (var sample in ForeignKeyErrorSamples[fkey])
@@ -1190,28 +1255,28 @@ this.Write("\t\t\t\t\t\t</tr>\r\n\t\t\t\t\t\t</thead>\r\n\t\t\t\t\t\t<tbody>\r\n
         #line default
         #line hidden
         
-        #line 472 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 489 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t<tr>\r\n\t\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t\t\t");
 
         
         #line default
         #line hidden
         
-        #line 475 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 492 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(count));
 
         
         #line default
         #line hidden
         
-        #line 475 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 492 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\r\n\t\t\t\t\t\t\t</td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 477 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 494 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 		foreach (Post post in sample.Item1.Values)
 		{
@@ -1220,14 +1285,14 @@ this.Write("\r\n\t\t\t\t\t\t\t</td>\r\n");
         #line default
         #line hidden
         
-        #line 480 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 497 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t\t<td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 482 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 499 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 			if (post.IsNull)
 			{
@@ -1236,14 +1301,14 @@ this.Write("\t\t\t\t\t\t\t<td>\r\n");
         #line default
         #line hidden
         
-        #line 485 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 502 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t\t\t<span class=\"value null\">NULL</span>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 487 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 504 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 			}
 			else if (post.Data == string.Empty)
@@ -1253,14 +1318,14 @@ this.Write("\t\t\t\t\t\t\t\t<span class=\"value null\">NULL</span>\r\n");
         #line default
         #line hidden
         
-        #line 491 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 508 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t\t\t<span class=\"value empty\">TOM</span>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 493 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 510 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 			}
 			else
@@ -1270,28 +1335,28 @@ this.Write("\t\t\t\t\t\t\t\t<span class=\"value empty\">TOM</span>\r\n");
         #line default
         #line hidden
         
-        #line 497 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 514 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t\t\t<span class=\"value\">");
 
         
         #line default
         #line hidden
         
-        #line 498 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 515 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write(this.ToStringHelper.ToStringWithCulture(post.Data));
 
         
         #line default
         #line hidden
         
-        #line 498 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 515 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("</span>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 499 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 516 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 			}
 
@@ -1299,14 +1364,14 @@ this.Write("</span>\r\n");
         #line default
         #line hidden
         
-        #line 501 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 518 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t\t</td>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 503 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 520 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 		} // foreach post
 
@@ -1314,14 +1379,14 @@ this.Write("\t\t\t\t\t\t\t</td>\r\n");
         #line default
         #line hidden
         
-        #line 505 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 522 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t</tr>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 507 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 524 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 	} // foreach sample
 
@@ -1329,14 +1394,14 @@ this.Write("\t\t\t\t\t\t</tr>\r\n");
         #line default
         #line hidden
         
-        #line 509 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 526 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 this.Write("\t\t\t\t\t\t</tbody>\r\n\t\t\t\t\t</table>\r\n\t\t\t\t</td>\r\n            </tr>\r\n");
 
         
         #line default
         #line hidden
         
-        #line 514 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
+        #line 531 "C:\Users\EG5S\Source\Repos\TableDataAnalyzer\HardHornLight\Resources\NotificationLog.tt"
 
 }
 

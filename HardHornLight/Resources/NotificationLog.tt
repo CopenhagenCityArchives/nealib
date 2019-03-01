@@ -40,6 +40,11 @@
 	.samples-table > tbody > tr:nth-child(odd) > td:nth-child(even) { background: #f6f6f6;}
 	.samples-table > tbody > tr:nth-child(even) > td:nth-child(odd) { background: #fdfdfd;}
 	.header-actions {font-weight: normal; font-size: 0.8em;}
+	span.data:before, span.data:after {
+		content: "\"";
+		color: gray;
+		font-weight: bold;
+	}
 </style>
 <script>
 	function toggleSamples(sender, sampleRow) {
@@ -141,7 +146,7 @@
 			break;
 		case 'Række':
 		case 'Antal':
-		case 'Forekomster':
+		case 'Længde':
 			return function(row1, row2) {
 				var idx = sortColumnIndex;
 				var field1 = row1.children[idx].innerText;
@@ -227,7 +232,14 @@ foreach (CollectionViewGroup group in NotificationGroups)
 <#
 foreach (CollectionViewGroup group in NotificationGroups)
 {
-	string groupNameEncoded = HttpUtility.HtmlEncode(group.Name);
+	string groupNameEncoded;
+	if (GroupByTables) {
+		groupNameEncoded = HttpUtility.HtmlEncode(group.Name);
+	}
+	else
+	{
+		groupNameEncoded = HttpUtility.HtmlEncode(NotificationsUtility.NotificationTypeToString((NotificationType)group.Name));
+	}
 #>
     <div id="<#= groupNameEncoded #>">
         <h3>
@@ -287,7 +299,7 @@ private void OutputNotificationHeaderRow(string groupNameEncoded)
 	}
 #>
 				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 4)">
-					<strong>Forekomster</strong>
+					<strong>Antal</strong>
 				</th>
 				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 5)">
 					<strong>Besked</strong>
@@ -403,11 +415,13 @@ private void OutputAnalysisSamples(INotification notification)
 				<table class="samples-table" id="<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table">
 					<thead>
 					<tr>
-						
 						<th class="sortable" onclick="sortBy(this, document.getElementById('<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table'), 0)">
 							<strong>Række</strong>
 						</th>
-						</th onclick="sortBy(this, document.getElementById('<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table'), 0)">
+						<th class="sortable" onclick="sortBy(this, document.getElementById('<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table'), 1)">
+							<strong>Længde</strong>
+						</th>
+						<th class="sortable" onclick="sortBy(this, document.getElementById('<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table'), 2)">
 							<strong>Data</strong>
 						</th>
 					</tr>
@@ -422,7 +436,10 @@ private void OutputAnalysisSamples(INotification notification)
 							<#= post.RowIndex + 1 #>
 						</td>
 						<td>
-							<p class="data"><#= post.Data #></p>
+							<#= post.Data.Length #>
+						</td>
+						<td>
+							<span class="data"><#= post.Data #></span>
 						</td>
 					</tr>
 <#+
