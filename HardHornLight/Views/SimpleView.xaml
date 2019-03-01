@@ -9,7 +9,7 @@
         xmlns:cal="http://www.caliburnproject.org"
         ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" Height="900" Width="1400"
+        Title="{Binding WindowTitle}" Height="900" Width="1500"
         Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="{Binding ProgressState}">
