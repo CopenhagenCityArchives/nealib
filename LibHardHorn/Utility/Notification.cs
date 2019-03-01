@@ -373,7 +373,7 @@ namespace HardHorn.Utility
                 case NotificationType.ForeignKeyTestError:
                     return "Fremmednøgletestfejl";
                 case NotificationType.ForeignKeyTestBlank:
-                    return "Fremmednøgletestfejl med blanke værdier";
+                    return "Fremmednøgletestfejl med NULL-værdier";
                 default:
                     return null;
             }
