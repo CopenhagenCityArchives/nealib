@@ -181,7 +181,7 @@
                     <StackPanel Margin="5" Orientation="Vertical">
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategoryForeignKeyTest}" FontWeight="Bold">Fremmednøgletest</CheckBox>
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestErrors}">Fremmednøglefejl</CheckBox>
-                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestBlanks}">Blanke fremmednøgler</CheckBox>
+                        <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowForeignKeyTestBlanks}">Fremmednøglefejl med NULL-værdier</CheckBox>
                     </StackPanel>
                     <StackPanel Margin="5" Orientation="Vertical">
                         <CheckBox Margin="5" IsChecked="{Binding Notifications_ShowCategorySuggestions}" FontWeight="Bold">Forslag</CheckBox>
