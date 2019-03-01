@@ -38,7 +38,7 @@ namespace HardHorn.ViewModels
         {
             get
             {
-                return $"{(ArchiveVersion != null ? ArchiveVersion.Id + " - " : string.Empty)}NEA Analyzer";
+                return $"{(ArchiveVersion != null ? ArchiveVersion.Id + " - " : string.Empty)}{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}";
             }
         }
 
@@ -407,14 +407,16 @@ namespace HardHorn.ViewModels
             Tasks = new ObservableCollection<TaskViewModel>();
 
             var args = Environment.GetCommandLineArgs();
-            if (args.Length == 2 && Directory.Exists(args[1]))
-            {
-                LoadLocation(args[1]);
-            }
+            string location = args.FirstOrDefault(Directory.Exists);
 
             if (args.Contains("--skip-analysis"))
             {
                 skipAnalysis = true;
+            }
+
+            if (location != null)
+            {
+                LoadLocation(location);
             }
         }
         #endregion
@@ -973,7 +975,22 @@ namespace HardHorn.ViewModels
                             else
                                 notificationGroups = NotificationsCategoryView.Groups.Cast<CollectionViewGroup>();
 
-                            NotificationsUtility.WriteHTML(writer, ArchiveVersion, groupByTables, notificationGroups, now);
+                            var analysisSamples = new Dictionary<INotification, IEnumerable<Post>>();
+                            foreach (var typedict in AnalysisNotificationsMap.Values)
+                            {
+                                foreach (var notificationvm in typedict.Values)
+                                {
+                                    analysisSamples.Add(notificationvm, notificationvm.Sample);
+                                }
+                            }
+
+                            var fkeySamples = new Dictionary<ForeignKey, IEnumerable<Tuple<ForeignKeyValue, int>>>();
+                            foreach (var notificationvm in ForeignKeyTestErrorNotificationsMap.Values)
+                            {
+                                fkeySamples.Add(notificationvm.ForeignKey,
+                                    notificationvm.ErrorValues.ToList().Select(keyValue => new Tuple<ForeignKeyValue, int>(keyValue.Key, keyValue.Value)));
+                            }
+                            writer.Write(new Resources.NotificationLog(ArchiveVersion, analysisSamples, fkeySamples, notificationGroups, groupByTables).TransformText());
                         }
                     }
                 }

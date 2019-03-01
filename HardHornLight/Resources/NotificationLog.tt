@@ -1,0 +1,516 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="HardHorn.Archiving" #>
+<#@ import namespace="HardHorn.ViewModels" #>
+<#@ import namespace="System.Windows.Data" #>
+<#@ import namespace="System.Web" #>
+<#@ import namespace="HardHorn.Utility" #>
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+	h1 { font-size: 1.5em; }
+	h2 { font-size: 1.25em; }
+	h3 { font-size: 1.0em;}
+	body { font-size: 0.8em; }
+	th, td { padding: 2px; }
+	th { text-align: left; white-space: nowrap; }
+	table { border-collapse: collapse; border-spacing: 0; }
+	.sort {display:inline-block; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; }
+	.expanded span  {margin: 0 0 3px 0; display:inline-block; border-top:  5px solid black; border-left: 5px solid transparent; border-right:  5px solid transparent; width: 0; height: 0; position: relative;}
+	.collapsed span {margin: 0 0 0 3px; display:inline-block; border-left: 5px solid black; border-top:  5px solid transparent; border-bottom: 5px solid transparent; width: 0; height: 0; position: relative;}
+	.expander {cursor:pointer;}
+	.sortable {cursor:pointer;}
+	.asc {border-bottom: 10px solid black;}
+	.desc {border-top: 10px solid black;}
+	.value {font-family: "Lucida Console", Monaco, monospace;}
+	.empty {font-weight: bold; color: brown;}
+	.null {font-weight: bold; color: blue;}
+	.samples-table {margin: 0 0.8em 0.8em 0.8em; font-size: 0.7em;}
+	.odd, .odd + .samplerow {background: #f5f5f5}
+	.odd > td:nth-child(even) { background: #f6f6f6; }
+	.even > td-nth-child(odd) { background: #fdfdfd; }
+	.samples-table > tbody > tr:nth-child(odd) { background: #f5f5f5;}
+	.samples-table > tbody > tr:nth-child(even) { background: #ffffff;}
+	.samples-table > tbody > tr:nth-child(odd) > td:nth-child(even) { background: #f6f6f6;}
+	.samples-table > tbody > tr:nth-child(even) > td:nth-child(odd) { background: #fdfdfd;}
+	.header-actions {font-weight: normal; font-size: 0.8em;}
+</style>
+<script>
+	function toggleSamples(sender, sampleRow) {
+		if (sampleRow.style.display === 'none')
+		{
+			sampleRow.style.display = 'table-row';
+			sender.classList = "expander expanded";
+		}
+		else
+		{
+			sampleRow.style.display = 'none';
+			sender.classList = "expander collapsed";
+		}
+	}
+
+	function expandAll(container)
+	{
+		var elems = Array.prototype.slice.call(container.getElementsByClassName('collapsed'));
+		for (var i = 0; i < elems.length; i++) {
+			elems[i].onclick();
+		}
+	}
+
+	function collapseAll(container)
+	{
+		var elems = Array.prototype.slice.call(container.getElementsByClassName('expanded'));
+		for (var i = 0; i < elems.length; i++) {
+			elems[i].onclick();
+		}
+	}
+
+	function sortBy(sender, table, sortColumnIndex) {
+		var sortTypeElem = table.children[0].children[0].children[sortColumnIndex].getElementsByTagName('strong')[0];
+		var sortType = '';
+		if (sortTypeElem != undefined) {
+			sortType = sortTypeElem.innerText;
+		}
+		var rows = [];
+		var trs = table.children[1].children;
+		for (var i = 0; i < trs.length; i++) {
+			if (trs[i].classList == "samplerow")
+			{
+				rows[rows.length-1].sampleRow = trs[i];
+			}
+			else
+			{
+				rows.push(trs[i]);
+			}
+		}
+		var glyphs = table.getElementsByClassName('sort');
+		for (var i = 0; i < glyphs.length; i++) {
+			glyphs[i].remove();
+		}
+		if (table.lastSortType == sortType) {
+			table.sortAscending = !table.sortAscending;
+			rows.reverse();
+		} else {
+			table.sortAscending = true;
+			table.lastSortType = sortType;
+			rows.sort(getSortFunc(sortType, sortColumnIndex)); 
+		}
+		addGlyph(table, sortColumnIndex);
+		readdRows(rows);
+	}
+
+	function getSortFunc(sortType, sortColumnIndex) {
+	switch (sortType) {
+		case 'Felt':
+			return function(row1, row2) {
+				var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+				var f1 = parseInt(field1.substr(2, field1.indexOf(':')-2));
+				var f2 = parseInt(field2.substr(2, field2.indexOf(':')-2));
+				return f1-f2;
+			};
+			break;
+		case 'Tabel':
+			return function(row1, row2) {
+				var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+				var f1 = parseInt(field1.substr(6, field1.indexOf(':')-6));
+				var f2 = parseInt(field2.substr(6, field2.indexOf(':')-6));
+				return f1-f2;
+			};
+			break;
+		case 'Række':
+		case 'Antal':
+		case 'Forekomster':
+			return function(row1, row2) {
+				var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+				return parseInt(field1) - parseInt(field2);
+			};
+			break;
+		default:
+			return function(row1, row2) {
+				var idx = sortColumnIndex;
+				var field1 = row1.children[idx].innerText;
+				var field2 = row2.children[idx].innerText;
+				if (field1 == '-') {
+					return -1;
+				}
+				if (field2 == '-') {
+					return 1;
+				}
+				return field1.localeCompare(field2);
+			};
+			break;
+		}
+	}
+
+	function readdRows(rows) {
+		for (var i = 0; i < rows.length; i++) {
+			var parent = rows[i].parentNode;
+			var detached = parent.removeChild(rows[i]);
+			if (detached.sampleRow)
+			{
+				parent.removeChild(detached.sampleRow);
+			}
+			if (i % 2 == 0) {
+				detached.classList.replace('even', 'odd');
+			}
+			else
+			{
+				detached.classList.replace('odd', 'even');
+			}
+			parent.appendChild(detached); 
+			if (detached.sampleRow)
+			{
+				parent.appendChild(detached.sampleRow);
+			}
+		}
+	}
+
+	function addGlyph(table, columnIndex) {
+		var glyph = document.createElement('span');
+		glyph.classList.add('sort');
+		if (table.sortAscending) {
+			glyph.classList.add('asc');
+		} else {
+			glyph.classList.add('desc');
+		}
+		table.children[0].children[0].children[columnIndex].appendChild(glyph);
+	}
+</script>
+<title><#= ArchiveVersion.Id #> - <#= System.Reflection.Assembly.GetExecutingAssembly().GetName().Name #> Log</title>
+</head>
+<body style="font-family: verdana, sans-serif;">
+<h1><#= ArchiveVersion.Id #> - <#= System.Reflection.Assembly.GetExecutingAssembly().GetName().Name #> Log</h1>
+<p><strong>Tidspunkt:</strong> <#= DateTime.Now #></p>
+<h2 id="oversigt">Oversigt</h2>
+<ul>
+<#
+foreach (CollectionViewGroup group in NotificationGroups)
+{
+	string groupNameEncoded = HttpUtility.HtmlEncode(group.Name);
+#>
+    <li><a href="#<#= groupNameEncoded #>"><#= groupNameEncoded #> (<#= group.ItemCount #> punkter)</a></li>
+<#
+}
+#>
+</ul>
+<h2>Rapport</h2>
+<#
+foreach (CollectionViewGroup group in NotificationGroups)
+{
+	string groupNameEncoded = HttpUtility.HtmlEncode(group.Name);
+#>
+    <div id="<#= groupNameEncoded #>">
+        <h3>
+			<#= groupNameEncoded #>&nbsp;<span class="header-actions"><a href="#oversigt">[til oversigt]</a> <a href="javascript:void(0)" onclick="expandAll(document.getElementById('<#= groupNameEncoded #>'))">[udvid eksempler]</a> <a href="javascript:void(0)" onclick="collapseAll(document.getElementById('<#= groupNameEncoded #>'))">[sammenfold eksempler]</a></span>
+		</h3>
+        <table class="notifications-table" id="<#= groupNameEncoded #>_table">
+			<thead>
+<#
+	OutputNotificationHeaderRow(groupNameEncoded);
+#>
+			</thead>
+			<tbody>
+<#
+	int index = 0;
+	foreach (INotification notification in group.Items)
+	{
+		OutputNotificationRow(notification, ++index % 2 == 0);
+    }
+#>
+			</tbody>
+		</table>
+	</div>
+<#
+}
+#>
+</body>
+</html>
+
+<#+
+private void OutputNotificationHeaderRow(string groupNameEncoded)
+{
+#>
+			<tr>
+				<th></th>
+				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 1)"></th>
+<#+
+	if (!GroupByTables)
+	{
+#>
+				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 2)">
+					<strong>Tabel</strong>
+				</th>
+<#+
+	}
+#>
+				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 2)">
+					<strong>Felt</strong>
+				</th>
+<#+
+	if (GroupByTables)
+	{
+#>
+				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 3)">
+					<strong>Kategori</strong>
+				</th>
+<#+
+	}
+#>
+				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 4)">
+					<strong>Forekomster</strong>
+				</th>
+				<th class="sortable" onclick="sortBy(this, document.getElementById('<#= groupNameEncoded #>_table'), 5)">
+					<strong>Besked</strong>
+				</th>
+			</tr>
+<#+
+}
+
+private void OutputNotificationRow(INotification notification, bool even)
+{
+	if (even) 
+	{
+#>
+			<tr class="even">
+<#+
+	} 
+	else 
+	{
+#>
+			<tr class="odd">
+<#+
+	}
+	if (AnalysisErrorSamples.ContainsKey(notification))
+	{
+#>
+				<td class="expander expanded" onclick="toggleSamples(this, document.getElementById('<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow'))"><span></span></td>
+<#+
+	}
+	else if (notification.Type == NotificationType.ForeignKeyTestError)
+	{
+		ForeignKey fkey = (notification as NotificationViewModel).ForeignKey;
+#>
+				<td class="expander expanded" onclick="toggleSamples(this, document.getElementById('<#= fkey.Name #>_samplerow'))"><span></span></td>
+<#+
+	}
+	else
+	{
+#>
+				<td></td>
+<#+
+	}
+#>
+				<td>
+<#+
+	if (notification.Severity == Severity.Hint)
+	{
+#>
+					<b style="background: yellow;">!</b>
+<#+
+	}
+	else 
+	{
+#>
+					<b style="background: red; color: white;">X</b>
+<#+
+	}
+#>
+				</td>
+<#+
+	if (!GroupByTables)
+	{
+#>
+				<td>
+					<#= HttpUtility.HtmlEncode(notification.Table?.ToString() ?? "-") #>
+				</td>
+<#+
+	}
+#>
+				<td>
+					<#= HttpUtility.HtmlEncode(notification.Column?.ToString() ?? "-") #>
+				</td>
+<#+
+	if (GroupByTables)
+	{
+#>
+				<td>
+					<#= HttpUtility.HtmlEncode(NotificationsUtility.NotificationTypeToString(notification.Type)?.ToString() ?? "-") #>
+				</td>
+<#+
+	}
+#>
+				<td>
+					<#= notification.Count?.ToString() ?? "-" #>
+				</td>
+				<td>
+					<#= HttpUtility.HtmlEncode(notification.Message?.ToString() ?? "-") #>
+				</td>
+            </tr>
+<#+
+	switch (notification.Type)
+	{
+		case NotificationType.AnalysisErrorBlank:
+        case NotificationType.AnalysisErrorOverflow:
+        case NotificationType.AnalysisErrorUnderflow:
+        case NotificationType.AnalysisErrorFormat:
+        case NotificationType.AnalysisErrorRegex:
+        case NotificationType.AnalysisErrorRepeatingChar:
+        case NotificationType.AnalysisErrorUnallowedKeyword:
+			OutputAnalysisSamples(notification);
+			break;
+		case NotificationType.ForeignKeyTestError:
+			OutputForeignKeyTestErrorSamples(notification);
+			break;
+	}
+}
+
+private void OutputAnalysisSamples(INotification notification)
+{
+
+#>
+            <tr id="<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow" class="samplerow">
+				<td colspan="6">
+				<table class="samples-table" id="<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table">
+					<thead>
+					<tr>
+						
+						<th class="sortable" onclick="sortBy(this, document.getElementById('<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table'), 0)">
+							<strong>Række</strong>
+						</th>
+						</th onclick="sortBy(this, document.getElementById('<#= notification.Table.Folder #>_<#= notification.Column.ColumnId #>_<#= notification.Type #>_samplerow_table'), 0)">
+							<strong>Data</strong>
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+<#+
+	foreach (var post in AnalysisErrorSamples[notification])
+	{
+#>
+					<tr>
+						<td>
+							<#= post.RowIndex + 1 #>
+						</td>
+						<td>
+							<p class="data"><#= post.Data #></p>
+						</td>
+					</tr>
+<#+
+	} // foreach post
+#>
+					</tbody>
+				</table>
+				</td>
+            </tr>
+<#+
+}
+
+private void OutputForeignKeyTestErrorSamples(INotification notification)
+{
+	ForeignKey fkey = (notification as NotificationViewModel).ForeignKey;
+
+#>
+            <tr id="<#= fkey.Name #>_samplerow" class="samplerow">
+				<td colspan="6">
+					<table class="samples-table" id="<#= fkey.Name #>_samplerow_table">
+						<thead>
+						<tr>
+							<th class="sortable" onclick="sortBy(this, document.getElementById('<#= fkey.Name #>_samplerow_table'), 0)">
+								<strong>Antal</strong>
+							</th>
+<#+
+		int colidx = 1;
+		foreach (var reference in fkey.References)
+		{
+#>
+							<th class="sortable" onclick="sortBy(this, document.getElementById('<#= fkey.Name #>_samplerow_table'), <#= colidx #>)">
+								<strong><#= HttpUtility.HtmlEncode(reference.Column.Name) #></strong>
+							</th>
+<#+
+			colidx++;
+		}
+#>
+						</tr>
+						</thead>
+						<tbody>
+<#+
+
+	foreach (var sample in ForeignKeyErrorSamples[fkey])
+	{
+		var values = sample.Item1.Values;
+		var count = sample.Item2;
+#>
+						<tr>
+							<td>
+								<#= count #>
+							</td>
+<#+
+		foreach (Post post in sample.Item1.Values)
+		{
+#>
+							<td>
+<#+
+			if (post.IsNull)
+			{
+#>
+								<span class="value null">NULL</span>
+<#+
+			}
+			else if (post.Data == string.Empty)
+			{
+#>
+								<span class="value empty">TOM</span>
+<#+
+			}
+			else
+			{
+#>
+								<span class="value"><#= post.Data #></span>
+<#+
+			}
+#>
+							</td>
+<#+
+		} // foreach post
+#>
+						</tr>
+<#+
+	} // foreach sample
+#>
+						</tbody>
+					</table>
+				</td>
+            </tr>
+<#+
+}
+#>
