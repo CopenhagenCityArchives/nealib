@@ -33,8 +33,8 @@
               AllowDrop="True"
               Cursor="Hand">
             <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -68,8 +68,7 @@
             <!-- Test options -->
             <StackPanel Grid.Row="1"
                         VerticalAlignment="Center"
-                        HorizontalAlignment="Center"
-                        Margin="100">
+                        HorizontalAlignment="Center">
                 <Label FontSize="20">Indstillinger</Label>
                 <CheckBox IsChecked="{Binding PerformAnalysis}">Udfør data-analyse</CheckBox>
                 <CheckBox IsChecked="{Binding PerformKeyTest}">Udfør fremmednøgletests</CheckBox>
@@ -79,8 +78,7 @@
             <StackPanel Grid.Row="1"
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        HorizontalAlignment="Center"
-                        Margin="100">
+                        HorizontalAlignment="Center">
                 <Label FontSize="20">Senest åbnede</Label>
                 <ItemsControl
                               ItemsSource="{Binding RecentLocations}">
