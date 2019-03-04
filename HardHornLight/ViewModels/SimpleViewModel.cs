@@ -42,6 +42,24 @@ namespace HardHorn.ViewModels
             }
         }
 
+        ObservableCollection<RecentLocationViewModel> recentLocations;
+        public ObservableCollection<RecentLocationViewModel> RecentLocations
+        {
+            get
+            {
+                if (recentLocations == null)
+                {
+                    recentLocations = new ObservableCollection<RecentLocationViewModel>();
+                    foreach (var location in Properties.Settings.Default.RecentLocations)
+                    {
+                        recentLocations.Add(new RecentLocationViewModel(location, LoadLocation));
+                    }
+                }
+
+                return recentLocations;
+            }
+        }
+
         string statusMessage;
         public string StatusMessage
         {
@@ -373,7 +391,36 @@ namespace HardHorn.ViewModels
         public double ProgressValue { get; private set; }
         public double ProgressValueTask { get; private set; }
 
-        bool skipAnalysis = false;
+        public bool PerformAnalysis
+        {
+            get
+            {
+                return Properties.Settings.Default.PerformAnalysis;
+            }
+
+            set
+            {
+                Properties.Settings.Default.PerformAnalysis = value;
+                Properties.Settings.Default.Save();
+                NotifyOfPropertyChange("PerformAnalysis");
+            }
+        }
+
+
+        public bool PerformKeyTest
+        {
+            get
+            {
+                return Properties.Settings.Default.PerformKeyTest;
+            }
+
+            set
+            {
+                Properties.Settings.Default.PerformKeyTest = value;
+                Properties.Settings.Default.Save();
+                NotifyOfPropertyChange("PerformKeyTest");
+            }
+        }
 
         List<Post> AnalysisErrorSamplesSelection = new List<Post>();
         List<System.Data.DataRowView> ForeignKeyTestErrorSamplesSelection = new List<System.Data.DataRowView>();
@@ -408,11 +455,6 @@ namespace HardHorn.ViewModels
 
             var args = Environment.GetCommandLineArgs();
             string location = args.FirstOrDefault(Directory.Exists);
-
-            if (args.Contains("--skip-analysis"))
-            {
-                skipAnalysis = true;
-            }
 
             if (location != null)
             {
@@ -662,6 +704,9 @@ namespace HardHorn.ViewModels
                     return ArchiveVersion.Load(location, null, HandleNotification);
                 });
 
+                // Update recents list, since loading was successful.
+                AddRecentLocation(location);
+
                 Analyzer analyzer = await Task.Run(() =>
                 {
                     var ana = new Analyzer(av, av.Tables, null);
@@ -679,15 +724,15 @@ namespace HardHorn.ViewModels
                                     ana.AddTest(column, new Test.Underflow());
                                     ana.AddTest(column, new Test.Overflow());
                                     ana.AddTest(column, new Test.Blank());
-                                    //ana.AddTest(column, new Test.RepeatingChar());
-                                    //ana.AddTest(column, new Test.SuspiciousKeyword());
+                                    ana.AddTest(column, new Test.RepeatingChar());
+                                    ana.AddTest(column, new Test.SuspiciousKeyword());
                                     break;
                                 case DataType.CHARACTER_VARYING:
                                 case DataType.NATIONAL_CHARACTER_VARYING:
                                     ana.AddTest(column, new Test.Overflow());
                                     ana.AddTest(column, new Test.Blank());
-                                    //ana.AddTest(column, new Test.SuspiciousKeyword());
-                                    //ana.AddTest(column, new Test.RepeatingChar());
+                                    ana.AddTest(column, new Test.SuspiciousKeyword());
+                                    ana.AddTest(column, new Test.RepeatingChar());
                                     break;
                                 case DataType.TIMESTAMP:
                                     ana.AddTest(column, Test.TimestampFormatTest());
@@ -725,7 +770,7 @@ namespace HardHorn.ViewModels
                     SetStatus($"Indlæsning er fuldført, med fejl. Fejlkategorier: {NotificationsCategoryView.Groups.Count}, antal fejl: {Notifications.Count}", LogLevel.ERROR);
 
                 // Add analysis tasks
-                if (!skipAnalysis)
+                if (PerformAnalysis)
                     foreach (var table in av.Tables)
                     {
                         Tasks.Add(new TaskViewModel($"Analyse af {table.Name}", _ => {
@@ -752,60 +797,64 @@ namespace HardHorn.ViewModels
                     }
 
                 // Add key test tasks
-                var keyTest = new ForeignKeyTest(av.Tables, HandleNotification);
-                ProgressKeyTestTotal = keyTest.TotalRowCount;
-                NotifyOfPropertyChange("ProgressKeyTestTotal");
-                int skippedTables = 0;
-                foreach (var table in av.Tables)
+                if (PerformKeyTest)
                 {
-                    // Skip if no foreign keys.
-                    if (table.ForeignKeys == null || table.ForeignKeys.Count == 0)
+                    var keyTest = new ForeignKeyTest(av.Tables, HandleNotification);
+                    ProgressKeyTestTotal = keyTest.TotalRowCount;
+                    NotifyOfPropertyChange("ProgressKeyTestTotal");
+                    int skippedTables = 0;
+                    foreach (var table in av.Tables)
                     {
-                        skippedTables++;
-                        continue;
-                    }
-
-                    Tasks.Add(new TaskViewModel($"Fremmednøgletest af {table.Name}", skipped =>
-                    {
-                        int? tablesSkipped = skipped as int?;
-                        if (!tablesSkipped.HasValue)
-                            throw new InvalidOperationException("Task error");
-                        bool readNext = false;
-
-                        // move next for each task with no foreign keys
-                        while (tablesSkipped > 0) {
-                            keyTest.MoveNextTable();
-                            tablesSkipped--;
+                        // Skip if no foreign keys.
+                        if (table.ForeignKeys == null || table.ForeignKeys.Count == 0)
+                        {
+                            skippedTables++;
+                            continue;
                         }
 
-                        // move next for this task
-                        keyTest.MoveNextTable();
+                        Tasks.Add(new TaskViewModel($"Fremmednøgletest af {table.Name}", skipped =>
+                        {
+                            int? tablesSkipped = skipped as int?;
+                            if (!tablesSkipped.HasValue)
+                                throw new InvalidOperationException("Task error");
+                            bool readNext = false;
 
-                        keyTest.InitializeReferencedValueLoading();
+                            // move next for each task with no foreign keys
+                            while (tablesSkipped > 0)
+                            {
+                                keyTest.MoveNextTable();
+                                tablesSkipped--;
+                            }
 
-                        taskTotalProgress.Report(keyTest.TableRowCount);
-                        taskProgress.Report(0);
+                            // move next for this task
+                            keyTest.MoveNextTable();
 
-                        while (keyTest.MoveNextForeignKey())
-                        {   
+                            keyTest.InitializeReferencedValueLoading();
+
+                            taskTotalProgress.Report(keyTest.TableRowCount);
+                            taskProgress.Report(0);
+
+                            while (keyTest.MoveNextForeignKey())
+                            {
+                                do
+                                {
+                                    readNext = keyTest.ReadReferencedForeignKeyValue();
+                                    taskProgress.Report(keyTest.TableDoneRows);
+                                    keyTestProgress.Report(keyTest.TotalDoneRows);
+                                } while (readNext);
+                            }
+
+                            keyTest.InitializeTableTest();
                             do
                             {
-                                readNext = keyTest.ReadReferencedForeignKeyValue();
+                                readNext = keyTest.ReadForeignKeyValue();
                                 taskProgress.Report(keyTest.TableDoneRows);
                                 keyTestProgress.Report(keyTest.TotalDoneRows);
                             } while (readNext);
-                        }
+                        }, skippedTables));
 
-                        keyTest.InitializeTableTest();
-                        do
-                        {
-                            readNext = keyTest.ReadForeignKeyValue();
-                            taskProgress.Report(keyTest.TableDoneRows);
-                            keyTestProgress.Report(keyTest.TotalDoneRows);
-                        } while (readNext);
-                    }, skippedTables));
-
-                    skippedTables = 0;
+                        skippedTables = 0;
+                    }
                 }
 
                 ArchiveVersion = av;
@@ -852,6 +901,30 @@ namespace HardHorn.ViewModels
                     LoadLocation(dialog.SelectedPath);
                 }
             }
+        }
+
+        void AddRecentLocation(string location)
+        {
+            if (Properties.Settings.Default.RecentLocations == null)
+            {
+                Properties.Settings.Default.RecentLocations = new System.Collections.Specialized.StringCollection();
+                Properties.Settings.Default.Save();
+            }
+
+            var removed = RecentLocations.FirstOrDefault(rl => rl.Location.Equals(location));
+            if (removed != null)
+            {
+                Properties.Settings.Default.RecentLocations.Remove(removed.Location);
+                RecentLocations.Remove(removed);
+            }
+                        RecentLocations.Insert(0, new RecentLocationViewModel(location, LoadLocation));
+            Properties.Settings.Default.RecentLocations.Insert(0, location);
+            while (RecentLocations.Count > 5)
+            {
+                Properties.Settings.Default.RecentLocations.RemoveAt(Properties.Settings.Default.RecentLocations.Count - 1);
+                RecentLocations.RemoveAt(RecentLocations.Count - 1);
+            }
+            Properties.Settings.Default.Save();
         }
 
         public void AnalysisErrorSamplesSelectionChanged(SelectionChangedEventArgs eventArgs)

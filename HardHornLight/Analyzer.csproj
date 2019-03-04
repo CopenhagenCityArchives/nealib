@@ -115,6 +115,7 @@
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Resources\NotificationLog.cs" />
     <Compile Include="ViewModels\NotificationViewModel.cs" />
+    <Compile Include="ViewModels\RecentLocationViewModel.cs" />
     <Compile Include="ViewModels\SimpleViewModel.cs" />
     <Compile Include="ViewModels\TaskViewModel.cs" />
     <Compile Include="Views\SimpleView.xaml.cs">

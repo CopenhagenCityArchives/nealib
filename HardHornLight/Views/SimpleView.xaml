@@ -9,7 +9,7 @@
         xmlns:cal="http://www.caliburnproject.org"
         ResizeMode="CanResizeWithGrip"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" Height="900" Width="1500"
+        Title="{Binding WindowTitle}" Height="900" Width="1550"
         Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="{Binding ProgressState}">
@@ -29,54 +29,97 @@
         </Grid.RowDefinitions>
 
         <!-- ArchiveVersion selection -->
-        <Label
-            cal:Message.Attach="[Event MouseLeftButtonUp] = [Action SelectLocation()]; [Event DragEnter] = [Action OnDrag($eventArgs)]; [Event Drop] = [Action OnDrop($eventArgs)]; [Event DragOver] = [Action OnDrag($eventArgs)]"
-            Cursor="Hand"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            HorizontalContentAlignment="Center"
-            VerticalContentAlignment="Center"
-            FontSize="25"
-            AllowDrop="True"
-            Content="Klik her, eller træk en arkiveringsversion hertil for at teste...">
-            <Label.Style>
-                <Style>
-                    <Setter Property="Label.Visibility" Value="Collapsed" />
-                    <Setter Property="Label.IsEnabled" Value="False" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding ArchiveVersion}" Value="{x:Null}">
-                            <Setter Property="Label.Visibility" Value="Visible" />
-                            <Setter Property="Label.IsEnabled" Value="True" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding LoadingArchiveVersion}" Value="True">
-                            <Setter Property="Label.Visibility" Value="Collapsed" />
-                            <Setter Property="Label.IsEnabled" Value="False" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Label.Style>
-        </Label>
-       
-        <!-- Loading splash -->
-        <Label
-            FontSize="25"
-            Content="Indlæser..."
-            Cursor="Wait"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            HorizontalContentAlignment="Center"
-            VerticalContentAlignment="Center">
-            <Label.Style>
-                <Style>
-                    <Setter Property="Label.Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding LoadingArchiveVersion}" Value="True">
-                            <Setter Property="Label.Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Label.Style>
-        </Label>
+        <Grid cal:Message.Attach="[Event MouseLeftButtonUp] = [Action SelectLocation()]; [Event DragEnter] = [Action OnDrag($eventArgs)]; [Event Drop] = [Action OnDrop($eventArgs)]; [Event DragOver] = [Action OnDrag($eventArgs)]"
+              AllowDrop="True"
+              Cursor="Hand">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Label Grid.ColumnSpan="2"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch"
+                   HorizontalContentAlignment="Center"
+                   VerticalContentAlignment="Center"
+                   FontSize="25"
+                   Content="Klik her, eller træk en arkiveringsversion hertil for at teste...">
+                <Label.Style>
+                    <Style>
+                        <Setter Property="Label.Visibility" Value="Collapsed" />
+                        <Setter Property="Label.IsEnabled" Value="False" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ArchiveVersion}" Value="{x:Null}">
+                                <Setter Property="Label.Visibility" Value="Visible" />
+                                <Setter Property="Label.IsEnabled" Value="True" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LoadingArchiveVersion}" Value="True">
+                                <Setter Property="Label.Visibility" Value="Collapsed" />
+                                <Setter Property="Label.IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Label.Style>
+            </Label>
+            
+            <!-- Test options -->
+            <StackPanel Grid.Row="1"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Margin="100">
+                <Label FontSize="20">Indstillinger</Label>
+                <CheckBox IsChecked="{Binding PerformAnalysis}">Udfør data-analyse</CheckBox>
+                <CheckBox IsChecked="{Binding PerformKeyTest}">Udfør fremmednøgletests</CheckBox>
+            </StackPanel>
+            
+            <!-- Recents list -->
+            <StackPanel Grid.Row="1"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Margin="100">
+                <Label FontSize="20">Senest åbnede</Label>
+                <ItemsControl
+                              ItemsSource="{Binding RecentLocations}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button cal:Message.Attach="Load()" Style="{StaticResource HyperlinkButtonStyle}">
+                                <Hyperlink >
+                                    <TextBlock Text="{Binding Location}" />
+                                </Hyperlink>
+                             </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- Loading splash -->
+            <Label Grid.ColumnSpan="2"
+                   Grid.RowSpan="2"
+                   Cursor="Wait"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch"
+                   HorizontalContentAlignment="Center"
+                   VerticalContentAlignment="Center">
+                <StackPanel>
+                    <Control Style="{StaticResource BusyAnimationStyle}" Margin="0 0 5 0"/>
+                    <TextBlock FontSize="25" Text="Indlæser..." />
+                </StackPanel>
+                <Label.Style>
+                    <Style>
+                        <Setter Property="Label.Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding LoadingArchiveVersion}" Value="True">
+                                <Setter Property="Label.Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Label.Style>
+            </Label>
+        </Grid>
 
         <!-- Test view -->
         <Grid>
