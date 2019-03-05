@@ -117,6 +117,18 @@
                     </Style>
                 </Label.Style>
             </Label>
+            <Grid.Style>
+                <Style>
+                    <Setter Property="Grid.Visibility" Value="Collapsed" />
+                    <Setter Property="Grid.IsEnabled" Value="False" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ArchiveVersion}" Value="{x:Null}">
+                            <Setter Property="Grid.Visibility" Value="Visible" />
+                            <Setter Property="Grid.IsEnabled" Value="True" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
         </Grid>
 
         <!-- Test view -->
