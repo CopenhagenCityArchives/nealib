@@ -260,7 +260,7 @@ namespace HardHorn.Analysis
                             int indAfterKey = keyInd + key.Length;
 
                             bool notLetterBef = indBeforeKey < 0 || !Char.IsLetter(HugeText[indBeforeKey]);
-                            bool notLetterAft = indAfterKey > HugeText.Length || !Char.IsLetter(HugeText[indAfterKey]);
+                            bool notLetterAft = indAfterKey >= HugeText.Length || !Char.IsLetter(HugeText[indAfterKey]);
 
                             // keyword is not part of compound word
                             if (notLetterAft && notLetterBef)
