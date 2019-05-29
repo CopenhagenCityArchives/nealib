@@ -12,6 +12,7 @@ using HardHorn.Logging;
 using System.Xml.Linq;
 using HardHorn.Utility;
 using System.Globalization;
+using System.Runtime.Serialization;
 
 namespace HardHorn.Archiving
 {
@@ -571,7 +572,7 @@ namespace HardHorn.Archiving
                 {
                     yield return new ArchiveVersionVerificationError() { Message = string.Format("{0} findes i {1}, men er ukendt.", table.Name, Id), Type = ArchiveVersionVerificationError.ErrorType.UnknownTable };
                 }
-            }
+            }y
         }
 
         /// <summary>
@@ -583,8 +584,25 @@ namespace HardHorn.Archiving
         public static ArchiveVersion Load(string path, ILogger log, NotificationCallback notify=null)
         {
             var archiveVersion = new ArchiveVersion(System.IO.Path.GetFileName(path), path, null);
-            archiveVersion.LoadTableIndex(log, notify);
-            archiveVersion.LoadArchiveIndex(System.IO.Path.Combine(path, "Indices", "archiveIndex.xml"), log);
+
+            try
+            {
+                archiveVersion.LoadTableIndex(log, notify);
+            }
+            catch (Exception ex)
+            {
+                throw new LoadTableIndexException("Tabelindeks kunne ikke indlæses.", ex);
+            }
+
+            try
+            {
+                archiveVersion.LoadArchiveIndex(System.IO.Path.Combine(path, "Indices", "archiveIndex.xml"), log);
+            }
+            catch (Exception ex)
+            {
+                throw new LoadArchiveIndexException("Arkivindeks kunne ikke indlæses.", ex);
+            }
+
             return archiveVersion;
         }
 
@@ -852,6 +870,46 @@ namespace HardHorn.Archiving
                     yield return new Tuple<TableSpecStatus, string>(TableSpecStatus.SPEC_UNDEFINED, table.Name);
                 }
             }
+        }
+    }
+
+    [Serializable]
+    public class LoadArchiveIndexException : Exception
+    {
+        public LoadArchiveIndexException()
+        {
+        }
+
+        public LoadArchiveIndexException(string message) : base(message)
+        {
+        }
+
+        public LoadArchiveIndexException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected LoadArchiveIndexException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
+    [Serializable]
+    public class LoadTableIndexException : Exception
+    {
+        public LoadTableIndexException()
+        {
+        }
+
+        public LoadTableIndexException(string message) : base(message)
+        {
+        }
+
+        public LoadTableIndexException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected LoadTableIndexException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
         }
     }
 }

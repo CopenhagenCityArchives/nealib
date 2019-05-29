@@ -860,6 +860,19 @@ namespace HardHorn.ViewModels
                 ArchiveVersion = av;
                 Analyzer = analyzer;
             }
+            catch (LoadArchiveIndexException ex)
+            {
+                SetStatus("Arkiv-indeks kunne ikke indlæses: " + ex.InnerException.Message, LogLevel.ERROR);
+                ProgressState = TaskbarItemProgressState.Error;
+                return;
+            }
+            catch (LoadTableIndexException ex)
+            {
+                SetStatus("Tabel-indeks kunne ikke indlæses: " + ex.InnerException.Message, LogLevel.ERROR);
+                Console.WriteLine(ex.InnerException.StackTrace);
+                ProgressState = TaskbarItemProgressState.Error;
+                return;
+            }
             catch (Exception ex)
             {
                 SetStatus("En undtagelse forekom under indlæsningen af arkiveringsversionen, med følgende besked: " + ex.Message, LogLevel.ERROR);
