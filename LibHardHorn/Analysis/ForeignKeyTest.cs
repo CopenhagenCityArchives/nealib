@@ -22,7 +22,7 @@ namespace HardHorn.Analysis
 
         private IDictionary<ForeignKey, ISet<ForeignKeyValue>> valueMap;
         private IDictionary<ForeignKey, int> errorCountMap;
-        private IDictionary<ForeignKey, int> blankCountMap;
+        private IDictionary<ForeignKey, int> nullCountMap;
         private IDictionary<ForeignKey, IDictionary<ForeignKeyValue, int>> errorMap;
 
         private IEnumerator<Table> _tableEnumerator;
@@ -57,13 +57,13 @@ namespace HardHorn.Analysis
 
             valueMap = new Dictionary<ForeignKey, ISet<ForeignKeyValue>>();
             errorCountMap = new Dictionary<ForeignKey, int>();
-            blankCountMap = new Dictionary<ForeignKey, int>();
+            nullCountMap = new Dictionary<ForeignKey, int>();
             errorMap = new Dictionary<ForeignKey, IDictionary<ForeignKeyValue, int>>();
             foreach (var table in Tables)
             {
                 foreach (var foreignKey in table.ForeignKeys)
                 {
-                    blankCountMap[foreignKey] = 0;
+                    nullCountMap[foreignKey] = 0;
                     errorCountMap[foreignKey] = 0;
                     errorMap[foreignKey] = new Dictionary<ForeignKeyValue, int>();
                 }
@@ -182,7 +182,7 @@ namespace HardHorn.Analysis
                     var key = foreignKey.GetValueFromRow(i, _rows);
                     if (key.Values.Any(post => post.IsNull))
                     {
-                        blankCountMap[foreignKey]++;
+                        nullCountMap[foreignKey]++;
                     }
                     else if (!valueMap[foreignKey].Contains(key))
                     {
@@ -209,9 +209,9 @@ namespace HardHorn.Analysis
                     Notify(new ForeignKeyTestErrorNotification(foreignKey, errorCountMap[foreignKey], errorMap[foreignKey]));
                 }
 
-                if (blankCountMap[foreignKey] > 0)
+                if (nullCountMap[foreignKey] > 0)
                 {
-                    Notify(new ForeignKeyTestBlankNotification(foreignKey, blankCountMap[foreignKey]));
+                    Notify(new ForeignKeyTestBlankNotification(foreignKey, nullCountMap[foreignKey]));
                 }
             }
 
