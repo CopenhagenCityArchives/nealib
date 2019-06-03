@@ -1,5 +1,5 @@
-﻿using HardHorn.Archiving;
-using HardHorn.Utility;
+﻿using NEA.Archiving;
+using NEA.Utility;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace HardHorn.Analysis
+namespace NEA.Analysis
 {
     public abstract class Test
     {

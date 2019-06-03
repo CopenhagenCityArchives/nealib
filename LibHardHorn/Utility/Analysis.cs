@@ -1,6 +1,6 @@
-﻿using HardHorn.Analysis;
+﻿using NEA.Analysis;
 
-namespace HardHorn.Utility
+namespace NEA.Utility
 {
     public static class AnalysisUtility
     {

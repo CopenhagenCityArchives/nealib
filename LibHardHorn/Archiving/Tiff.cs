@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     /// <summary>
     /// An enumeration of possible tiff byte orders.

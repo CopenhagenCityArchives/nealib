@@ -1,10 +1,10 @@
-﻿using HardHorn.Archiving;
+﻿using NEA.Archiving;
 using System;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace HardHorn.Utility
+namespace NEA.Utility
 {
 
     public class TableReader : IDisposable

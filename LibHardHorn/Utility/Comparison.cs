@@ -1,7 +1,7 @@
-﻿using HardHorn.Archiving;
+﻿using NEA.Archiving;
 using System.Collections.Generic;
 
-namespace HardHorn.Utility
+namespace NEA.Utility
 {
     public class ColumnComparison
     {

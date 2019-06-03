@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     public class ColumnParsingException : Exception
     {

@@ -1,4 +1,4 @@
-﻿namespace HardHorn.Archiving
+﻿namespace NEA.Archiving
 {
     public enum DataType
     {

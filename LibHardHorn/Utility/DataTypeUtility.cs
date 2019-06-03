@@ -1,4 +1,4 @@
-﻿using HardHorn.Archiving;
+﻿using NEA.Archiving;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HardHorn.Utility
+namespace NEA.Utility
 {
     public static class DataTypeUtility
     {

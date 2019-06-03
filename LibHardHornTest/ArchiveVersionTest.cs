@@ -1,11 +1,11 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using HardHorn.Archiving;
+using NEA.Archiving;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using HardHorn.Logging;
-using HardHorn.Analysis;
+using NEA.Logging;
+using NEA.Analysis;
 
 namespace LibHardHornTest
 {

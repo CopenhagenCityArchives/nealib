@@ -1,11 +1,11 @@
-﻿using HardHorn.Utility;
+﻿using NEA.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     public class ParameterizedDataType : IComparable
     {

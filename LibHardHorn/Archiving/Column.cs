@@ -2,9 +2,9 @@
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-using HardHorn.Utility;
+using NEA.Utility;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     /// <summary>
     /// A column of a table in an archive version.

@@ -1,4 +1,4 @@
-﻿using HardHorn.Utility;
+﻿using NEA.Utility;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     public class Parameter : IComparable
     {

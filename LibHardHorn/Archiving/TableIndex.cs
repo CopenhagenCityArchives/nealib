@@ -1,13 +1,13 @@
-﻿using HardHorn.Archiving;
-using HardHorn.Logging;
-using HardHorn.Utility;
+﻿using NEA.Archiving;
+using NEA.Logging;
+using NEA.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using System.Xml.Schema;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     public class TableIndex
     {

@@ -1,6 +1,6 @@
 ﻿using System;
-using HardHorn.Archiving;
-using HardHorn.Utility;
+using NEA.Archiving;
+using NEA.Utility;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 using System.Text.RegularExpressions;

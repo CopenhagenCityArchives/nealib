@@ -1,12 +1,12 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using HardHorn.Archiving;
+using NEA.Archiving;
 using System.Collections.Generic;
-using HardHorn.Analysis;
+using NEA.Analysis;
 using LibHardHornTest.Utilities;
 using System.Text.RegularExpressions;
 using System.Linq;
-using HardHorn.Utility;
+using NEA.Utility;
 using System.Text;
 
 namespace LibHardHornTest

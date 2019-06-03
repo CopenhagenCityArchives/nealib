@@ -1,5 +1,5 @@
-﻿using HardHorn.Analysis;
-using HardHorn.Archiving;
+﻿using NEA.Analysis;
+using NEA.Archiving;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Web;
 using System.Windows.Data;
 using System.Xml.Linq;
 
-namespace HardHorn.Utility
+namespace NEA.Utility
 {
     public enum Severity
     {

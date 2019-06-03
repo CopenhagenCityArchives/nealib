@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HardHorn.Archiving;
-using HardHorn.Utility;
+using NEA.Archiving;
+using NEA.Utility;
 
-namespace HardHorn.Analysis
+namespace NEA.Analysis
 {
     public class ForeignKeyTest : IDisposable
     {

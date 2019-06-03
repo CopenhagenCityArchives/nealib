@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HardHorn.Analysis
+namespace NEA.Analysis
 {
     public enum AnalysisTestType
     {

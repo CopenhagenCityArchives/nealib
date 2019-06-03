@@ -1,4 +1,4 @@
-﻿using HardHorn.Utility;
+﻿using NEA.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     public class Reference
     {

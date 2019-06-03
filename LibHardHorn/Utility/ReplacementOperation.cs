@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using HardHorn.Archiving;
+using NEA.Archiving;
 
-namespace HardHorn.Utility
+namespace NEA.Utility
 {
     public class ReplacementOperation
     {

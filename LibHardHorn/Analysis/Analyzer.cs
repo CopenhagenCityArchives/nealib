@@ -4,15 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using HardHorn.Archiving;
+using NEA.Archiving;
 using System.Text.RegularExpressions;
 using System.Dynamic;
-using HardHorn.Logging;
+using NEA.Logging;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
-using HardHorn.Utility;
+using NEA.Utility;
 
-namespace HardHorn.Analysis
+namespace NEA.Analysis
 {
     public class AnalysisTestException : Exception
     {

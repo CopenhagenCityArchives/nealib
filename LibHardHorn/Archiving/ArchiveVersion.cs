@@ -8,13 +8,13 @@ using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
 using System.Dynamic;
-using HardHorn.Logging;
+using NEA.Logging;
 using System.Xml.Linq;
-using HardHorn.Utility;
+using NEA.Utility;
 using System.Globalization;
 using System.Runtime.Serialization;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     /// <summary>
     /// An error from verifying the archive version.

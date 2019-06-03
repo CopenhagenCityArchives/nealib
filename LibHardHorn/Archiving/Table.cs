@@ -1,13 +1,13 @@
-﻿using HardHorn.Logging;
+﻿using NEA.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-using HardHorn.Utility;
+using NEA.Utility;
 using System.IO;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     /// <summary>
     /// A table in an archive version.

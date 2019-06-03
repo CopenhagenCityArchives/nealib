@@ -2,8 +2,8 @@
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using HardHorn.Archiving;
-using HardHorn.Analysis;
+using NEA.Archiving;
+using NEA.Analysis;
 
 namespace LibHardHornTest
 {

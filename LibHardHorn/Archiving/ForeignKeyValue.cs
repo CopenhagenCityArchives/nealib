@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HardHorn.Archiving
+namespace NEA.Archiving
 {
     public class ForeignKeyValue : IEquatable<ForeignKeyValue>
     {

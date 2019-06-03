@@ -1,10 +1,10 @@
-﻿using HardHorn.Archiving;
+﻿using NEA.Archiving;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 
-namespace HardHorn.Statistics
+namespace NEA.Statistics
 {
     public class BarChartConfiguration
     {
