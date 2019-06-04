@@ -323,259 +323,286 @@ namespace NEA.Archiving
         /// <returns>The verification errors.</returns>
         public IEnumerable<ArchiveVersionVerificationError> Verify(JsonObject av)
         {
-            var archiveIndex = av["archiveIndex"] as JsonObject;
-
-            if (archiveIndex["archiveInformationPackageID"] != Id)
+            if (av.ContainsKey("archiveIndex"))
             {
-                yield return new ArchiveVersionVerificationError
+                var archiveIndex = av["archiveIndex"] as JsonObject;
+                if (archiveIndex["archiveInformationPackageID"] != Id)
                 {
-                    Message = "archiveInformationPackageID",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "archiveInformationPackageID",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["archiveInformationPackageIDPrevious"] != PreviousId)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["archiveInformationPackageIDPrevious"] != PreviousId)
                 {
-                    Message = "archiveInformationPackageIDPrevious",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "archiveInformationPackageIDPrevious",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["systemName"] != SystemName)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["systemName"] != SystemName)
                 {
-                    Message = "systemName",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "systemName",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["archiveType"] != PeriodType)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["archiveType"] != PeriodType)
                 {
-                    Message = "archiveType",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "archiveType",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["archiveInformationPacketType"] != PacketType)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["archiveInformationPacketType"] != PacketType)
                 {
-                    Message = "archiveInformationPacketType",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "archiveInformationPacketType",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["regionNum"] != RegionNumbersUsed)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["regionNum"] != RegionNumbersUsed)
                 {
-                    Message = "regionNum",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "regionNum",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["komNum"] != KommuneNumbersUsed)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["komNum"] != KommuneNumbersUsed)
                 {
-                    Message = "komNum",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "komNum",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["cprNum"] != CPRNumbersUsed)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["cprNum"] != CPRNumbersUsed)
                 {
-                    Message = "cprNum",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "cprNum",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["cvrNum"] != CVRNumbersUsed)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["cvrNum"] != CVRNumbersUsed)
                 {
-                    Message = "cvrNum",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "cvrNum",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["matrikNum"] != MatrikelNumbersUsed)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["matrikNum"] != MatrikelNumbersUsed)
                 {
-                    Message = "matrikNum",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "matrikNum",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["bbrNum"] != BBRNumbersUsed)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["bbrNum"] != BBRNumbersUsed)
                 {
-                    Message = "bbrNum",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "bbrNum",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["whoSygKod"] != WHOCodesUsed)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["whoSygKod"] != WHOCodesUsed)
                 {
-                    Message = "whoSygKod",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "whoSygKod",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["containsDigitalDocuments"] != ContainsDigitalDocuments)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["containsDigitalDocuments"] != ContainsDigitalDocuments)
                 {
-                    Message = "containsDigitalDocuments",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "containsDigitalDocuments",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["searchRelatedOtherRecords"] != SearchRelatedOtherRecords)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["searchRelatedOtherRecords"] != SearchRelatedOtherRecords)
                 {
-                    Message = "searchRelatedOtherRecords",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "searchRelatedOtherRecords",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["systemFileConcept"] != SystemFileConcept)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["systemFileConcept"] != SystemFileConcept)
                 {
-                    Message = "systemFileConcept",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "systemFileConcept",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["multipleDataCollection"] != MultipleDataCollection)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["multipleDataCollection"] != MultipleDataCollection)
                 {
-                    Message = "multipleDataCollection",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "multipleDataCollection",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["personalDataRestrictedInfo"] != PersonalDataRestrictedInfo)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["personalDataRestrictedInfo"] != PersonalDataRestrictedInfo)
                 {
-                    Message = "personalDataRestrictedInfo",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "personalDataRestrictedInfo",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if (archiveIndex["otherAccessTypeRestrictions"] != OtherAccessTypeRestrictions)
-            {
-                yield return new ArchiveVersionVerificationError
+                if (archiveIndex["otherAccessTypeRestrictions"] != OtherAccessTypeRestrictions)
                 {
-                    Message = "otherAccessTypeRestrictions",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "otherAccessTypeRestrictions",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if ((archiveIndex["sourceName"] as JsonArray).Any(sourceName => !SourceNames.Any(sname => sname == sourceName["datasource"])))
-            {
-                yield return new ArchiveVersionVerificationError
+                if ((archiveIndex["sourceName"] as JsonArray).Any(sourceName => !SourceNames.Any(sname => sname == sourceName["datasource"])))
                 {
-                    Message = "sourceName",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "sourceName",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if ((archiveIndex["predecessorName"] as JsonArray).Any(predecessorName => !PredecessorNames.Any(predName => predName == predecessorName["predecessor"])))
-            {
-                yield return new ArchiveVersionVerificationError
+                if ((archiveIndex["predecessorName"] as JsonArray).Any(predecessorName => !PredecessorNames.Any(predName => predName == predecessorName["predecessor"])))
                 {
-                    Message = "predecessorName",
-                    Type = ArchiveVersionVerificationError.ErrorType.Value
-                };
-            }
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "predecessorName",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
 
-            if ((archiveIndex["archiveCreators"] as JsonArray).Any(archiveCreator => !ArchiveCreators.Any(aCreator =>
+                if ((archiveIndex["archiveCreators"] as JsonArray).Any(archiveCreator => !ArchiveCreators.Any(aCreator =>
                 {
                     return aCreator.Name == archiveCreator["creatorName"]
                     && aCreator.PeriodEnd.ToShortDateString() == archiveCreator["endDate"]
                     && aCreator.PeriodStart.ToShortDateString() == archiveCreator["startDate"];
                 })))
+                {
+                    yield return new ArchiveVersionVerificationError
+                    {
+                        Message = "predecessorName",
+                        Type = ArchiveVersionVerificationError.ErrorType.Value
+                    };
+                }
+            }
+            else
             {
                 yield return new ArchiveVersionVerificationError
                 {
-                    Message = "predecessorName",
+                    Message = "archiveIndex",
                     Type = ArchiveVersionVerificationError.ErrorType.Value
                 };
             }
 
-            foreach (JsonObject verifyTable in av["tableIndex"] as JsonArray)
+            if (av.ContainsKey("tableIndex"))
             {
-                bool match = false;
+                foreach (JsonObject verifyTable in av["tableIndex"] as JsonArray)
+                {
+                    bool empty = verifyTable.ContainsKey("empty") && verifyTable["empty"];
+                    bool keep = verifyTable.ContainsKey("keep") && verifyTable["keep"];
+                    bool match = false;
+                    foreach (var table in Tables)
+                    {
+                        if (table.Name.ToLower() == ((string)verifyTable["name"]).ToLower())
+                        {
+                            if (empty != (table.Rows == 0))
+                            {
+                                yield return new ArchiveVersionVerificationError
+                                {
+                                    Message = string.Format("{0} har {1} rækker, men er sat til {2}", table.Name, table.Rows, empty ? "tom" : "ikke tom"),
+                                    Type = ArchiveVersionVerificationError.ErrorType.TableEmptiness
+                                };
+                            }
+
+                            if (!keep)
+                            {
+                                yield return new ArchiveVersionVerificationError
+                                {
+                                    Message = string.Format("{0} findes i {1}, men burde kasseres.", table.Name, Id),
+                                    Type = ArchiveVersionVerificationError.ErrorType.TableKeptInError
+                                };
+                            }
+                            match = true;
+                            break;
+                        }
+                    }
+
+                    if (keep && !match)
+                    {
+                        // Report error (Table missing from AV)
+                        yield return new ArchiveVersionVerificationError
+                        {
+                            Message = string.Format("{0} findes ikke i {1}.", verifyTable["name"], Id),
+                            Type = ArchiveVersionVerificationError.ErrorType.TableNotKept
+                        };
+                    }
+                }
+
                 foreach (var table in Tables)
                 {
-                    if (table.Name.ToLower() == ((string)verifyTable["name"]).ToLower())
-                    {
-                        if ((((bool)verifyTable["empty"]) && table.Rows != 0) || (!((bool)verifyTable["empty"]) && table.Rows == 0))
-                        {
-                            yield return new ArchiveVersionVerificationError()
-                            {
-                                Message = string.Format("{0} har {1} rækker, men er sat til {2}", table.Name, table.Rows, ((bool)verifyTable["empty"]) ? "tom" : "ikke tom"),
-                                Type = ArchiveVersionVerificationError.ErrorType.TableEmptiness
-                            };
-                        }
+                    bool match = false;
 
-                        if (!((bool)verifyTable["keep"]))
+                    foreach (dynamic verifyTable in av["tableIndex"] as JsonArray)
+                    {
+                        if (table.Name.ToLower() == ((string)verifyTable["name"]).ToLower())
                         {
-                            yield return new ArchiveVersionVerificationError()
-                            {
-                                Message = string.Format("{0} findes i {1}, men burde kasseres.", table.Name, Id),
-                                Type = ArchiveVersionVerificationError.ErrorType.TableKeptInError
-                            };
+                            match = true;
+                            break;
                         }
-                        match = true;
-                        break;
                     }
-                }
 
-                if (((bool)verifyTable["keep"]) && !match)
-                {
-                    // Report error (Table missing from AV)
-                    yield return new ArchiveVersionVerificationError()
+                    if (!match)
                     {
-                        Message = string.Format("{0} findes ikke i {1}.", verifyTable["name"], Id),
-                        Type = ArchiveVersionVerificationError.ErrorType.TableNotKept
-                    };
+                        yield return new ArchiveVersionVerificationError
+                        {
+                            Message = string.Format("{0} findes i {1}, men er ukendt.", table.Name, Id),
+                            Type = ArchiveVersionVerificationError.ErrorType.UnknownTable
+                        };
+                    }
                 }
             }
-
-            foreach (var table in Tables)
+            else
             {
-                bool match = false;
-                 
-                foreach (dynamic verifyTable in av["tableIndex"] as JsonArray)
+                yield return new ArchiveVersionVerificationError
                 {
-                    if (table.Name.ToLower() == ((string)verifyTable["name"]).ToLower())
-                    {
-                        match = true;
-                        break;
-                    }
-                }
-
-                if (!match)
-                {
-                    yield return new ArchiveVersionVerificationError() { Message = string.Format("{0} findes i {1}, men er ukendt.", table.Name, Id), Type = ArchiveVersionVerificationError.ErrorType.UnknownTable };
-                }
+                    Message = "tableIndex",
+                    Type = ArchiveVersionVerificationError.ErrorType.Value
+                };
             }
         }
 
