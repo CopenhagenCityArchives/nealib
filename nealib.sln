@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nealib", "LibHardHorn\nealib.csproj", "{E4E71235-951C-4D4E-865D-50BB1A79653A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nealib", "nealib\nealib.csproj", "{E4E71235-951C-4D4E-865D-50BB1A79653A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nealib-test", "LibHardHornTest\nealib-test.csproj", "{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nealib-test", "nealib-test\nealib-test.csproj", "{DEF61742-A655-44E0-B2C0-32A06F3F0C0F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

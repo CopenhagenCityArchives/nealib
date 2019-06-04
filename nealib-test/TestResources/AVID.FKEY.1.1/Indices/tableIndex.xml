@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<siardDiark xsi:schemaLocation="http://www.sa.dk/xmlns/diark/1.0 ../Schemas/standard/tableIndex.xsd" xmlns="http://www.sa.dk/xmlns/diark/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <version>1.0</version>
+  <dbName>Institution</dbName>
+  <databaseProduct>Db2</databaseProduct>
+  <tables>
+    <table>
+      <name>PERSONER</name>
+      <folder>table1</folder>
+      <description>Tabel over personer.</description>
+      <columns>
+        <column>
+          <name>ID</name>
+          <columnID>c1</columnID>
+          <type>integer</type>
+          <typeOriginal>SMALLINT</typeOriginal>
+          <nullable>false</nullable>
+          <description>Løbenummer</description>
+        </column>
+        <column>
+          <name>NAVN</name>
+          <columnID>c2</columnID>
+          <type>VARCHAR(64)</type>
+          <typeOriginal>CHAR(256)</typeOriginal>
+          <nullable>false</nullable>
+          <description>Personens fulde navn.</description>
+        </column>
+        <column>
+          <name>TLFNR</name>
+          <columnID>c10</columnID>
+          <type>CHAR(8)</type>
+          <typeOriginal>CHAR(8)</typeOriginal>
+          <nullable>false</nullable>
+          <description>Personens telefonnummer</description>
+        </column>
+      </columns>
+      <primaryKey>
+        <name>PK_PERSONER</name>
+        <column>ID</column>
+      </primaryKey>
+      <rows>3</rows>
+    </table>
+    <table>
+      <name>ADDRESSER</name>
+      <folder>table2</folder>
+      <description>Personaddresser.</description>
+      <columns>
+        <column>
+          <name>ADDRESSE_ID</name>
+          <columnID>c1</columnID>
+          <type>integer</type>
+          <typeOriginal>SMALLINT</typeOriginal>
+          <nullable>false</nullable>
+          <description>Nøgle indsat under arkivering.</description>
+        </column>
+        <column>
+          <name>PERSON_ID</name>
+          <columnID>c2</columnID>
+          <type>integer</type>
+          <typeOriginal>SMALLINT</typeOriginal>
+          <nullable>true</nullable>
+          <description>Person løbenummer.</description>
+        </column>
+        <column>
+          <name>ADDRESSE</name>
+          <columnID>c3</columnID>
+          <type>VARCHAR(128)</type>
+          <typeOriginal>TEXT</typeOriginal>
+          <nullable>true</nullable>
+          <description>Addresse.</description>
+        </column>
+        <column>
+          <name>INDFLYT</name>
+          <columnID>c4</columnID>
+          <type>DATE</type>
+          <typeOriginal>DATE</typeOriginal>
+          <nullable>true</nullable>
+          <description>Dato for indflytning.</description>
+        </column>
+      </columns>
+      <primaryKey>
+        <name>PK_ADDRESSE</name>
+        <column>ADDRESSE_ID</column>
+      </primaryKey>
+      <foreignKeys>
+        <foreignKey>
+          <name>PERSON_FK</name>
+          <referencedTable>PERSONER</referencedTable>
+          <reference>
+            <column>PERSON_ID</column>
+            <referenced>ID</referenced>
+          </reference>
+        </foreignKey>
+      </foreignKeys>
+      <rows>8</rows>
+    </table>
+  </tables>
+  <views>
+    <view>
+      <name>AV_Find_stamopl_for_barn_fra_cpr</name>
+      <queryOriginal>
+          SELECT * FROM WA00100T 
+          WHERE KOMNR = 250 and PNRINSTB = '010110-5121'
+      </queryOriginal>
+      <description>Find stamoplysninger for barnet ud fra cpr-nummer.(OBS. resten af oplysninger hentes via P-data snitflade, så som adresse mv.)</description>
+    </view>
+    <view>
+      <name>AV_Find_barns_forældre_fra_cpr</name>
+      <queryOriginal>
+SELECT B.PNRINSTB AS BARN,c.BESKRIV as RELATION ,b.PNRRELAT
+FROM WA43800T B 
+INNER JOIN WA03000T C on (C.KOMNR = B.KOMNR AND C.STATPROL =B.STATPROL)
+Where c.STATPROL in (1,2) and B.PNRINSTB = '010508-5052'
+     </queryOriginal>
+      <description>Find forældre til barnet ud fra cpr-nummer.</description>
+    </view>
+    <view>
+      <name>AV_Find_notater_tilkn_barn_fra_cpr</name>
+      <queryOriginal>
+select 'Intern kommentar og notat' as Notattype, KOMNR,null as SAGID,JOURNR,TEKSTGRP,HÆNDDATO,LBNNR,USERID,TIMESTAM,TEKSTLIN,CMARK from WA42200T where JOURNR ='3105640802'
+union select 'notat tilknyttet institutionsbruger'  as Notattype, KOMNR,null as SAGID,JOURNR,TEKSTGRP,HÆNDDATO,LBNNR,USERID,TIMESTAM,TEKSTLIN,CMARK from WA42200A where JOURNR ='3105640802'
+Union select 'Notater tilknyttet journal'  as Notattype, KOMNR,SAGID,JOURNR,TEKSTGRP,HÆNDDATO,LBNNR,USERID,TIMESTAM,TEKSTLIN,CMARK from WA42200B where JOURNR ='3105640802'
+      </queryOriginal>
+      <description>Find notater tilknyttet barnet ud fra cpr-nummer. (JOURNR=CPRNR formatet er('0101012222') </description>
+    </view>
+    <view>
+      <name>AV_Find_institution</name>
+      <queryOriginal>--INSTITUTION
+        SELECT INSTNR, DISTRIKTNR 
+          FROM WA00200T
+        WHERE KOMNR = 157
+          AND INSTNR = 57
+          AND DISTRIKTNR IS NOT NULL;
+     </queryOriginal>
+      <description>Find institution.</description>
+    </view>
+    <view>
+      <name>AV_Find_dagplejedistrikt</name>
+      <queryOriginal>
+        SELECT A.DISTRIKTNR
+          FROM WA01100T A
+          INNER JOIN WA41700T B ON B.KOMNR = A.KOMNR AND B.KODGRUP = A.KODGRUP
+        WHERE A.KOMNR = 157
+          AND B.INSTNR = 182
+          AND A.DISTRIKTNR IS NOT NULL
+     </queryOriginal>
+      <description>Find dagplejedistrikt.</description>
+    </view>
+    <view>
+      <name>AV_Find_dagplejerstamoplysninger</name>
+      <queryOriginal>
+        SELECT * FROM WA30000T
+        WHERE KOMNR = 157
+          AND PNRRELAT =  '270968-0091'
+          OR INSTNR = 22
+       </queryOriginal>
+      <description>Find dagplejerstamoplysninger.</description>
+    </view>
+  </views>
+</siardDiark>
