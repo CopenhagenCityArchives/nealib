@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
+using System.Json;
 using System.Net;
 using System.IO;
 using System.Dynamic;
@@ -305,10 +302,17 @@ namespace NEA.Archiving
         /// <returns>The verification errors.</returns>
         public IEnumerable<ArchiveVersionVerificationError> VerifyJSON(string json)
         {
-            dynamic av = JsonConvert.DeserializeObject<ExpandoObject>(json);
-            foreach (var error in Verify(av))
+            var av = JsonObject.Parse(json) as JsonObject;
+            if (av == null)
             {
-                yield return error;
+                yield return new ArchiveVersionVerificationError() { Message = "Kunne ikke forstå input.", Type = ArchiveVersionVerificationError.ErrorType.Value };
+            }
+            else
+            {
+                foreach (var error in Verify(av))
+                {
+                    yield return error;
+                }
             }
         }
 
@@ -317,11 +321,11 @@ namespace NEA.Archiving
         /// </summary>
         /// <param name="av">The deserialized JSON object.</param>
         /// <returns>The verification errors.</returns>
-        public IEnumerable<ArchiveVersionVerificationError> Verify(dynamic av)
+        public IEnumerable<ArchiveVersionVerificationError> Verify(JsonObject av)
         {
-            dynamic archiveIndex = av.archiveIndex;
+            var archiveIndex = av["archiveIndex"] as JsonObject;
 
-            if (archiveIndex.archiveInformationPackageID != Id)
+            if (archiveIndex["archiveInformationPackageID"] != Id)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -330,7 +334,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.archiveInformationPackageIDPrevious != PreviousId)
+            if (archiveIndex["archiveInformationPackageIDPrevious"] != PreviousId)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -339,7 +343,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.systemName != SystemName)
+            if (archiveIndex["systemName"] != SystemName)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -348,7 +352,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.archiveType != PeriodType)
+            if (archiveIndex["archiveType"] != PeriodType)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -357,7 +361,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.archiveInformationPacketType != PacketType)
+            if (archiveIndex["archiveInformationPacketType"] != PacketType)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -366,7 +370,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.regionNum != RegionNumbersUsed)
+            if (archiveIndex["regionNum"] != RegionNumbersUsed)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -375,7 +379,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.komNum != KommuneNumbersUsed)
+            if (archiveIndex["komNum"] != KommuneNumbersUsed)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -384,7 +388,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.cprNum != CPRNumbersUsed)
+            if (archiveIndex["cprNum"] != CPRNumbersUsed)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -393,7 +397,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.cvrNum != CVRNumbersUsed)
+            if (archiveIndex["cvrNum"] != CVRNumbersUsed)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -402,7 +406,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.matrikNum != MatrikelNumbersUsed)
+            if (archiveIndex["matrikNum"] != MatrikelNumbersUsed)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -411,7 +415,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.bbrNum != BBRNumbersUsed)
+            if (archiveIndex["bbrNum"] != BBRNumbersUsed)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -420,7 +424,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.whoSygKod != WHOCodesUsed)
+            if (archiveIndex["whoSygKod"] != WHOCodesUsed)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -429,7 +433,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.containsDigitalDocuments != ContainsDigitalDocuments)
+            if (archiveIndex["containsDigitalDocuments"] != ContainsDigitalDocuments)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -438,7 +442,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.searchRelatedOtherRecords != SearchRelatedOtherRecords)
+            if (archiveIndex["searchRelatedOtherRecords"] != SearchRelatedOtherRecords)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -447,7 +451,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.systemFileConcept != SystemFileConcept)
+            if (archiveIndex["systemFileConcept"] != SystemFileConcept)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -456,7 +460,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.multipleDataCollection != MultipleDataCollection)
+            if (archiveIndex["multipleDataCollection"] != MultipleDataCollection)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -465,7 +469,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.personalDataRestrictedInfo != PersonalDataRestrictedInfo)
+            if (archiveIndex["personalDataRestrictedInfo"] != PersonalDataRestrictedInfo)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -474,7 +478,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if (archiveIndex.otherAccessTypeRestrictions != OtherAccessTypeRestrictions)
+            if (archiveIndex["otherAccessTypeRestrictions"] != OtherAccessTypeRestrictions)
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -483,7 +487,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if ((archiveIndex.sourceName as IEnumerable<dynamic>).Any(sourceName => !SourceNames.Any(sname => sname == sourceName.datasource)))
+            if ((archiveIndex["sourceName"] as JsonArray).Any(sourceName => !SourceNames.Any(sname => sname == sourceName["datasource"])))
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -492,7 +496,7 @@ namespace NEA.Archiving
                 };
             }
 
-            if ((archiveIndex.predecessorName as IEnumerable<dynamic>).Any(predecessorName => !PredecessorNames.Any(predName => predName == predecessorName.predecessor)))
+            if ((archiveIndex["predecessorName"] as JsonArray).Any(predecessorName => !PredecessorNames.Any(predName => predName == predecessorName["predecessor"])))
             {
                 yield return new ArchiveVersionVerificationError
                 {
@@ -501,11 +505,11 @@ namespace NEA.Archiving
                 };
             }
 
-            if ((archiveIndex.archiveCreators as IEnumerable<dynamic>).Any(archiveCreator => !ArchiveCreators.Any(aCreator =>
+            if ((archiveIndex["archiveCreators"] as JsonArray).Any(archiveCreator => !ArchiveCreators.Any(aCreator =>
                 {
-                    return aCreator.Name == archiveCreator.creatorName
-                    && aCreator.PeriodEnd.ToShortDateString() == archiveCreator.endDate
-                    && aCreator.PeriodStart.ToShortDateString() == archiveCreator.startDate;
+                    return aCreator.Name == archiveCreator["creatorName"]
+                    && aCreator.PeriodEnd.ToShortDateString() == archiveCreator["endDate"]
+                    && aCreator.PeriodStart.ToShortDateString() == archiveCreator["startDate"];
                 })))
             {
                 yield return new ArchiveVersionVerificationError
@@ -515,23 +519,23 @@ namespace NEA.Archiving
                 };
             }
 
-            foreach (dynamic verifyTable in av.tableIndex)
+            foreach (JsonObject verifyTable in av["tableIndex"] as JsonArray)
             {
                 bool match = false;
                 foreach (var table in Tables)
                 {
-                    if (table.Name.ToLower() == verifyTable.name.ToLower())
+                    if (table.Name.ToLower() == ((string)verifyTable["name"]).ToLower())
                     {
-                        if ((verifyTable.empty && table.Rows != 0) || (!verifyTable.empty && table.Rows == 0))
+                        if ((((bool)verifyTable["empty"]) && table.Rows != 0) || (!((bool)verifyTable["empty"]) && table.Rows == 0))
                         {
                             yield return new ArchiveVersionVerificationError()
                             {
-                                Message = string.Format("{0} har {1} rækker, men er sat til {2}", table.Name, table.Rows, verifyTable.empty ? "tom" : "ikke tom"),
+                                Message = string.Format("{0} har {1} rækker, men er sat til {2}", table.Name, table.Rows, ((bool)verifyTable["empty"]) ? "tom" : "ikke tom"),
                                 Type = ArchiveVersionVerificationError.ErrorType.TableEmptiness
                             };
                         }
 
-                        if (!verifyTable.keep)
+                        if (!((bool)verifyTable["keep"]))
                         {
                             yield return new ArchiveVersionVerificationError()
                             {
@@ -544,12 +548,12 @@ namespace NEA.Archiving
                     }
                 }
 
-                if (verifyTable.keep && !match)
+                if (((bool)verifyTable["keep"]) && !match)
                 {
                     // Report error (Table missing from AV)
                     yield return new ArchiveVersionVerificationError()
                     {
-                        Message = string.Format("{0} findes ikke i {1}.", verifyTable.name, Id),
+                        Message = string.Format("{0} findes ikke i {1}.", verifyTable["name"], Id),
                         Type = ArchiveVersionVerificationError.ErrorType.TableNotKept
                     };
                 }
@@ -559,9 +563,9 @@ namespace NEA.Archiving
             {
                 bool match = false;
                  
-                foreach (dynamic verifyTable in av.tableIndex)
+                foreach (dynamic verifyTable in av["tableIndex"] as JsonArray)
                 {
-                    if (table.Name.ToLower() == verifyTable.name.ToLower())
+                    if (table.Name.ToLower() == ((string)verifyTable["name"]).ToLower())
                     {
                         match = true;
                         break;
