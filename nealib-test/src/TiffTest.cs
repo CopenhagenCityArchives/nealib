@@ -9,10 +9,9 @@ namespace NEA.Testing
     public class TiffTest
     {
         [TestMethod]
-        [DeploymentItem(@"..\..\TestResources", @"TestResources")]
         public void TestTiffLoad()
         {
-            var tiff = Tiff.Open(@"TestResources\tiff\2.tif");
+            var tiff = Tiff.Open(@"..\..\..\res\tiff\2.tif");
             Assert.AreEqual(ByteOrder.LittleEndian, tiff.ByteOrder);
 
             uint offset = tiff.FirstImageFileDirectoryOffset;

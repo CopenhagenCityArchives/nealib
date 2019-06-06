@@ -62,14 +62,14 @@ namespace NEA.Testing
         #endregion
 
         [TestMethod]
-        [DeploymentItem(@"..\..\TestResources", @"TestResources")]
         public void TestErrorsBlanks()
         {
-            var AV = ArchiveVersion.Load(@"TestResources\AVID.FKEY.1.1", new TestLogger());
+            var AV = ArchiveVersion.Load(@"..\..\..\res\AVID.FKEY.1.1", new TestLogger());
 
             int blankCount = 0;
             int errorCount = 0;
-            var fkeyTest = new ForeignKeyTest(AV.TableIndex.Tables, notification => {
+            var fkeyTest = new ForeignKeyTest(AV.TableIndex.Tables, notification =>
+            {
                 switch (notification.Type)
                 {
                     case NEA.Utility.NotificationType.ForeignKeyTestBlank:

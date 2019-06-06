@@ -14,10 +14,9 @@ namespace NEA.Testing
     public class TableTest
     {
         [TestMethod]
-        [DeploymentItem(@"..\..\TestResources", @"TestResources")]
         public void TestTableReplace()
         {
-            var archiveVersion = ArchiveVersion.Load(@"TestResources\AVID.OVERFLOW.1.1", new TestLogger());
+            var archiveVersion = ArchiveVersion.Load(@"..\..\..\res\AVID.OVERFLOW.1.1", new TestLogger());
 
             var table1 = archiveVersion.Tables.First();
             var pattern = new Regex(@"^(\d\d\d\d-\d\d-\d\d)T\d\d:\d\d:\d\d(?:.\d+)?$");

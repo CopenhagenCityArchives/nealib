@@ -21,7 +21,8 @@ namespace NEA.Archiving
         /// <summary>
         /// Possible types of verification errors.
         /// </summary>
-        public enum ErrorType {
+        public enum ErrorType
+        {
             TableNotKept,
             TableKeptInError,
             UnknownTable,
@@ -577,7 +578,7 @@ namespace NEA.Archiving
                 {
                     bool match = false;
 
-                    foreach (dynamic verifyTable in av["tableIndex"] as JsonArray)
+                    foreach (JsonObject verifyTable in av["tableIndex"] as JsonArray)
                     {
                         if (table.Name.ToLower() == ((string)verifyTable["name"]).ToLower())
                         {
@@ -612,7 +613,7 @@ namespace NEA.Archiving
         /// <param name="path">A path to the root of the archive versions first media.</param>
         /// <param name="log">A logger.</param>
         /// <returns></returns>
-        public static ArchiveVersion Load(string path, ILogger log, NotificationCallback notify=null)
+        public static ArchiveVersion Load(string path, ILogger log, NotificationCallback notify = null)
         {
             var archiveVersion = new ArchiveVersion(System.IO.Path.GetFileName(path), path, null);
 
@@ -667,7 +668,7 @@ namespace NEA.Archiving
             {
                 throw new ErrorFieldException("archivePeriodStart", archiveIndex.Element(xmlns + "archivePeriodStart").Value);
             }
-            
+
             PeriodEnd = DateTime.Parse(archiveIndex.Element(xmlns + "archivePeriodEnd").Value);
 
             PacketType = bool.Parse(archiveIndex.Element(xmlns + "archiveInformationPacketType").Value);
@@ -691,7 +692,7 @@ namespace NEA.Archiving
                     {
                         throw new ErrorFieldException("creationPeriodEnd", creationPeriodEnds[i]);
                     }
-                    
+
                     archiveCreators.Add(new ArchiveCreator(creatorNames[i], creationPeriodStart, creationPeriodEnd));
                 }
             }

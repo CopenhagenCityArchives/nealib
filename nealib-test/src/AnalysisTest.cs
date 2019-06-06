@@ -391,10 +391,9 @@ namespace NEA.Testing
         }
 
         [TestMethod]
-        [DeploymentItem(@"..\..\TestResources", @"TestResources")]
         public void Analyzer()
         {
-            var AV = ArchiveVersion.Load(@"TestResources\AVID.OVERFLOW.1.1", new TestLogger());
+            var AV = ArchiveVersion.Load(@"..\..\..\res\AVID.OVERFLOW.1.1", new TestLogger());
             var Analyzer = new Analyzer(AV, AV.Tables, new TestLogger());
 
             var table1 = AV.Tables.First();
@@ -682,7 +681,7 @@ namespace NEA.Testing
                     new Post("", true));
             }
         }
-        
+
         [TestMethod]
         public void SuspiciosKeyword_nokeyword_resultokay()
         {
