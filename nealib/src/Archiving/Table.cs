@@ -27,7 +27,7 @@ namespace NEA.Archiving
         public string Description { get; set; }
 
         public PrimaryKey PrimaryKey { get; private set; }
-        public List<ForeignKey> ForeignKeys {get;private set;}
+        public List<ForeignKey> ForeignKeys { get; private set; }
         public int FolderNumber { get; private set; }
 
         public override string ToString()
@@ -244,7 +244,7 @@ namespace NEA.Archiving
             {
                 Post[,] rows;
                 int read = 0;
-                while ((read += reader.Read(out rows, read)) > 0)
+                while ((read += reader.ReadN(out rows, read)) > 0)
                 {
 
                 }

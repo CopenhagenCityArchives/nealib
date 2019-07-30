@@ -124,14 +124,14 @@ namespace NEA.Analysis
             }
 
             Post[,] rows;
-            _readRows = _tableReader.Read(out rows, n, TableDoneRows);
+            _readRows = _tableReader.ReadN(out rows, n, TableDoneRows);
 
             // analyze the rows
             for (int i = 0; i < _readRows; i++)
             {
                 for (int j = 0; j < CurrentTable.Columns.Count; j++)
                 {
-                    var post = rows[i,j];
+                    var post = rows[i, j];
                     TestHierachy[CurrentTable][CurrentTable.Columns[j]].UpdateColumnStatistics(post);
                     TestHierachy[CurrentTable][CurrentTable.Columns[j]].RunTests(post, Notify);
                 }
@@ -160,7 +160,7 @@ namespace NEA.Analysis
 
             TableDoneRows = 0;
             TableRowCount = CurrentTable.Rows;
-            
+
             if (_tableReader != null)
             {
                 _tableReader.Dispose();

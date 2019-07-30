@@ -1,5 +1,6 @@
 ﻿using NEA.Archiving;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
@@ -47,14 +48,14 @@ namespace NEA.Utility
             return myString;
         }
         */
-        
+
         /// <summary>
         /// Read rows of the table.
         /// </summary>
         /// <param name="rows"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        public int Read(out Post[,] rows, int n = 100000, int offset = 0, bool readRaw = false)
+        public int ReadN(out Post[,] rows, int n = 100000, int offset = 0, bool readRaw = false)
         {
             rows = new Post[n, _table.Columns.Count];
             int row = 0;
@@ -107,6 +108,27 @@ namespace NEA.Utility
             }
 
             return row;
+        }
+
+        public IEnumerable<Post[]> Read(int chunkSize = 100000, int offset = 0, bool readRaw = false)
+        {
+            int rowsRead = 0;
+            Post[,] rows;
+
+            while ((rowsRead = ReadN(out rows, chunkSize, offset, readRaw)) > 0)
+            {
+                for (int i = 0; i < rowsRead; i++)
+                {
+                    Post[] row = new Post[_table.Columns.Count];
+                    for (int j = 0; j < _table.Columns.Count; j++)
+                    {
+                        row[j] = rows[i, j];
+                    }
+                    yield return row;
+                }
+            }
+
+            yield break;
         }
 
         #region IDisposable Support

@@ -29,7 +29,7 @@ namespace NEA.Analysis
         private IEnumerator<ForeignKey> _foreignKeyEnumerator;
         private TableReader _tableReader;
 
-        private NotificationCallback Notify { get;set;}
+        private NotificationCallback Notify { get; set; }
 
         private Post[,] _rows;
 
@@ -148,7 +148,7 @@ namespace NEA.Analysis
 
         public bool ReadReferencedForeignKeyValue(int chunk = 10000)
         {
-            _readRows = _tableReader.Read(out _rows, chunk);
+            _readRows = _tableReader.ReadN(out _rows, chunk);
 
             for (int i = 0; i < _readRows; i++)
             {
@@ -173,7 +173,7 @@ namespace NEA.Analysis
 
         public bool ReadForeignKeyValue(int chunk = 10000)
         {
-            _readRows = _tableReader.Read(out _rows, chunk);
+            _readRows = _tableReader.ReadN(out _rows, chunk);
 
             for (int i = 0; i < _readRows; i++)
             {

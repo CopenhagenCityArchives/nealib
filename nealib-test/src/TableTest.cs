@@ -26,7 +26,7 @@ namespace NEA.Testing
             var stream = new MemoryStream();
             var originalTableReader = new TableReader(table1);
             Post[,] posts;
-            originalTableReader.Read(out posts, 3);
+            originalTableReader.ReadN(out posts, 3);
             var replacer = new TableReplacer(table1, new ReplacementOperation[] { replacementOperation }, stream);
             replacer.WriteHeader();
             replacer.Write(posts, 3);
@@ -34,7 +34,7 @@ namespace NEA.Testing
             replacer.Flush();
             stream.Seek(0, SeekOrigin.Begin);
             var replacedTableReader = new TableReader(table1, stream);
-            replacedTableReader.Read(out posts, 3);
+            replacedTableReader.ReadN(out posts, 3);
             var assertPattern = new Regex(@"^\d\d\d\d-\d\d-\d\d$");
             for (int i = 0; i < 3; i++)
             {
