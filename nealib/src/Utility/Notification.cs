@@ -36,7 +36,7 @@ namespace NEA.Utility
         ParameterSuggestion,
         DataTypeIllegalAlias,
         Suggestion,
-        AnalysisErrorRepeatingChar,
+        AnalysisErrorRepeatingCharacter,
         AnalysisErrorUnallowedKeyword,
         ForeignKeyReferencedTableMissing
     }
@@ -117,7 +117,7 @@ namespace NEA.Utility
                 case AnalysisTestType.REPEATING_CHAR:
                     uint col_treshold = column.ParameterizedDataType.Parameter.Length * 100 / 95;
                     Severity = Severity.Hint;
-                    var repcharTest = (Test.RepeatingChar)test;
+                    var repcharTest = (Test.RepeatingCharacter)test;
 
                     SortedList<string, int> critical = new SortedList<string, int>();
                     SortedList<string, int> rest = new SortedList<string, int>();
@@ -131,20 +131,14 @@ namespace NEA.Utility
                     }
                     Message = "";
                     if (critical.Any())
-                    {
-                        var strB = new StringBuilder();
-                        foreach (KeyValuePair<string, int> pair in critical)
-                            strB.AppendFormat($"{pair.Key}({pair.Value}).");
-                        Message += "Over threshold length: " + strB.ToString();
-                    }
+                        Message += "Over tærskel: " + string.Join(", ", critical.Select(pair => $"{pair.Key}: {pair.Value}"));
                     if (rest.Any())
                     {
-                        var strB = new StringBuilder();
-                        foreach (KeyValuePair<string, int> pair in rest)
-                            strB.AppendFormat($"{pair.Key}({pair.Value}).");
-                        Message += " List: " + strB.ToString();
+                        if (Message.Length > 0)
+                            Message += " ";
+                        Message += "Resterende: " + string.Join(", ", rest.Select(pair => $"{pair.Key}: {pair.Value}"));
                     }
-                    Type = NotificationType.AnalysisErrorRepeatingChar;
+                    Type = NotificationType.AnalysisErrorRepeatingCharacter;
                     break;
                 case AnalysisTestType.UNALLOWED_KEYWORD:
                     Severity = Severity.Hint;
@@ -155,6 +149,18 @@ namespace NEA.Utility
                         .Select(entry => entry.Key)
                         .ToList();
                     Message = keysFound.Count() == 0 ? null : string.Join(" ", keysFound);
+                    Type = NotificationType.AnalysisErrorUnallowedKeyword;
+                    break;
+                case AnalysisTestType.HTML_TAG:
+                    Severity = Severity.Hint;
+                    var htmlTest = (Test.HtmlEntity)test;
+                    Message = htmlTest.Value;
+                    Type = NotificationType.AnalysisErrorUnallowedKeyword;
+                    break;
+                case AnalysisTestType.ENTITY_CHAR_REF:
+                    Severity = Severity.Hint;
+                    var entityTest = (Test.EntityCharRef)test;
+                    Message = entityTest.CharRef;
                     Type = NotificationType.AnalysisErrorUnallowedKeyword;
                     break;
             }
@@ -352,7 +358,7 @@ namespace NEA.Utility
                     return AnalysisUtility.AnalysisTestTypeToString(AnalysisTestType.REGEX);
                 case NotificationType.AnalysisErrorUnallowedKeyword:
                     return AnalysisUtility.AnalysisTestTypeToString(AnalysisTestType.UNALLOWED_KEYWORD);
-                case NotificationType.AnalysisErrorRepeatingChar:
+                case NotificationType.AnalysisErrorRepeatingCharacter:
                     return AnalysisUtility.AnalysisTestTypeToString(AnalysisTestType.REPEATING_CHAR);
                 case NotificationType.DataTypeIllegalAlias:
                     return "Ulovlig datatypeforkortelse";

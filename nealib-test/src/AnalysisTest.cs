@@ -881,18 +881,19 @@ namespace NEA.Testing
         }
 
         [TestMethod]
-        public void RepeatingChar_ychar_result_error()
+        public void RepeatingCharacter_ychar_result_error()
         {
-            var test = new Test.RepeatingChar();
+            var test = new Test.RepeatingCharacter();
             INotification noti = null;
-            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ", false), null, myNotification => noti = myNotification);
+            var column = new Column(null, "column", new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(35)), null, false, null, null, 1, null, null);
+            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ", false), column, myNotification => noti = myNotification);
             Assert.AreEqual(rep, Test.Result.ERROR);
         }
 
         [TestMethod]
-        public void RepeatingChar_spaceignored_result_okay()
+        public void RepeatingCharacter_spaceignored_result_okay()
         {
-            var test = new Test.RepeatingChar();
+            var test = new Test.RepeatingCharacter();
             INotification noti = null;
             var rep = test.Run(new Post("                              ", false), null, myNotification => noti = myNotification);
             Assert.AreEqual(rep, Test.Result.OKAY);
@@ -900,21 +901,23 @@ namespace NEA.Testing
 
 
         [TestMethod]
-        public void RepeatingChar_ychar_update_message()
+        public void RepeatingCharacter_ychar_update_message()
         {
-            var test = new Test.RepeatingChar();
+            var test = new Test.RepeatingCharacter();
             INotification noti = null;
-            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ", false), null, myNotification => noti = myNotification);
-            Assert.AreEqual("ÿ(33).", noti.Message);
+            var column = new Column(null, "column", new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(35)), null, false, null, null, 1, null, null);
+            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ", false), column, myNotification => noti = myNotification);
+            Assert.AreEqual("Resterende: ÿ: 33", noti.Message);
         }
 
         [TestMethod]
-        public void RepeatingChar_ychar_update_message_longestonly()
+        public void RepeatingCharacter_ychar_update_message_longestonly()
         {
-            var test = new Test.RepeatingChar();
+            var test = new Test.RepeatingCharacter();
             INotification noti = null;
-            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿ cccccccccccccc bbbbbbbbbbbbbbb ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ ccccccccccccc bbbbbbbbbbbb bbbbbbbbbbbbbbbbbbb", false), null, myNotification => noti = myNotification);
-            Assert.AreEqual("ÿ(26).c(14).b(19).", noti.Message);
+            var column = new Column(null, "column", new ParameterizedDataType(DataType.CHARACTER_VARYING, Parameter.WithLength(100)), null, false, null, null, 1, null, null);
+            var rep = test.Run(new Post("ÿÿÿÿÿÿÿÿÿÿÿÿÿ cccccccccccccc bbbbbbbbbbbbbbb ÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿÿ ccccccccccccc bbbbbbbbbbbb bbbbbbbbbbbbbbbbbbb", false), column, myNotification => noti = myNotification);
+            Assert.AreEqual("Resterende: b: 19, c: 14, ÿ: 26", noti.Message);
         }
 
         [TestMethod]

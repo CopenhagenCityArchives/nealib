@@ -313,7 +313,7 @@ namespace NEA.Analysis
             }
         }
         // Find all repeating characters
-        public class RepeatingChar : Test
+        public class RepeatingCharacter : Test
         {
             public override AnalysisTestType Type { get { return AnalysisTestType.REPEATING_CHAR; } }
 
