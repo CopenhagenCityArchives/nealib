@@ -3,17 +3,15 @@
     public enum AVRuleSet { BKG342, BKG1007, BKG128 }
     public class ArchiveVersionFolderIdType
     {
-        private string _baseFolder;
-        private string _id;
-        private AVRuleSet _avRuleSet;
+        public AVRuleSet AvRuleSet { get; private set; }
+        public string Id { get; private set; }
+        public string  FolderPath { get; private set; }
 
-        public string Id { get { return _id; } }
-
-        public ArchiveVersionFolderIdType(string id, string folder, AVRuleSet avRuleSet)
+        public ArchiveVersionFolderIdType(string id, string path, AVRuleSet avRuleSet)
         {
-            _baseFolder = folder;
-            _id = id;
-            _avRuleSet = avRuleSet;
+            FolderPath = path;
+            Id = id;
+            AvRuleSet = avRuleSet;
         }
     }
 }
