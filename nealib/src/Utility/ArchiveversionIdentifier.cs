@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Text.RegularExpressions;
 using NEA.Archiving;
 
 namespace NEA.Utility
 {
-
-
     public class ArchiveVersionIdentifier
     {
         private readonly string _folderPattern1007 = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}$";
@@ -15,11 +14,16 @@ namespace NEA.Utility
         private readonly string _folderPattern342 = @"^000\d{5}$";
         private readonly string _folderPattern342NoBase = @"^\d{5}001$";
 
-        private DirectoryInfo dir;
+        private readonly IFileSystem _fileSystem;
+
+        public ArchiveVersionIdentifier(IFileSystem fileSystem)
+        {
+            _fileSystem = fileSystem;
+        }
 
         public bool TryGetAvFolder(out ArchiveVersionFolderIdType avFolderIdType, string path)
         {
-            DirectoryInfo curDir = new DirectoryInfo(path);
+            var curDir = _fileSystem.DirectoryInfo.FromDirectoryName(path);
             avFolderIdType = null;
 
             /*
@@ -35,8 +39,8 @@ namespace NEA.Utility
              */
             else if ((Regex.IsMatch(curDir.Name, _folderPattern342, RegexOptions.IgnoreCase)))
             {
-                FileInfo mainDir = new FileInfo(Path.Combine(curDir.FullName, curDir.Name.Substring(3) + "001", "arkver.tab"));
-                if (mainDir.Exists) { 
+                var mainFile = _fileSystem.FileInfo.FromFileName(Path.Combine(curDir.FullName, curDir.Name.Substring(3) + "001", "arkver.tab"));
+                if (mainFile.Exists) { 
                     avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name, curDir.FullName, AVRuleSet.BKG342);
                     return true;
                 }
@@ -46,9 +50,8 @@ namespace NEA.Utility
              */
             else if ((Regex.IsMatch(curDir.Name, _folderPattern1007NoBase, RegexOptions.IgnoreCase)))
             {
-                DirectoryInfo mainDir = new DirectoryInfo(Path.Combine(curDir.FullName, "Indices"));
+                var mainDir = _fileSystem.DirectoryInfo.FromDirectoryName(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists) { 
-                    //CurDir.Name = d:\AVID.GBS.3.1
                     avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name.Substring(0, curDir.Name.Length - 2), curDir.FullName.Replace(curDir.Name, ""), AVRuleSet.BKG1007);
                     return true;
                 }
@@ -58,10 +61,9 @@ namespace NEA.Utility
              */
             else if ((Regex.IsMatch(curDir.Name, _folderPattern342NoBase, RegexOptions.IgnoreCase)))
             {
-                FileInfo mainFile = new FileInfo(curDir.FullName + "\\arkver.tab");
-                if (mainFile.Exists) { 
-                    //CurDir.Name = d:\10084001
-                    avFolderIdType = new ArchiveVersionFolderIdType("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), curDir.FullName.Replace(curDir.Name, ""), AVRuleSet.BKG342);
+                var mainFile = _fileSystem.FileInfo.FromFileName(curDir.FullName + "\\arkver.tab");
+                if (mainFile.Exists) {
+                    avFolderIdType = new ArchiveVersionFolderIdType("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), curDir.FullName, AVRuleSet.BKG342);
                     return true;
                 }
             }
@@ -69,14 +71,13 @@ namespace NEA.Utility
             return false;
         }
 
-        public List<ArchiveVersionFolderIdType> GetArchiveVersionFolders()
+        public List<ArchiveVersionFolderIdType> GetArchiveVersionFolders(string path)
         {
-            DirectoryInfo[] dirs;
-            dirs = this.dir.GetDirectories();
+            var dirs = _fileSystem.DirectoryInfo.FromDirectoryName(path).GetDirectories();
             List<String> archiveVersionDirectories = new List<String>();
             List<ArchiveVersionFolderIdType> avFolderList = new List<ArchiveVersionFolderIdType>();
 
-            foreach (DirectoryInfo curDir in dirs)
+            foreach (var curDir in dirs)
             {
                // ArchiveVersionFolderIdType avFolder = new ArchiveVersionFolderIdType();
                 if(TryGetAvFolder(out ArchiveVersionFolderIdType avFolder, curDir.ToString()))

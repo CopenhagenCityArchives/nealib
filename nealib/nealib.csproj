@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IO.Abstractions" Version="13.2.9" />
     <PackageReference Include="System.Json" Version="4.5.0" />
   </ItemGroup>
 
