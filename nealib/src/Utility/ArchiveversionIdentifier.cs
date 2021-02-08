@@ -1,29 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
+using NEA.Archiving;
 
 namespace NEA.Utility
 {
-    public enum AVRuleSet { BKG342, BKG1007, BKG128 }
 
-    public class ArchiveVersionFolderIdType
-    {
-        private string _baseFolder;
-        private string _id;
-        private AVRuleSet _avRuleSet;
-
-        public string Id { get { return _id; } }
-
-        public ArchiveVersionFolderIdType(string id, string folder, AVRuleSet avRuleSet)
-        {
-            _baseFolder = folder;
-            _id = id;
-            _avRuleSet = avRuleSet;
-        }
-    }
 
     public class ArchiveVersionIdentifier
     {
@@ -33,7 +16,6 @@ namespace NEA.Utility
         private readonly string _folderPattern342NoBase = @"^\d{5}001$";
 
         private DirectoryInfo dir;
-        private List<string> existingArchiveVersions;
 
         public bool TryGetAvFolder(out ArchiveVersionFolderIdType avFolderIdType, string path)
         {

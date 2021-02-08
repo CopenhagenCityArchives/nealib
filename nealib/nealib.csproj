@@ -7,6 +7,8 @@
     <PackageId>NEALib_DAF</PackageId>
     <Product>NEALib</Product>
     <Copyright>Københavns Stadsarkiv</Copyright>
+    <RootNamespace>NEA</RootNamespace>
+    <AssemblyName>NEALib</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
