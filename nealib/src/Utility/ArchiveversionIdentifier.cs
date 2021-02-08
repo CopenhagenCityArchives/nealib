@@ -52,7 +52,7 @@ namespace NEA.Utility
             {
                 var mainDir = _fileSystem.DirectoryInfo.FromDirectoryName(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists) { 
-                    avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name.Substring(0, curDir.Name.Length - 2), curDir.FullName.Replace(curDir.Name, ""), AVRuleSet.BKG1007);
+                    avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name.Substring(0, curDir.Name.Length - 2), curDir.FullName, AVRuleSet.BKG1007);
                     return true;
                 }
             }
