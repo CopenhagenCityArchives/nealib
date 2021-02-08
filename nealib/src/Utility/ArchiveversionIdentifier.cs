@@ -9,7 +9,7 @@ namespace NEA.Utility
 {
     public enum AVRuleSet { BKG342, BKG1007, BKG128 }
 
-    class ArchiveVersionFolderIdType
+    public class ArchiveVersionFolderIdType
     {
         private string _baseFolder;
         private string _id;
@@ -23,20 +23,19 @@ namespace NEA.Utility
             _id = id;
             _avRuleSet = avRuleSet;
         }
-
     }
 
-    class ArchiveVersionIdentifier
+    public class ArchiveVersionIdentifier
     {
-        public static string folderPattern1007 = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}$";
-        public static string folderPattern1007NoBase = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}.1$";
-        public static string folderPattern342 = @"^000\d{5}$";
-        public static string folderPattern342NoBase = @"^\d{5}001$";
+        private readonly string _folderPattern1007 = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}$";
+        private readonly string _folderPattern1007NoBase = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}.1$";
+        private readonly string _folderPattern342 = @"^000\d{5}$";
+        private readonly string _folderPattern342NoBase = @"^\d{5}001$";
 
         private DirectoryInfo dir;
         private List<string> existingArchiveVersions;
 
-        public static bool GetAVFromPath(out ArchiveVersionFolderIdType avFolderIdType, string path)
+        public bool GetAVFromPath(out ArchiveVersionFolderIdType avFolderIdType, string path)
         {
             DirectoryInfo curDir = new DirectoryInfo(path);
             avFolderIdType = null;
@@ -44,7 +43,7 @@ namespace NEA.Utility
             /*
              * Archiveversion 1007 with base folder
              */
-            if (Regex.IsMatch(curDir.Name, ArchiveVersionIdentifier.folderPattern1007, RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(curDir.Name, _folderPattern1007, RegexOptions.IgnoreCase))
             {
                 avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name, curDir.FullName, AVRuleSet.BKG1007);
                 return true;
@@ -52,7 +51,7 @@ namespace NEA.Utility
             /*
              * Archiveversion 342 with base folder
              */
-            else if ((Regex.IsMatch(curDir.Name, ArchiveVersionIdentifier.folderPattern342, RegexOptions.IgnoreCase)))
+            else if ((Regex.IsMatch(curDir.Name, _folderPattern342, RegexOptions.IgnoreCase)))
             {
                 FileInfo mainDir = new FileInfo(Path.Combine(curDir.FullName, curDir.Name.Substring(3) + "001", "arkver.tab"));
                 if (mainDir.Exists) { 
@@ -63,7 +62,7 @@ namespace NEA.Utility
             /*
              * Archiveversion 1007 without base folder
              */
-            else if ((Regex.IsMatch(curDir.Name, ArchiveVersionIdentifier.folderPattern1007NoBase, RegexOptions.IgnoreCase)))
+            else if ((Regex.IsMatch(curDir.Name, _folderPattern1007NoBase, RegexOptions.IgnoreCase)))
             {
                 DirectoryInfo mainDir = new DirectoryInfo(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists) { 
@@ -75,7 +74,7 @@ namespace NEA.Utility
             /*
              * Archiveversion 342 without base folder
              */
-            else if ((Regex.IsMatch(curDir.Name, ArchiveVersionIdentifier.folderPattern342NoBase, RegexOptions.IgnoreCase)))
+            else if ((Regex.IsMatch(curDir.Name, _folderPattern342NoBase, RegexOptions.IgnoreCase)))
             {
                 FileInfo mainFile = new FileInfo(curDir.FullName + "\\arkver.tab");
                 if (mainFile.Exists) { 
