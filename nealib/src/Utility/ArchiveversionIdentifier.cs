@@ -69,7 +69,7 @@ namespace NEA.Utility
             return false;
         }
 
-        public List<ArchiveVersionFolderIdType> getArchiveVersionFolders()
+        public List<ArchiveVersionFolderIdType> GetArchiveVersionFolders()
         {
             DirectoryInfo[] dirs;
             dirs = this.dir.GetDirectories();
