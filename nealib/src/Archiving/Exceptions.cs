@@ -71,4 +71,14 @@ namespace NEA.Archiving
             Value = value;
         }
     }
+
+    public class AVFileTypeNotFoundException : Exception
+    {
+        public string Path { get; private set; }
+        
+        public AVFileTypeNotFoundException(string path) : base(string.Format("Kunne ikke identificere filtypen for filen {0}", path))
+        {
+            Path = path;
+        }
+    }
 }
