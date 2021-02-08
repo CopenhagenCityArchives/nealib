@@ -2,6 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>DAF</Authors>
+    <Company>Københavns Stadsarkiv</Company>
+    <PackageId>NEALib_DAF</PackageId>
+    <Product>NEALib</Product>
+    <Copyright>Københavns Stadsarkiv</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
