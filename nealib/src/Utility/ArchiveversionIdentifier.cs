@@ -35,7 +35,7 @@ namespace NEA.Utility
         private DirectoryInfo dir;
         private List<string> existingArchiveVersions;
 
-        public bool GetAVFromPath(out ArchiveVersionFolderIdType avFolderIdType, string path)
+        public bool TryGetAvFolder(out ArchiveVersionFolderIdType avFolderIdType, string path)
         {
             DirectoryInfo curDir = new DirectoryInfo(path);
             avFolderIdType = null;
@@ -97,7 +97,7 @@ namespace NEA.Utility
             foreach (DirectoryInfo curDir in dirs)
             {
                // ArchiveVersionFolderIdType avFolder = new ArchiveVersionFolderIdType();
-                if(GetAVFromPath(out ArchiveVersionFolderIdType avFolder, curDir.ToString()))
+                if(TryGetAvFolder(out ArchiveVersionFolderIdType avFolder, curDir.ToString()))
                 {
                     avFolderList.Add(avFolder);
                 }
