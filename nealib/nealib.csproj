@@ -9,6 +9,9 @@
     <Copyright>Københavns Stadsarkiv</Copyright>
     <RootNamespace>NEA</RootNamespace>
     <AssemblyName>NEALib</AssemblyName>
+    <PackageVersion>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmmss&quot;))</PackageVersion>
+    <AssemblyVersion>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmmss&quot;))</AssemblyVersion>
+    <AssemblyFileVersion>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmmss&quot;))</AssemblyFileVersion>
   </PropertyGroup>
 
   <ItemGroup>
