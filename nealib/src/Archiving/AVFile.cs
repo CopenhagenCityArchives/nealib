@@ -21,61 +21,61 @@ namespace NEA.Archiving
 
     public class AVFile
     {
-        private string _filePath;
-        private string _fileName;
-        private string _checksum;
-        private string _absolutePath;
-        private ArchiveVersion _archiveversion;
-        private AVFileType _avFileType;
+        public string FilePath { get; private set; }
+        public string FileName { get; private set; }
+        public string Checksum { get; private set; }
+        public string AbsolutePath { get; private set; }
+        public ArchiveVersion Archiveversion { get; private set; }
+        public AVFileType AvFileType { get; private set; }
 
         public AVFile(string path, string name, ArchiveVersion archiveversion, string checksum = null)
         {
-            _filePath = path;
-            _fileName = name;
-            _archiveversion = archiveversion;
-            _checksum = checksum;
+            FilePath = path;
+            FileName = name;
+            Archiveversion = archiveversion;
+            Checksum = checksum;
         }
 
         public bool ValidateChecksum(string checksumIn)
         {
-            if(_checksum == null)
+            if(Checksum == null)
             {
                 using (var md5 = MD5.Create())
                 {
                     using (var stream = File.OpenRead(this.GetAbsolutePath()))
                     {
-                        _checksum = md5.ComputeHash(stream).ToString();
+                        Checksum = md5.ComputeHash(stream).ToString();
                     }
                 }
             }
 
-            return _checksum == checksumIn;
+            return Checksum == checksumIn;
         }
 
         public string GetAbsolutePath()
         { 
-            if(_absolutePath == null)
+            if(AbsolutePath == null)
             {
-                _absolutePath = Path.Combine(_archiveversion.Path, _filePath, _fileName);
+                AbsolutePath = Path.Combine(Archiveversion.Path, FilePath, FileName);
             }
-            return _absolutePath;
+            return AbsolutePath;
         }
 
         public AVFileType GetFileType()
         {
-            if(_avFileType.Equals(null)) { return _avFileType; }
+            if(AvFileType.Equals(null)) { return AvFileType; }
             
-            if (_fileName.IndexOf("xsd") != -1) { _avFileType = AVFileType.SCHEMA; return _avFileType; }
+            if (FileName.IndexOf("xsd") != -1) { AvFileType = AVFileType.SCHEMA; return AvFileType; }
 
-            if (_fileName.IndexOf("fileIndex.xml") != -1) { _avFileType = AVFileType.FILEINDEX; return _avFileType; }
+            if (FileName.IndexOf("fileIndex.xml") != -1) { AvFileType = AVFileType.FILEINDEX; return AvFileType; }
 
-            if (_fileName.IndexOf("Index") != -1) { _avFileType = AVFileType.INDEX; return _avFileType; }
+            if (FileName.IndexOf("Index") != -1) { AvFileType = AVFileType.INDEX; return AvFileType; }
 
-            if (_fileName.IndexOf("table") != -1) { _avFileType = AVFileType.TABLE; return _avFileType; }
+            if (FileName.IndexOf("table") != -1) { AvFileType = AVFileType.TABLE; return AvFileType; }
 
-            if (_filePath.IndexOf("Context") != -1) { _avFileType = AVFileType.CONTEXTDOCUMENT; return _avFileType; }
+            if (FilePath.IndexOf("Context") != -1) { AvFileType = AVFileType.CONTEXTDOCUMENT; return AvFileType; }
 
-            if (_filePath.IndexOf("Documents") != -1) { _avFileType = AVFileType.DOCUMENT; return _avFileType; }
+            if (FilePath.IndexOf("Documents") != -1) { AvFileType = AVFileType.DOCUMENT; return AvFileType; }
 
             throw new AVFileTypeNotFoundException(this.GetAbsolutePath());
         }
