@@ -2,16 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Authors>DAF</Authors>
-    <Company>Københavns Stadsarkiv</Company>
-    <PackageId>NEALib_DAF</PackageId>
+    <Authors>Copenhagen City Archives</Authors>
+    <Company>Copenhagen City Archives</Company>
+    <PackageId>NEALib</PackageId>
     <Product>NEALib</Product>
-    <Copyright>Københavns Stadsarkiv</Copyright>
+    <Copyright>Copenhagen City Archives</Copyright>
     <RootNamespace>NEA</RootNamespace>
     <AssemblyName>NEALib</AssemblyName>
-    <PackageVersion>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmm&quot;))</PackageVersion>
-    <AssemblyVersion>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmm&quot;))</AssemblyVersion>
-    <Version>$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmm&quot;))</Version>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
+    <Version>1.0.0.1</Version>
+    <RepositoryUrl>https://github.com/CopenhagenCityArchives/nealib</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
