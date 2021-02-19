@@ -21,7 +21,13 @@ namespace NEA.Utility
             _fileSystem = fileSystem;
         }
 
-        public bool TryGetAvFolder(out ArchiveVersionFolderIdType avFolderIdType, string path)
+        /// <summary>
+        /// Checks wether a given folder is an archive version
+        /// </summary>
+        /// <param name="avFolderIdType">Output for arhive version information</param>
+        /// <param name="path">File path of the folder to be checked</param>
+        /// <returns></returns>
+        public bool TryGetAvFolder(out ArchiveVersionInfo avFolderIdType, string path)
         {
             var curDir = _fileSystem.DirectoryInfo.FromDirectoryName(path);
             avFolderIdType = null;
@@ -31,7 +37,7 @@ namespace NEA.Utility
              */
             if (Regex.IsMatch(curDir.Name, _folderPattern1007, RegexOptions.IgnoreCase))
             {
-                avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name, curDir.FullName, AVRuleSet.BKG1007);
+                avFolderIdType = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG1007);
                 return true;
             }
             /*
@@ -41,7 +47,7 @@ namespace NEA.Utility
             {
                 var mainFile = _fileSystem.FileInfo.FromFileName(Path.Combine(curDir.FullName, curDir.Name.Substring(3) + "001", "arkver.tab"));
                 if (mainFile.Exists) { 
-                    avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name, curDir.FullName, AVRuleSet.BKG342);
+                    avFolderIdType = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG342);
                     return true;
                 }
             }
@@ -52,7 +58,7 @@ namespace NEA.Utility
             {
                 var mainDir = _fileSystem.DirectoryInfo.FromDirectoryName(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists) { 
-                    avFolderIdType = new ArchiveVersionFolderIdType(curDir.Name.Substring(0, curDir.Name.Length - 2), curDir.FullName, AVRuleSet.BKG1007);
+                    avFolderIdType = new ArchiveVersionInfo(curDir.Name.Substring(0, curDir.Name.Length - 2), curDir.FullName, AVRuleSet.BKG1007);
                     return true;
                 }
             }
@@ -63,24 +69,28 @@ namespace NEA.Utility
             {
                 var mainFile = _fileSystem.FileInfo.FromFileName(curDir.FullName + "\\arkver.tab");
                 if (mainFile.Exists) {
-                    avFolderIdType = new ArchiveVersionFolderIdType("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), curDir.FullName, AVRuleSet.BKG342);
+                    avFolderIdType = new ArchiveVersionInfo("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), curDir.FullName, AVRuleSet.BKG342);
                     return true;
                 }
             }
 
             return false;
         }
-
-        public List<ArchiveVersionFolderIdType> GetArchiveVersionFolders(string path)
+        /// <summary>
+        /// Returns the all archive versions found withing the given directory
+        /// </summary>
+        /// <param name="path">Directory path to check</param>
+        /// <returns>A list of archive version information objects</returns>
+        public List<ArchiveVersionInfo> GetArchiveVersionFolders(string path)
         {
             var dirs = _fileSystem.DirectoryInfo.FromDirectoryName(path).GetDirectories();
             List<String> archiveVersionDirectories = new List<String>();
-            List<ArchiveVersionFolderIdType> avFolderList = new List<ArchiveVersionFolderIdType>();
+            List<ArchiveVersionInfo> avFolderList = new List<ArchiveVersionInfo>();
 
             foreach (var curDir in dirs)
             {
                // ArchiveVersionFolderIdType avFolder = new ArchiveVersionFolderIdType();
-                if(TryGetAvFolder(out ArchiveVersionFolderIdType avFolder, curDir.ToString()))
+                if(TryGetAvFolder(out ArchiveVersionInfo avFolder, curDir.ToString()))
                 {
                     avFolderList.Add(avFolder);
                 }
