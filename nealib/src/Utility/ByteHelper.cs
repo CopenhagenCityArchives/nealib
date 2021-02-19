@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NEA.src.Utility
+namespace NEA.Utility
 {
     public static class ByteHelper
     {
