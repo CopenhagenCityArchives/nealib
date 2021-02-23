@@ -21,6 +21,11 @@ namespace NEA.Utility
             _fileSystem = fileSystem;
         }
 
+        public ArchiveVersionIdentifier()
+        {
+            _fileSystem = new FileSystem();
+        }
+
         /// <summary>
         /// Checks wether a given folder is an archive version
         /// </summary>
