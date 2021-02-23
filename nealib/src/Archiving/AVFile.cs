@@ -23,33 +23,32 @@ namespace NEA.Archiving
     {
         public string FilePath { get; private set; }
         public string FileName { get; private set; }
-        public string Checksum { get; private set; }
+        public string IndicatedChecksum { get; private set; }
         public string AbsolutePath { get; private set; }
         public ArchiveVersion Archiveversion { get; private set; }
         public AVFileType AvFileType { get; private set; }
 
-        public AVFile(string path, string name, ArchiveVersion archiveversion, string checksum = null)
+        public AVFile(string path, string name, ArchiveVersion archiveversion, string indicatedSum)
         {
             FilePath = path;
             FileName = name;
             Archiveversion = archiveversion;
-            Checksum = checksum;
+            IndicatedChecksum = indicatedSum;
         }
 
-        public bool ValidateChecksum(string checksumIn)
+        public bool ValidateIndicatedChecksum()
         {
-            if(Checksum == null)
+            if (IndicatedChecksum == null)
+                throw new Exception("IndicatedChecksum is not set, cannot validate checksum");
+            
+            using (var md5 = MD5.Create())
             {
-                using (var md5 = MD5.Create())
+                using (var stream = File.OpenRead(this.GetAbsolutePath()))
                 {
-                    using (var stream = File.OpenRead(this.GetAbsolutePath()))
-                    {
-                        Checksum = md5.ComputeHash(stream).ToString();
-                    }
+                    var hash = md5.ComputeHash(stream);
+                    return IndicatedChecksum == BitConverter.ToString(hash).Replace("-", "").ToUpperInvariant();
                 }
             }
-
-            return Checksum == checksumIn;
         }
 
         public string GetAbsolutePath()
