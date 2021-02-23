@@ -13,5 +13,10 @@
             Id = id;
             AvRuleSet = avRuleSet;
         }
+
+        public ArchiveVersionInfo()
+        {
+
+        }
     }
 }
