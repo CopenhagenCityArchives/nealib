@@ -10,9 +10,9 @@ namespace NEA.Utility
     public class ArchiveVersionIdentifier
     {
         private readonly string _folderPattern1007 = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}$";
-        private readonly string _folderPattern1007NoBase = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}.1$";
+        private readonly string _folderPattern1007FirstMedia = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}.1$";
         private readonly string _folderPattern342 = @"^000\d{5}$";
-        private readonly string _folderPattern342NoBase = @"^\d{5}001$";
+        private readonly string _folderPattern342FirstMedia = @"^\d{5}001$";
 
         private readonly IFileSystem _fileSystem;
 
@@ -59,7 +59,7 @@ namespace NEA.Utility
             /*
              * Archiveversion 1007 without base folder
              */
-            else if ((Regex.IsMatch(curDir.Name, _folderPattern1007NoBase, RegexOptions.IgnoreCase)))
+            else if ((Regex.IsMatch(curDir.Name, _folderPattern1007FirstMedia, RegexOptions.IgnoreCase)))
             {
                 var mainDir = _fileSystem.DirectoryInfo.FromDirectoryName(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists) { 
@@ -70,7 +70,7 @@ namespace NEA.Utility
             /*
              * Archiveversion 342 without base folder
              */
-            else if ((Regex.IsMatch(curDir.Name, _folderPattern342NoBase, RegexOptions.IgnoreCase)))
+            else if ((Regex.IsMatch(curDir.Name, _folderPattern342FirstMedia, RegexOptions.IgnoreCase)))
             {
                 var mainFile = _fileSystem.FileInfo.FromFileName(curDir.FullName + "\\arkver.tab");
                 if (mainFile.Exists) {
