@@ -25,25 +25,26 @@ namespace NEA.Archiving
         public string FileName { get; private set; }
         public string IndicatedChecksum { get; private set; }
         public string AbsolutePath { get; private set; }
-        public ArchiveVersion Archiveversion { get; private set; }
         public AVFileType AvFileType { get; private set; }
 
-        public AVFile(string path, string name, ArchiveVersion archiveversion, string indicatedSum)
+        public AVFile(string path, string name, string indicatedSum)
         {
             FilePath = path;
             FileName = name;
-            Archiveversion = archiveversion;
             IndicatedChecksum = indicatedSum;
+            
+            SetFileType();
+
         }
 
-        public bool ValidateIndicatedChecksum()
+        public bool ValidateIndicatedChecksum(string ArchiveversionBasePath)
         {
             if (IndicatedChecksum == null)
                 throw new Exception("IndicatedChecksum is not set, cannot validate checksum");
             
             using (var md5 = MD5.Create())
             {
-                using (var stream = File.OpenRead(this.GetAbsolutePath()))
+                using (var stream = File.OpenRead(Path.Combine(ArchiveversionBasePath, FilePath, FileName)))
                 {
                     var hash = md5.ComputeHash(stream);
                     return IndicatedChecksum == BitConverter.ToString(hash).Replace("-", "").ToUpperInvariant();
@@ -51,19 +52,8 @@ namespace NEA.Archiving
             }
         }
 
-        public string GetAbsolutePath()
-        { 
-            if(AbsolutePath == null)
-            {
-                AbsolutePath = Path.Combine(Archiveversion.Path, FilePath, FileName);
-            }
-            return AbsolutePath;
-        }
-
-        public AVFileType GetFileType()
+        private AVFileType SetFileType()
         {
-            if(AvFileType.Equals(null)) { return AvFileType; }
-            
             if (FileName.IndexOf("xsd") != -1) { AvFileType = AVFileType.SCHEMA; return AvFileType; }
 
             if (FileName.IndexOf("fileIndex.xml") != -1) { AvFileType = AVFileType.FILEINDEX; return AvFileType; }
@@ -76,7 +66,7 @@ namespace NEA.Archiving
 
             if (FilePath.IndexOf("Documents") != -1) { AvFileType = AVFileType.DOCUMENT; return AvFileType; }
 
-            throw new AVFileTypeNotFoundException(this.GetAbsolutePath());
+            throw new AVFileTypeNotFoundException(FilePath + FileName);
         }
     }
 }
