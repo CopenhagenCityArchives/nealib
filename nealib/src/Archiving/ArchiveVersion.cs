@@ -72,6 +72,8 @@ namespace NEA.Archiving
     /// </summary>
     public class ArchiveVersion
     {
+        public List<string> Medias { get; set; }
+
         /// <summary>
         /// The tables of the archive version.
         /// </summary>

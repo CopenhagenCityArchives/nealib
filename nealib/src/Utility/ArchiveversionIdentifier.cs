@@ -63,7 +63,7 @@ namespace NEA.Utility
             {
                 var mainDir = _fileSystem.DirectoryInfo.FromDirectoryName(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists) { 
-                    avFolderIdType = new ArchiveVersionInfo(curDir.Name.Substring(0, curDir.Name.Length - 2), curDir.FullName, AVRuleSet.BKG1007);
+                    avFolderIdType = new ArchiveVersionInfo(curDir.Name.Substring(0, curDir.Name.Length - 2), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG1007);
                     return true;
                 }
             }
@@ -74,7 +74,7 @@ namespace NEA.Utility
             {
                 var mainFile = _fileSystem.FileInfo.FromFileName(curDir.FullName + "\\arkver.tab");
                 if (mainFile.Exists) {
-                    avFolderIdType = new ArchiveVersionInfo("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), curDir.FullName, AVRuleSet.BKG342);
+                    avFolderIdType = new ArchiveVersionInfo("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG342);
                     return true;
                 }
             }
@@ -102,6 +102,24 @@ namespace NEA.Utility
             }
             avFolderList.Sort((x, y) => string.Compare(x.Id, y.Id));
             return avFolderList;
+        }
+
+        public List<string> GetArciveversionMediaFolders(ArchiveVersionInfo avInfo)
+        {
+            List<string> medias = new List<string>();
+            string folderToCheck = avInfo.FolderPath;
+
+            foreach (string potentialPath in Directory.EnumerateDirectories(folderToCheck))
+            {
+                string folderName = new DirectoryInfo(potentialPath).Name;
+
+                if (Regex.IsMatch(folderName, _folderPattern1007FirstMedia) && potentialPath.Contains(avInfo.Id))
+                {
+                    medias.Add(folderName);
+                }
+            }
+
+            return medias;
         }
     }
 }

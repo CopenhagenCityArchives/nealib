@@ -16,7 +16,7 @@ namespace NEA.Utility
 
         public FileIndexReader(ArchiveVersion archiveversion)
         {
-            FilePath = new FileInfo(Path.Combine(archiveversion.Path, archiveversion.Id + ".1", "Indices", "fileIndex.xml"));
+            FilePath = new FileInfo(Path.Combine(archiveversion.Path, archiveversion.Medias[0], "Indices", "fileIndex.xml"));
             
             _archiveversion = archiveversion;
 
