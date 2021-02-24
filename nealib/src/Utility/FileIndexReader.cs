@@ -36,7 +36,7 @@ namespace NEA.Utility
             var ns = fileIndex.Root.Name.Namespace;
 
             return from f in fileIndex.Descendants(ns.GetName("f"))
-                   select new AVFile(f.Element(ns.GetName("foN")).Value, f.Element(ns.GetName("fiN")).Value, _archiveversion, f.Element(ns.GetName("md5")).Value);
+                   select new AVFile(f.Element(ns.GetName("foN")).Value, f.Element(ns.GetName("fiN")).Value, f.Element(ns.GetName("md5")).Value);
         }
     }
 

@@ -5,7 +5,7 @@
     {
         public AVRuleSet AvRuleSet { get; private set; }
         public string Id { get; private set; }
-        public string  FolderPath { get; private set; }
+        public string FolderPath { get; private set; }
 
         public ArchiveVersionInfo(string id, string path, AVRuleSet avRuleSet)
         {
