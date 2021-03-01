@@ -52,19 +52,19 @@ namespace NEA.Archiving
             }
         }
 
-        private AVFileType SetFileType()
+        private void SetFileType()
         {
-            if (FileName.IndexOf("xsd") != -1) { AvFileType = AVFileType.SCHEMA; return AvFileType; }
+            if (FileName.IndexOf("xsd") != -1) { this.AvFileType = AVFileType.SCHEMA; return; }
 
-            if (FileName.IndexOf("fileIndex.xml") != -1) { AvFileType = AVFileType.FILEINDEX; return AvFileType; }
+            if (FileName.IndexOf("fileIndex.xml") != -1) { this.AvFileType = AVFileType.FILEINDEX; return; }
 
-            if (FileName.IndexOf("Index") != -1) { AvFileType = AVFileType.INDEX; return AvFileType; }
+            if (FileName.IndexOf("Index") != -1) { this.AvFileType = AVFileType.INDEX; return; }
 
-            if (FileName.IndexOf("table") != -1) { AvFileType = AVFileType.TABLE; return AvFileType; }
+            if (FileName.IndexOf("table") != -1) { this.AvFileType = AVFileType.TABLE; return; }
 
-            if (FilePath.IndexOf("Context") != -1) { AvFileType = AVFileType.CONTEXTDOCUMENT; return AvFileType; }
+            if (FilePath.IndexOf("ContextDocumentation") != -1) { this.AvFileType = AVFileType.CONTEXTDOCUMENT; return; }
 
-            if (FilePath.IndexOf("Documents") != -1) { AvFileType = AVFileType.DOCUMENT; return AvFileType; }
+            if (FilePath.IndexOf("Documents") != -1) { this.AvFileType = AVFileType.DOCUMENT; return; }
 
             throw new AVFileTypeNotFoundException(FilePath + FileName);
         }
