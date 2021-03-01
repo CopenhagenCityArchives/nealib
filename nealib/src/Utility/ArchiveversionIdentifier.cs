@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Text.RegularExpressions;
+using NEA.ArchiveModel;
 using NEA.Archiving;
 
 namespace NEA.Utility
