@@ -22,27 +22,27 @@ namespace NEA.ArchiveModel
 
         protected override void Load(string folderPath)
         {
-            using (var stream = File.OpenRead($"{folderPath}\\Indices\\archiveIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{folderPath}\\Indices\\archiveIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(archiveIndex));
                 ArchiveIndex = (archiveIndex)serializer.Deserialize(stream);
             }
-            using (var stream = File.OpenRead($"{folderPath}\\Indices\\contextDocumentationIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{folderPath}\\Indices\\contextDocumentationIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(contextDocumentationIndex));
                 ContextDocumentationIndex = (contextDocumentationIndex)serializer.Deserialize(stream);
             }
-            using (var stream = File.OpenRead($"{folderPath}\\Indices\\docIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{folderPath}\\Indices\\docIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(docIndexType));
                 DocIndex = (docIndexType)serializer.Deserialize(stream);
             }
-            using (var stream = File.OpenRead($"{folderPath}\\Indices\\fileIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{folderPath}\\Indices\\fileIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(fileIndexType));
                 FileIndex = (fileIndexType)serializer.Deserialize(stream);
             }
-            using (var stream = File.OpenRead($"{folderPath}\\Indices\\tableIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{folderPath}\\Indices\\tableIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(siardDiark));
                 TableIndex = (siardDiark)serializer.Deserialize(stream);
