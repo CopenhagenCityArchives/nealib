@@ -1,6 +1,8 @@
-﻿using NEA.ArchiveModel.BKG1007;
+﻿using log4net;
+using NEA.ArchiveModel.BKG1007;
 using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
@@ -8,13 +10,13 @@ using System.Xml.Serialization;
 namespace NEA.ArchiveModel
 {
     public class ArchiveVersion1007 : BaseArchiveVersion
-    {
+    { 
         public archiveIndex ArchiveIndex { get; set; }
         public contextDocumentationIndex ContextDocumentationIndex { get; set; }
         public docIndexType DocIndex { get; set; }
         public fileIndexType FileIndex { get; set; }
         public siardDiark TableIndex { get; set; }
-        public ArchiveVersion1007(ArchiveVersionInfo info) : base(info)
+        public ArchiveVersion1007(ArchiveVersionInfo info, ILog log, IFileSystem fileSystem = null) : base(info, log, fileSystem)
         {
         }
 
