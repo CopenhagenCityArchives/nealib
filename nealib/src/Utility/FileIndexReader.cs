@@ -11,15 +11,12 @@ namespace NEA.Utility
 
     public class FileIndexReader
     {
-        ArchiveVersion _archiveversion;
         FileInfo FilePath;
 
         public FileIndexReader(ArchiveVersion archiveversion)
         {
             FilePath = new FileInfo(Path.Combine(archiveversion.Path, archiveversion.Medias[0], "Indices", "fileIndex.xml"));
             
-            _archiveversion = archiveversion;
-
             if (!FilePath.Exists)
             {
                 throw new Exception(String.Format("Could not find fileIndex.xml in this path", FilePath));
