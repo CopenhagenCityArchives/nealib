@@ -34,8 +34,8 @@ namespace NEA.Services
         {
             var removeString = _fileSystem.Directory.GetParent(av.Info.FolderPath).FullName;
             var removeIndex = filePath.IndexOf(removeString);
-            var relativeFile = filePath.Remove(removeIndex, removeString.Length);
-            var expected = av.GetChecksumDict().SingleOrDefault(x => x.Key.ToLower() == filePath.ToLower()).Value;
+            var relativePath = filePath.Remove(removeIndex, removeString.Length);
+            var expected = av.GetChecksumDict().SingleOrDefault(x => x.Key.ToLower() == relativePath.ToLower()).Value;
 
             if (expected.Length == 0)
             {
