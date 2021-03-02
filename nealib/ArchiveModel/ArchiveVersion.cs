@@ -11,56 +11,46 @@ namespace NEA.ArchiveModel
     public abstract class ArchiveVersion
     {
         protected readonly IFileSystem _fileSystem;
-        protected readonly ILog _log;
+        protected static readonly log4net.ILog _log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public ArchiveVersionInfo Info { get; set; }
 
-        protected ArchiveVersion(ArchiveVersionInfo info, ILog log, IFileSystem fileSystem = null)
+        protected ArchiveVersion(ArchiveVersionInfo info, IFileSystem fileSystem = null)
         {
-            Info = info;            
-            _log = log;
+            Info = info;
             _fileSystem = fileSystem ?? new FileSystem();
-            Load(info.FolderPath);
         }
         /// <summary>
-        /// Loads archive version indices to populate this object
+        /// Loads all archive version indices to populate this object
         /// </summary>
-        /// <param name="folderPath">the path to the ArchiveVersion's root folder</param>
-        protected abstract void Load(string folderPath);
+        public abstract void Load();
         /// <summary>
         /// Gets the file checksums in the archive versions index represented as a dictionary
         /// </summary>
         /// <returns>Key = file path, Value = MD5 checksum</returns>
         public abstract Dictionary<string, byte[]> GetChecksumDict();
-        public Dictionary<string, bool> VerifyAllChecksums()
-        {
-            var files = _fileSystem.Directory.GetFiles(this.Info.FolderPath, "*", System.IO.SearchOption.AllDirectories);
-            var result = new Dictionary<string, bool>();
-            foreach (var file in files)
-            {
-
-                result.Add(file, VerifyChecksum(file));
-            }
-            return result;
-        }
-        public bool VerifyChecksum(string filePath)
+        /// <summary>
+        /// Verify the checksums of all files within the archive versions against its manifest
+        /// </summary>
+        /// <param name="skipDocuments"></param>
+        /// <returns></returns>
+        public abstract Dictionary<string, bool> VerifyAllChecksums(bool skipDocuments = false);
+        /// <summary>
+        /// Validates the MD5 checksum of a given file against the one saved in the archive versions manifest
+        /// </summary>
+        /// <param name="filePath">Full path of the file to be checked</param>
+        /// <returns></returns>
+        public abstract bool VerifyChecksum(string filePath);
+        /// <summary>
+        /// Gets this files path relative to the archive version
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <returns></returns>
+        public string GetRelativeFilePath(string filepath)
         {
             var removeString = _fileSystem.Directory.GetParent(this.Info.FolderPath).FullName;
-            var removeIndex = filePath.IndexOf(removeString);
-            var relativePath = filePath.Remove(removeIndex, removeString.Length);
-            var expected = this.GetChecksumDict().SingleOrDefault(x => x.Key.ToLower() == relativePath.ToLower()).Value;
-
-            if (expected.Length == 0)
-            {
-                return false;
-            }
-            using (var md5 = MD5.Create())
-            {
-                using (var stream = _fileSystem.File.OpenRead(filePath))
-                {
-                    return expected == md5.ComputeHash(stream);
-                }
-            }
+            var removeIndex = filepath.IndexOf(removeString);
+            return filepath.Remove(removeIndex, removeString.Length);
         }
     }
 }
