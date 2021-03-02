@@ -9,7 +9,7 @@ using System.Xml.Serialization;
 
 namespace NEA.ArchiveModel
 {
-    public class ArchiveVersion1007 : BaseArchiveVersion
+    public class ArchiveVersion1007 : ArchiveVersion
     { 
         public archiveIndex ArchiveIndex { get; set; }
         public contextDocumentationIndex ContextDocumentationIndex { get; set; }

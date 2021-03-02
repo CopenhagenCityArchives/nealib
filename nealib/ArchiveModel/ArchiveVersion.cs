@@ -8,14 +8,14 @@ using System.Text;
 
 namespace NEA.ArchiveModel
 {
-    public abstract class BaseArchiveVersion
+    public abstract class ArchiveVersion
     {
         protected readonly IFileSystem _fileSystem;
         protected readonly ILog _log;
 
         public ArchiveVersionInfo Info { get; set; }
 
-        protected BaseArchiveVersion(ArchiveVersionInfo info, ILog log, IFileSystem fileSystem = null)
+        protected ArchiveVersion(ArchiveVersionInfo info, ILog log, IFileSystem fileSystem = null)
         {
             Info = info;            
             _log = log;
