@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NEA.Utility
+namespace NEA.Helpers
 {
     public static class ByteHelper
     {
@@ -21,34 +21,34 @@ namespace NEA.Utility
         public static string GetBytesReadable(long bytes)
         {
             // Get absolute value
-            long absolute_bytes = (bytes < 0 ? -bytes : bytes);
+            long absolute_bytes = bytes < 0 ? -bytes : bytes;
             // Determine the suffix and readable value
             string suffix;
             double readable;
             if (absolute_bytes >= ExaByte)
             {
                 suffix = "EB";
-                readable = (bytes >> 50);
+                readable = bytes >> 50;
             }
             else if (absolute_bytes >= PetaByte)
             {
                 suffix = "PB";
-                readable = (bytes >> 40);
+                readable = bytes >> 40;
             }
             else if (absolute_bytes >= TeraByte)
             {
                 suffix = "TB";
-                readable = (bytes >> 30);
+                readable = bytes >> 30;
             }
             else if (absolute_bytes >= GigaByte)
             {
                 suffix = "GB";
-                readable = (bytes >> 20);
+                readable = bytes >> 20;
             }
             else if (absolute_bytes >= MegaByte)
             {
                 suffix = "MB";
-                readable = (bytes >> 10);
+                readable = bytes >> 10;
             }
             else if (absolute_bytes >= KiloByte)
             {
@@ -60,7 +60,7 @@ namespace NEA.Utility
                 return bytes.ToString("0 B");
             }
             // Divide by 1024 to get fractional value
-            readable = (readable / 1024);
+            readable = readable / 1024;
             // Return formatted number with suffix
             return readable.ToString("0.## ") + suffix;
         }

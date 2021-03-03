@@ -34,7 +34,20 @@ namespace NEA.ArchiveModel
         /// </summary>
         /// <param name="skipDocuments"></param>
         /// <returns></returns>
-        public abstract Dictionary<string, bool> VerifyAllChecksums(bool skipDocuments = false);
+        public abstract VerifyChecksumsResult VerifyAllChecksums(bool skipDocuments = false);
+        public class VerifyChecksumsResult
+        {
+            public int SkippedFiles { get; set; }
+            public int CheckedFiles { get { return result.Count; } }
+            public int FailedChecks { get { return result.Count(x => !x.Value); } }
+            public Dictionary<string, bool> result { get; set; }
+
+            public VerifyChecksumsResult(Dictionary<string, bool> result, int skippedFiles)
+            {
+                this.result = result;
+                SkippedFiles = skippedFiles;
+            }
+        }
         /// <summary>
         /// Validates the MD5 checksum of a given file against the one saved in the archive versions manifest
         /// </summary>
@@ -52,5 +65,7 @@ namespace NEA.ArchiveModel
             var removeIndex = filepath.IndexOf(removeString);
             return filepath.Remove(removeIndex, removeString.Length);
         }
+        public abstract TableReader GetTableReader(string tableName);
     }
+    
 }

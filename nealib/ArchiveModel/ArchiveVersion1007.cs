@@ -142,9 +142,10 @@ namespace NEA.ArchiveModel
             return result;
         }
 
-        public override Dictionary<string, bool> VerifyAllChecksums(bool skipDocuments = false)
+        public override VerifyChecksumsResult VerifyAllChecksums(bool skipDocuments = false)
         {
             var files = _fileSystem.Directory.GetFiles(Info.FolderPath).AsEnumerable();
+            int skippedFiles = 0;
             files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Indices", "*", System.IO.SearchOption.AllDirectories));
             files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
             files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Tables", "*", System.IO.SearchOption.AllDirectories));
@@ -153,11 +154,16 @@ namespace NEA.ArchiveModel
                 files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories));
                 files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
             }
+            else
+            {
+                skippedFiles = _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories).Length;
+                skippedFiles += _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories).Length;
+            }
             var result = new Dictionary<string, bool>();
             Parallel.ForEach(files,new ParallelOptions {MaxDegreeOfParallelism = Environment.ProcessorCount} ,file => { 
                 result.Add(file,VerifyChecksum(file));
             });
-            return result;
+            return new VerifyChecksumsResult(result,skippedFiles);
         }
         public override bool VerifyChecksum(string filePath)
         {
@@ -169,6 +175,11 @@ namespace NEA.ArchiveModel
             var expected = fileIndex.f.FirstOrDefault(x => $"{x.foN}\\{x.fiN}".ToLower() == GetRelativeFilePath(filePath).ToLower()).md5;
             var md5Helper = new MD5Helper(_fileSystem);
             return expected == md5Helper.CalculateChecksum(filePath);
+        }
+
+        public override TableReader GetTableReader(string tableName)
+        {
+            return new TableReader1007(TableIndex.tables.FirstOrDefault(x => x.name == tableName), this, _fileSystem);
         }
     }
 }
