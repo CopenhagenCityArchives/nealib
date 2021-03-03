@@ -37,12 +37,19 @@ namespace NEA.Utility
     public class FileIndexReadEventArgs : EventArgs
     {
         public int TotalFiles { get; set; }
-        public int NonDocumentFiles { get; set; }
+        public int NonDocumentTypeFiles { get; set; }
     }
 
     public class FileIndexChecksumValidator
     {
+        /// <summary>
+        /// Fires when a file is processed
+        /// </summary>
         public event FileProcessedEventHandler FileProcessed;
+
+        /// <summary>
+        /// Handles event handlers when FileProcessed is fired
+        /// </summary>
         protected virtual void OnFileProcessed(FileProcessedEventArgs e)
         {
             FileProcessedEventHandler handler = FileProcessed;
@@ -52,8 +59,14 @@ namespace NEA.Utility
             }
         }
 
+        /// <summary>
+        /// Fires when fileIndex.xml is read
+        /// </summary>
         public event FileIndexReadEventHandler FileIndexRead;
 
+        /// <summary>
+        /// Handles event handlers wen FileIndexRead is fired
+        /// </summary>
         protected virtual void OnFileIndexRead(FileIndexReadEventArgs e)
         {
             FileIndexReadEventHandler handler = FileIndexRead;
@@ -67,9 +80,9 @@ namespace NEA.Utility
         /// Fires when the validation is done
         /// </summary>
         public event FileProcessedEventHandler ValidationDone;
-        
+
         /// <summary>
-        /// Handles ValidationDone events
+        /// Handles event handlers wen ValidationDone is fired
         /// </summary>
         protected virtual void OnValidationDone(FileProcessedEventArgs e)
         {
@@ -98,13 +111,34 @@ namespace NEA.Utility
             }
         }
 
+        /// <summary>
+        /// Number of files iterated in validation
+        /// </summary>
         private int _iteratedFiles;
+        
+        /// <summary>
+        /// Number of skipped files in validation
+        /// </summary>
         private int _skippedFiles;
+        
+        /// <summary>
+        /// Number of errors in validation
+        /// </summary>
         private int _errors;
-        private int _nonDocumentFilesInFileIndex;
+        
+        /// <summary>
+        /// Number of files not being of type AVFileType.Document
+        /// </summary>
+        private int _nonDocumentTypeFilesInFileIndex;
 
+        /// <summary>
+        /// Whether or not to check files of type AVFileType.Document
+        /// </summary>
         private bool _checkDocuments;
 
+        /// <summary>
+        /// Path to archiveversion
+        /// </summary>
         private string _archiveversionPath;
 
         /// <summary>
@@ -118,6 +152,9 @@ namespace NEA.Utility
             _checkDocuments = validateDocuments;
         }
 
+        /// <summary>
+        /// Validates files in a fileIndex.xml in multiple threads. Validates documents of AVFileType.Document if set in constructor
+        /// </summary>
         public void ValidateFileIndex()
         {
             var avInfo = new ArchiveVersionInfo();
@@ -135,12 +172,12 @@ namespace NEA.Utility
             {
                 if (f.AvFileType != AVFileType.DOCUMENT)
                 {
-                    Interlocked.Increment(ref _nonDocumentFilesInFileIndex);
+                    Interlocked.Increment(ref _nonDocumentTypeFilesInFileIndex);
                 }
                 avFilesConcurrent.Enqueue(f);
             }
 
-            OnFileIndexRead(new FileIndexReadEventArgs { TotalFiles = avFilesConcurrent.Count, NonDocumentFiles = _nonDocumentFilesInFileIndex });
+            OnFileIndexRead(new FileIndexReadEventArgs { TotalFiles = avFilesConcurrent.Count, NonDocumentTypeFiles = _nonDocumentTypeFilesInFileIndex });
 
             Parallel.ForEach(avFilesConcurrent, new ParallelOptions { MaxDegreeOfParallelism = 16 }, item =>
             {
