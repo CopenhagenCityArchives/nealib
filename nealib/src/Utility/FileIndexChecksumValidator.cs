@@ -99,7 +99,6 @@ namespace NEA.Utility
         }
 
         private int _iteratedFiles;
-        private int _checkedFiles;
         private int _skippedFiles;
         private int _errors;
         private int _nonDocumentFilesInFileIndex;
@@ -147,25 +146,23 @@ namespace NEA.Utility
             {
                 Interlocked.Increment(ref _iteratedFiles);
 
-                if (!_checkDocuments && item.AvFileType.Equals(AVFileType.DOCUMENT))
-                {
-                    Interlocked.Increment(ref _skippedFiles);
-                    return;
-                }
-
-                if (!item.ValidateIndicatedChecksum(av.Path))
-                {
-                    Interlocked.Increment(ref _errors);
-                    OnErrorFound(item.FilePath + "\\"+ item.FileName);
-                }
-
-                Interlocked.Increment(ref _checkedFiles);
-
-                if (_checkedFiles % 1000 == 0 || !_checkDocuments)
+                if (_iteratedFiles % 1000 == 0 || (!_checkDocuments && !item.AvFileType.Equals(AVFileType.DOCUMENT)))
                 {
                     OnFileProcessed(new FileProcessedEventArgs { ProcessedFiles = _iteratedFiles, ErrorsCount = _errors, SkippedFiles = _skippedFiles });
                 }
 
+                if (!_checkDocuments && item.AvFileType.Equals(AVFileType.DOCUMENT))
+                {
+                    Interlocked.Increment(ref _skippedFiles);
+                }
+                else
+                {
+                    if (!item.ValidateIndicatedChecksum(av.Path))
+                    {
+                        Interlocked.Increment(ref _errors);
+                        OnErrorFound(item.FilePath + "\\" + item.FileName);
+                    }
+                }
             });
 
             OnValidationDone(new FileProcessedEventArgs { ProcessedFiles = _iteratedFiles, ErrorsCount = _errors, SkippedFiles = _skippedFiles });
