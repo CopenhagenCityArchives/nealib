@@ -3,11 +3,13 @@ using NEA.ArchiveModel.BKG1007;
 using NEA.Helpers;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace NEA.ArchiveModel
@@ -137,49 +139,34 @@ namespace NEA.ArchiveModel
         #endregion
         public override Dictionary<string, byte[]> GetChecksumDict()
         {
-            var result = FileIndex.f.ToDictionary(f => $"{f.foN}\\{f.fiN}", f => f.md5);
-            
-            return result;
-        }
-
-        public override VerifyChecksumsResult VerifyAllChecksums(bool skipDocuments = false)
-        {
-            var files = _fileSystem.Directory.GetFiles(Info.FolderPath).AsEnumerable();
-            int skippedFiles = 0;
-            files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Indices", "*", System.IO.SearchOption.AllDirectories));
-            files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
-            files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Tables", "*", System.IO.SearchOption.AllDirectories));
-            if (!skipDocuments)
+            //If the fileindex has allready been loaded into memory we get it from there
+            if (fileIndex != null)
             {
-                files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories));
-                files = files.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
+                return FileIndex.f.ToDictionary(f => $"{f.foN}\\{f.fiN}", f => f.md5);
             }
-            else
+            //Otherwise we stream it in from the xml to keep down memory usage
+            using (var stream = _fileSystem.FileStream.Create($"{Info.FolderPath}\\Indices\\fileIndex.xml", FileMode.Open))
             {
-                skippedFiles = _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories).Length;
-                skippedFiles += _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories).Length;
+                var fileindex = XDocument.Load(stream);
+                var ns = fileindex.Root.Name.Namespace;
+                return fileindex.Descendants(ns.GetName("f"))
+                    .ToDictionary(f => $"{f.Element(ns.GetName("foN")).Value}\\{f.Element(ns.GetName("fiN")).Value}", f => MD5Helper.ParseHex(f.Element(ns.GetName("md5")).Value));
             }
-            var result = new Dictionary<string, bool>();
-            Parallel.ForEach(files,new ParallelOptions {MaxDegreeOfParallelism = Environment.ProcessorCount} ,file => { 
-                result.Add(file,VerifyChecksum(file));
-            });
-            return new VerifyChecksumsResult(result,skippedFiles);
         }
-        public override bool VerifyChecksum(string filePath)
-        {
-            if (filePath.ToLower() == $"{Info.FolderPath}\\Indices\\fileIndex.xml".ToLower())
-            {
-                //Since fileindex cant contain its own reference checksum we just have to assume that its ok.
-                return true;
-            }
-            var expected = fileIndex.f.FirstOrDefault(x => $"{x.foN}\\{x.fiN}".ToLower() == GetRelativeFilePath(filePath).ToLower()).md5;
-            var md5Helper = new MD5Helper(_fileSystem);
-            return expected == md5Helper.CalculateChecksum(filePath);
-        }
-
         public override TableReader GetTableReader(string tableName)
         {
             return new TableReader1007(TableIndex.tables.FirstOrDefault(x => x.name == tableName), this, _fileSystem);
+        }
+
+        public override GetFilesResult GetFiles()
+        {
+            var metadata = _fileSystem.Directory.GetFiles(Info.FolderPath).AsEnumerable();
+            metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Indices", "*", System.IO.SearchOption.AllDirectories));
+            metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
+            metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
+            var tables = _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Tables", "*", System.IO.SearchOption.AllDirectories);
+            var documents = _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories);
+            return new GetFilesResult(metadata.ToArray(), tables, documents);
         }
     }
 }

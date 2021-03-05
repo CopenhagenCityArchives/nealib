@@ -30,30 +30,38 @@ namespace NEA.ArchiveModel
         /// <returns>Key = file path, Value = MD5 checksum</returns>
         public abstract Dictionary<string, byte[]> GetChecksumDict();
         /// <summary>
-        /// Verify the checksums of all files within the archive versions against its manifest
+        /// Gets and object containing lists of Archive Versions various file types
         /// </summary>
-        /// <param name="skipDocuments"></param>
-        /// <returns></returns>
-        public abstract VerifyChecksumsResult VerifyAllChecksums(bool skipDocuments = false);
-        public class VerifyChecksumsResult
+        public abstract GetFilesResult GetFiles();
+        public class GetFilesResult
         {
-            public int SkippedFiles { get; set; }
-            public int CheckedFiles { get { return result.Count; } }
-            public int FailedChecks { get { return result.Count(x => !x.Value); } }
-            public Dictionary<string, bool> result { get; set; }
-
-            public VerifyChecksumsResult(Dictionary<string, bool> result, int skippedFiles)
+            /// <summary>
+            /// A collection of paths for the Archive Versions metadata files such as indices, table definitions and context documents
+            /// </summary>
+            public string[] MetadataData { get; set; }
+            /// <summary>
+            /// A collection of paths for the Archive Versions files containing table row data
+            /// </summary>
+            public string[] TableData { get; set; }
+            /// <summary>
+            /// A collection of paths for the Archive Versions document files
+            /// </summary>
+            public string[] Documents { get; set; }
+            /// <summary>
+            /// Returns a concatenation of all file collections
+            /// </summary>
+            /// <returns>A collection of all files found within the Archive Version</returns>
+            public IEnumerable<string> GetAll ()
             {
-                this.result = result;
-                SkippedFiles = skippedFiles;
+                return MetadataData.Concat(TableData).Concat(Documents);
+            }
+            public GetFilesResult(string[] metadataData, string[] tableData, string[] documents)
+            {
+                MetadataData = metadataData;
+                TableData = tableData;
+                Documents = documents;
             }
         }
-        /// <summary>
-        /// Validates the MD5 checksum of a given file against the one saved in the archive versions manifest
-        /// </summary>
-        /// <param name="filePath">Full path of the file to be checked</param>
-        /// <returns></returns>
-        public abstract bool VerifyChecksum(string filePath);
         /// <summary>
         /// Gets this files path relative to the archive version
         /// </summary>
