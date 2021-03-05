@@ -150,7 +150,7 @@ namespace NEA.ArchiveModel
                 var fileindex = XDocument.Load(stream);
                 var ns = fileindex.Root.Name.Namespace;
                 return fileindex.Descendants(ns.GetName("f"))
-                    .ToDictionary(f => $"{f.Element(ns.GetName("foN")).Value}\\{f.Element(ns.GetName("fiN")).Value}", f => MD5Helper.ParseHex(f.Element(ns.GetName("md5")).Value));
+                    .ToDictionary(f => $"{f.Element(ns.GetName("foN")).Value}\\{f.Element(ns.GetName("fiN")).Value}", f => ByteHelper.ParseHex(f.Element(ns.GetName("md5")).Value));
             }
         }
         public override TableReader GetTableReader(string tableName)
