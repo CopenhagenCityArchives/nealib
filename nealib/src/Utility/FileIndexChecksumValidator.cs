@@ -179,7 +179,7 @@ namespace NEA.Utility
 
             OnFileIndexRead(new FileIndexReadEventArgs { TotalFiles = avFilesConcurrent.Count, NonDocumentTypeFiles = _nonDocumentTypeFilesInFileIndex });
 
-            Parallel.ForEach(avFilesConcurrent, new ParallelOptions { MaxDegreeOfParallelism = 16 }, item =>
+            Parallel.ForEach(avFilesConcurrent, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, item =>
             {
                 Interlocked.Increment(ref _iteratedFiles);
 
