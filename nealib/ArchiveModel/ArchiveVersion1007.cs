@@ -160,13 +160,31 @@ namespace NEA.ArchiveModel
 
         public override GetFilesResult GetFiles()
         {
-            var metadata = _fileSystem.Directory.GetFiles(Info.FolderPath).AsEnumerable();
-            metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Indices", "*", System.IO.SearchOption.AllDirectories));
-            metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
-            metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
-            var tables = _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Tables", "*", System.IO.SearchOption.AllDirectories);
-            var documents = _fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories);
-            return new GetFilesResult(metadata.ToArray(), tables, documents);
+            var metadata = Enumerable.Empty<string>();
+            var tables = Enumerable.Empty<string>();
+            var documents = Enumerable.Empty<string>();
+            if (Info.Medias.Any())
+            {
+                foreach (var media in Info.Medias)
+                {
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles(media));
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\Indices", "*", System.IO.SearchOption.AllDirectories));
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
+                    tables = tables.Concat(_fileSystem.Directory.GetFiles($"{media}\\Tables", "*", System.IO.SearchOption.AllDirectories));
+                    documents = documents.Concat(_fileSystem.Directory.GetFiles($"{media}\\Documents", "*", System.IO.SearchOption.AllDirectories));
+                }
+            }
+            else
+            {
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles(Info.FolderPath).AsEnumerable());
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Indices", "*", System.IO.SearchOption.AllDirectories));
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
+                tables = tables.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Tables", "*", System.IO.SearchOption.AllDirectories));
+                documents = documents.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories));
+            }     
+            return new GetFilesResult(metadata.ToArray(), tables.ToArray(), documents.ToArray());
         }
     }
 }
