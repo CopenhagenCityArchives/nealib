@@ -14,12 +14,13 @@ namespace NEA.Testing.src
         [TestMethod]
         public void sandbox()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(fileIndexType));
-            using (var stream = File.OpenRead(@"C:\Archives\AVID.SA.18004.1\Indices\fileIndex.xml"))
-            {
-                var fileindex = serializer.Deserialize(stream);
-                Assert.IsNotNull(fileindex);
-            }
+            Console.WriteLine(Math.Ceiling((decimal)42 / 100));
+            //XmlSerializer serializer = new XmlSerializer(typeof(fileIndexType));
+            //using (var stream = File.OpenRead(@"C:\Archives\AVID.SA.18004.1\Indices\fileIndex.xml"))
+            //{
+            //    var fileindex = serializer.Deserialize(stream);
+            //    Assert.IsNotNull(fileindex);
+            //}
         }
     }
 }
