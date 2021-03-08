@@ -1,9 +1,9 @@
-﻿using System;
+﻿using NEA.ArchiveModel;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Text.RegularExpressions;
-using NEA.Archiving;
 
 namespace NEA.Helpers
 {
@@ -29,20 +29,20 @@ namespace NEA.Helpers
         /// <summary>
         /// Checks wether a given folder is an archive version
         /// </summary>
-        /// <param name="avFolderIdType">Output for arhive version information</param>
+        /// <param name="avInfo">Output for arhive version information</param>
         /// <param name="path">File path of the folder to be checked</param>
         /// <returns></returns>
-        public bool TryGetAvFolder(out ArchiveVersionInfo avFolderIdType, string path)
+        public bool TryGetAvFolder(out ArchiveVersionInfo avInfo, string path)
         {
             var curDir = _fileSystem.DirectoryInfo.FromDirectoryName(path);
-            avFolderIdType = null;
+            avInfo = null;
 
             /*
              * Archiveversion 1007 with base folder
              */
             if (Regex.IsMatch(curDir.Name, _folderPattern1007, RegexOptions.IgnoreCase))
             {
-                avFolderIdType = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG1007);
+                avInfo = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG1007);
                 return true;
             }
             /*
@@ -53,7 +53,7 @@ namespace NEA.Helpers
                 var mainFile = _fileSystem.FileInfo.FromFileName(Path.Combine(curDir.FullName, curDir.Name.Substring(3) + "001", "arkver.tab"));
                 if (mainFile.Exists)
                 {
-                    avFolderIdType = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG342);
+                    avInfo = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG342);
                     return true;
                 }
             }
@@ -65,7 +65,8 @@ namespace NEA.Helpers
                 var mainDir = _fileSystem.DirectoryInfo.FromDirectoryName(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists)
                 {
-                    avFolderIdType = new ArchiveVersionInfo(curDir.Name.Substring(0, curDir.Name.Length - 2), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG1007);
+                    avInfo = new ArchiveVersionInfo(curDir.Name.Substring(0, curDir.Name.Length - 2), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG1007);
+                    avInfo.Medias = GetArciveversionMediaFolders(avInfo);
                     return true;
                 }
             }
@@ -77,7 +78,7 @@ namespace NEA.Helpers
                 var mainFile = _fileSystem.FileInfo.FromFileName(curDir.FullName + "\\arkver.tab");
                 if (mainFile.Exists)
                 {
-                    avFolderIdType = new ArchiveVersionInfo("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG342);
+                    avInfo = new ArchiveVersionInfo("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG342);
                     return true;
                 }
             }
@@ -106,19 +107,18 @@ namespace NEA.Helpers
             avFolderList.Sort((x, y) => string.Compare(x.Id, y.Id));
             return avFolderList;
         }
-
-        public List<string> GetArciveversionMediaFolders(ArchiveVersionInfo avInfo)
+        private List<string> GetArciveversionMediaFolders(ArchiveVersionInfo avInfo)
         {
             List<string> medias = new List<string>();
             string folderToCheck = avInfo.FolderPath;
 
-            foreach (string potentialPath in Directory.EnumerateDirectories(folderToCheck))
+            foreach (string potentialPath in _fileSystem.Directory.EnumerateDirectories(folderToCheck))
             {
-                string folderName = new DirectoryInfo(potentialPath).Name;
+                var directory = _fileSystem.DirectoryInfo.FromDirectoryName(potentialPath);
 
-                if (Regex.IsMatch(folderName, _folderPattern1007FirstMedia) && potentialPath.Contains(avInfo.Id))
+                if (Regex.IsMatch(directory.Name, _folderPattern1007FirstMedia) && potentialPath.Contains(avInfo.Id))
                 {
-                    medias.Add(folderName);
+                    medias.Add(directory.FullName);
                 }
             }
 
