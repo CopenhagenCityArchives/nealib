@@ -1,7 +1,6 @@
 ﻿using NEA.ArchiveModel;
 using System;
 using System.IO.Abstractions.TestingHelpers;
-using WolfpackTest.Helpers;
 
 namespace NEA.Testing
 {
