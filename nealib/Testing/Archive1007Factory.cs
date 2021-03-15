@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 
-namespace WolfpackTest.Helpers
+namespace NEA.Testing
 {
     public class Archive1007Factory : IArchiveFactory
     {
@@ -26,14 +26,14 @@ namespace WolfpackTest.Helpers
             _name = name;
             InitIndexWriter();
             _fileSystem.AddDirectory($"{_basePath}\\{_name}");
-            this.AddIndices();
-            this.AddSchemas();
+            AddIndices();
+            AddSchemas();
             _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Tables");
             _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Documents");
             _fileSystem.AddDirectory($"{_basePath}\\{_name}\\ContextDocumentation");
             _tableCount = 0;
             _docCollectionCount = 0;
-            
+
         }
 
         private void InitIndexWriter()
@@ -41,8 +41,8 @@ namespace WolfpackTest.Helpers
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
             settings.Encoding = Encoding.UTF8;
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Indices\\fileIndex.xml",new MockFileData("", Encoding.UTF8));
-            _fileIndexWriter = XmlWriter.Create(_fileSystem.FileStream.Create($"{_basePath}\\{_name}\\Indices\\fileIndex.xml",System.IO.FileMode.Create), settings);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\Indices\\fileIndex.xml", new MockFileData("", Encoding.UTF8));
+            _fileIndexWriter = XmlWriter.Create(_fileSystem.FileStream.Create($"{_basePath}\\{_name}\\Indices\\fileIndex.xml", System.IO.FileMode.Create), settings);
             _fileIndexWriter.WriteStartDocument();
             _fileIndexWriter.WriteStartElement("fileIndex", "http://www.sa.dk/xmlns/diark/1.0");
             _fileIndexWriter.WriteAttributeString("xmlns", "xsi", null, "http://www.w3.org/2001/XMLSchema-instance");
@@ -142,17 +142,17 @@ namespace WolfpackTest.Helpers
 
 
             _fileIndexWriter.WriteStartElement("f");
-                _fileIndexWriter.WriteStartElement("foN");
-                _fileIndexWriter.WriteString(_fileSystem.Path.GetDirectoryName(relativepath));
-                _fileIndexWriter.WriteEndElement();
+            _fileIndexWriter.WriteStartElement("foN");
+            _fileIndexWriter.WriteString(_fileSystem.Path.GetDirectoryName(relativepath));
+            _fileIndexWriter.WriteEndElement();
 
-                _fileIndexWriter.WriteStartElement("fiN");
-                _fileIndexWriter.WriteString(_fileSystem.Path.GetFileName(relativepath));
-                _fileIndexWriter.WriteEndElement();
+            _fileIndexWriter.WriteStartElement("fiN");
+            _fileIndexWriter.WriteString(_fileSystem.Path.GetFileName(relativepath));
+            _fileIndexWriter.WriteEndElement();
 
-                _fileIndexWriter.WriteStartElement("md5");
-                _fileIndexWriter.WriteString(Checksum);
-                _fileIndexWriter.WriteEndElement();
+            _fileIndexWriter.WriteStartElement("md5");
+            _fileIndexWriter.WriteString(Checksum);
+            _fileIndexWriter.WriteEndElement();
             _fileIndexWriter.WriteEndElement();
         }
     }

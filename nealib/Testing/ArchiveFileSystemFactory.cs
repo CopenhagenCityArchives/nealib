@@ -1,8 +1,9 @@
 ﻿using NEA.ArchiveModel;
 using System;
 using System.IO.Abstractions.TestingHelpers;
+using WolfpackTest.Helpers;
 
-namespace WolfpackTest.Helpers
+namespace NEA.Testing
 {
     public class ArchiveFileSystemFactory
     {
@@ -24,7 +25,7 @@ namespace WolfpackTest.Helpers
                 default:
                     throw new NotSupportedException("This ArchiveVersion type is currently not supported");
             }
-            
+
         }
         public MockFileSystem Done()
         {

@@ -1,6 +1,6 @@
 ﻿using NEA.Helpers;
 
-namespace WolfpackTest.Helpers
+namespace NEA.Testing
 {
     public interface IArchiveFactory
     {
