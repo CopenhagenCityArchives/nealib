@@ -69,9 +69,9 @@ namespace NEA.ArchiveModel
         /// <returns></returns>
         public string GetRelativeFilePath(string filepath)
         {
-            var removeString = _fileSystem.Directory.GetParent(this.Info.FolderPath).FullName;
+            var removeString = _fileSystem.Directory.GetParent(this.Info.Medias[0]).FullName;
             var removeIndex = filepath.IndexOf(removeString);
-            return filepath.Remove(removeIndex, removeString.Length);
+            return filepath.Remove(removeIndex, removeString.Length+1);
         }
         public abstract TableReader GetTableReader(string tableName);
     }
