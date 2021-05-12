@@ -96,6 +96,13 @@ namespace NEA.Helpers
             List<string> archiveVersionDirectories = new List<string>();
             List<ArchiveVersionInfo> avFolderList = new List<ArchiveVersionInfo>();
 
+            // The current folder is an archiveversion
+            if (TryGetAvFolder(out ArchiveVersionInfo avInfo, path))
+            {
+                avFolderList.Add(avInfo);
+                return avFolderList;
+            }
+
             foreach (var curDir in dirs)
             {
                 // ArchiveVersionFolderIdType avFolder = new ArchiveVersionFolderIdType();
