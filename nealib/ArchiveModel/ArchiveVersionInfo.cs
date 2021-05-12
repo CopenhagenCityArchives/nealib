@@ -7,12 +7,10 @@ namespace NEA.ArchiveModel
     {
         public AVRuleSet AvRuleSet { get; private set; }
         public string Id { get; private set; }
-        public string FolderPath { get; private set; }
         public List<string> Medias { get; set; }
 
-        public ArchiveVersionInfo(string id, string path, AVRuleSet avRuleSet)
+        public ArchiveVersionInfo(string id, AVRuleSet avRuleSet)
         {
-            FolderPath = path;
             Id = id;
             AvRuleSet = avRuleSet;
         }
