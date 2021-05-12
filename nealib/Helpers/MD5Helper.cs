@@ -49,7 +49,7 @@ namespace NEA.Helpers
         {
             return BitConverter.ToString(CalculateChecksum(filepath)).Replace("-", "");
         }
-        public async Task<Dictionary<string, bool>> VerifyChecksumsAsync(ArchiveVersion av, bool includeDocuments = true)
+        public async Task<Dictionary<string, bool>> VerifyChecksumsAsync(ArchiveVersion1007 av, bool includeDocuments = true)
         {
             return await Task.Run(() =>
             {
@@ -62,9 +62,10 @@ namespace NEA.Helpers
         /// <param name="av">The archive version to be checked</param>
         /// <param name="includeDocuments">Indicate wether documents files should also be verified</param>
         /// <returns>A dictionary of (key)filepaths and (value)verification result</returns>
-        public Dictionary<string, bool> VerifyChecksums(ArchiveVersion av, bool includeDocuments = true)
+        public Dictionary<string, bool> VerifyChecksums(ArchiveVersion1007 av, bool includeDocuments = true)
         {
             var avFiles = av.GetFiles();
+            av.LoadFileIndex();
             var checkFiles = avFiles.MetadataData.Concat(avFiles.TableData);
             if (includeDocuments)
             {
@@ -75,14 +76,29 @@ namespace NEA.Helpers
             int failedChecks = 0;
             int notifyFrequency = (int)Math.Ceiling((decimal)checkFiles.Count() / 100); //We want to notify at least for each 1% of files processed
             var resultDict = new ConcurrentDictionary<string, bool>();
-            var expectedChecksums = av.GetChecksumDict();
+            var expectedChecksums = av.GetChecksumDictTest();
 
-            Parallel.ForEach(checkFiles, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, file =>
+            Parallel.ForEach(checkFiles, new ParallelOptions { MaxDegreeOfParallelism = 1 }, file =>
             {
-                Interlocked.Increment(ref checkedFiles);
+                //foreach (string file in checkFiles)
+                //{
 
-                var result = CalculateChecksum(file) == expectedChecksums.FirstOrDefault(x => x.Key == av.GetRelativeFilePath(file)).Value;
+                    Interlocked.Increment(ref checkedFiles);
 
+                //Console.WriteLine("checksum, file:");
+                //Console.WriteLine(CalculateChecksumString(file));
+
+                //Console.WriteLine("checksum, expected");
+                //var tes = expectedChecksums.FirstOrDefault(x => x.Key == av.GetRelativeFilePath(file)).Value;
+                //Console.WriteLine(expectedChecksums.FirstOrDefault(x => x.Key == av.GetRelativeFilePath(file)));
+
+                string relativePath = av.GetRelativeFilePath(file);
+                if (relativePath.IndexOf("fileIndex.xml") != -1)
+                {
+                    return;
+                }
+
+                var result = CalculateChecksumString(file) == expectedChecksums.FirstOrDefault(x => x.Key == av.GetRelativeFilePath(file)).Value;
                 if (!resultDict.TryAdd(file, result))
                 {
                     throw new InvalidOperationException($"Cannot process duplicate filepath! {file}");
@@ -98,6 +114,7 @@ namespace NEA.Helpers
                 {
                     OnFilesVerified(new FilesVerifiedEventArgs { ProcessedFiles = checkedFiles, ErrorsCount = failedChecks });
                 }
+                //}
             });
             return resultDict.ToDictionary(x => x.Key, x => x.Value);
         }

@@ -137,6 +137,23 @@ namespace NEA.ArchiveModel
             }
         }
         #endregion
+
+        public Dictionary<string, string> GetChecksumDictString()
+        {
+            /*  //If the fileindex has allready been loaded into memory we get it from there
+              if (fileIndex != null)
+              {
+                  return FileIndex.f.ToDictionary(f => $"{f.foN}\\{f.fiN}", f => f.md5);
+              }*/
+            //Otherwise we stream it in from the xml to keep down memory usage
+            using (var stream = _fileSystem.FileStream.Create($"{Info.Medias[0]}\\Indices\\fileIndex.xml", FileMode.Open))
+            {
+                var fileindex = XDocument.Load(stream);
+                var ns = fileindex.Root.Name.Namespace;
+                return fileindex.Descendants(ns.GetName("f"))
+                    .ToDictionary(f => $"{f.Element(ns.GetName("foN")).Value}\\{f.Element(ns.GetName("fiN")).Value}", f => f.Element(ns.GetName("md5")).Value);
+            }
+        }
         public override Dictionary<string, byte[]> GetChecksumDict()
         {
             //If the fileindex has allready been loaded into memory we get it from there
