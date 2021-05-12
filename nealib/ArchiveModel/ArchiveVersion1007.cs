@@ -98,7 +98,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadArchiveIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\archiveIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{Info.Medias[1]}\\Indices\\archiveIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(archiveIndex));
                 ArchiveIndex = (archiveIndex)serializer.Deserialize(stream);
@@ -106,7 +106,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadContextDocumentationIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\contextDocumentationIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{Info.Medias[1]}\\Indices\\contextDocumentationIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(contextDocumentationIndex));
                 ContextDocumentationIndex = (contextDocumentationIndex)serializer.Deserialize(stream);
@@ -114,7 +114,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadDocIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\docIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{Info.Medias[1]}\\Indices\\docIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(docIndexType));
                 DocIndex = (docIndexType)serializer.Deserialize(stream);
@@ -122,7 +122,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadFileIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\fileIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{Info.Medias[1]}\\Indices\\fileIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(fileIndexType));
                 FileIndex = (fileIndexType)serializer.Deserialize(stream);
@@ -130,7 +130,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadTableIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\tableIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead($"{Info.Medias[1]}\\Indices\\tableIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(siardDiark));
                 TableIndex = (siardDiark)serializer.Deserialize(stream);
@@ -184,22 +184,22 @@ namespace NEA.ArchiveModel
             {
                 foreach (var media in Info.Medias)
                 {
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles(media));
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\Indices", "*", System.IO.SearchOption.AllDirectories));
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
-                    tables = tables.Concat(_fileSystem.Directory.GetFiles($"{media}\\Tables", "*", System.IO.SearchOption.AllDirectories));
-                    documents = documents.Concat(_fileSystem.Directory.GetFiles($"{media}\\Documents", "*", System.IO.SearchOption.AllDirectories));
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles(media.Value));
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media.Value}\\Indices", "*", System.IO.SearchOption.AllDirectories));
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media.Value}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
+                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media.Value}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
+                    tables = tables.Concat(_fileSystem.Directory.GetFiles($"{media.Value}\\Tables", "*", System.IO.SearchOption.AllDirectories));
+                    documents = documents.Concat(_fileSystem.Directory.GetFiles($"{media.Value}\\Documents", "*", System.IO.SearchOption.AllDirectories));
                 }
             }
             else
             {
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles(Info.FolderPath).AsEnumerable());
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Indices", "*", System.IO.SearchOption.AllDirectories));
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
-                tables = tables.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Tables", "*", System.IO.SearchOption.AllDirectories));
-                documents = documents.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories));
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles(Info.Medias[1]).AsEnumerable());
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.Medias[1]}\\Indices", "*", System.IO.SearchOption.AllDirectories));
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.Medias[1]}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
+                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.Medias[1]}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
+                tables = tables.Concat(_fileSystem.Directory.GetFiles($"{Info.Medias[1]}\\Tables", "*", System.IO.SearchOption.AllDirectories));
+                documents = documents.Concat(_fileSystem.Directory.GetFiles($"{Info.Medias[1]}\\Documents", "*", System.IO.SearchOption.AllDirectories));
             }     
             return new GetFilesResult(metadata.ToArray(), tables.ToArray(), documents.ToArray());
         }
