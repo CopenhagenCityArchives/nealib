@@ -17,7 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Abstractions" Version="13.2.9" />
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="System.IO.Abstractions" Version="13.2.25" />
+    <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="13.2.25" />
     <PackageReference Include="System.Json" Version="4.5.0" />
   </ItemGroup>
 
