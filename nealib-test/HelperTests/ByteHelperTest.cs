@@ -1,15 +1,15 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
 using NEA.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace NEA.Testing.HelperTests
+namespace NEA.Testing.Helpers
 {
-    [TestClass]
+    [TestFixture]
     public class ByteHelperTest
     {
-        [TestMethod]
+        [Test]
         public void CanReverseByteString()
         {
             var buffer = new RandomBufferGenerator(0x100000);
