@@ -95,7 +95,7 @@ namespace NEA.Helpers
             return avFolderList;
         }
 
-        public List<ArchiveVersion> GetArchiveVersionInfosInFolders(List<string> folders, int folderDepth, Dictionary<string, ArchiveVersion> avs)
+        public List<ArchiveVersion> GetArchiveVersionsInFolders(List<string> folders, int folderDepth, Dictionary<string, ArchiveVersion> avs)
         {
             if(avs == null)
             {
@@ -120,7 +120,7 @@ namespace NEA.Helpers
                 {
                     foreach (string subfolder in this._fileSystem.Directory.EnumerateDirectories(folder, "*", SearchOption.TopDirectoryOnly))
                     {
-                        GetArchiveVersionInfosInFolders(new List<string>() { subfolder }, folderDepth - 1, avs);
+                        GetArchiveVersionsInFolders(new List<string>() { subfolder }, folderDepth - 1, avs);
                     }
                 }
             }
@@ -133,9 +133,9 @@ namespace NEA.Helpers
             return list;
         }
 
-        public List<ArchiveVersion> GetArchiveVersionInfosInFolders(List<string> folders)
+        public List<ArchiveVersion> GetArchiveVersionsInFolders(List<string> folders)
         {
-            return GetArchiveVersionInfosInFolders(folders, 0, null);
+            return GetArchiveVersionsInFolders(folders, 0, null);
         }
 
         private List<ArchiveVersionMedia> GetArciveversionMediaFolders(ArchiveVersionInfo avInfo, string folderPath)
