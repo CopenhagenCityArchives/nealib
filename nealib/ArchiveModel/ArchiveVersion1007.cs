@@ -145,7 +145,7 @@ namespace NEA.ArchiveModel
                 return FileIndex.f.ToDictionary(f => $"{f.foN}\\{f.fiN}", f => f.md5);
             }
             //Otherwise we stream it in from the xml to keep down memory usage
-            using (var stream = _fileSystem.FileStream.Create($"{Info.FolderPath}\\Indices\\fileIndex.xml", FileMode.Open))
+            using (var stream = _fileSystem.FileStream.Create($"{Info.Medias.FirstOrDefault()}\\Indices\\fileIndex.xml", FileMode.Open))
             {
                 var fileindex = XDocument.Load(stream);
                 var ns = fileindex.Root.Name.Namespace;
