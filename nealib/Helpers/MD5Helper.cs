@@ -17,6 +17,7 @@ namespace NEA.Helpers
         public int ProcessedFiles { get; set; }
         public int SkippedFiles { get; set; }
         public int ErrorsCount { get; set; }
+        public int AVFilesFound { get; set; }
     }
     public class MD5Helper
     {
@@ -76,7 +77,7 @@ namespace NEA.Helpers
             int failedChecks = 0;
             int notifyFrequency = (int)Math.Ceiling((decimal)checkFiles.Count() / 100); //We want to notify at least for each 1% of files processed
             var resultDict = new ConcurrentDictionary<string, bool>();
-            var expectedChecksums = av.GetChecksumDictTest();
+            var expectedChecksums = av.GetChecksumDictString();
 
             Parallel.ForEach(checkFiles, new ParallelOptions { MaxDegreeOfParallelism = 1 }, file =>
             {
