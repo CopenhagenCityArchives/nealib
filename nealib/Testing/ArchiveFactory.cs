@@ -1,4 +1,5 @@
 ﻿using NEA.Helpers;
+using System.IO.Abstractions;
 
 namespace NEA.Testing
 {
@@ -7,5 +8,6 @@ namespace NEA.Testing
         IArchiveFactory AddDocCollection(int numberOfFiles, int fileSize = 1048576);
         IArchiveFactory AddTable(int fileSize = 1048576);
         IArchiveFactory AddTables(int amount, int fileSize = (int)ByteHelper.MegaByte);
+        IFileSystem Done();
     }
 }
