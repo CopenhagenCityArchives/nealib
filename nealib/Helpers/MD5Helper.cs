@@ -81,7 +81,7 @@ namespace NEA.Helpers
             {
                 Interlocked.Increment(ref checkedFiles);
 
-                var result = CalculateChecksum(file) == expectedChecksums.First(x => x.Key == av.GetRelativeFilePath(file)).Value;
+                var result = CalculateChecksum(file) == expectedChecksums.FirstOrDefault(x => x.Key == av.GetRelativeFilePath(file)).Value;
 
                 if (!resultDict.TryAdd(file, result))
                 {
