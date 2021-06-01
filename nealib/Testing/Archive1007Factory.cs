@@ -1,6 +1,7 @@
 ﻿using NEA.Helpers;
 using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,7 +15,7 @@ namespace NEA.Testing
         private readonly MockFileSystem _fileSystem;
         private readonly string _basePath;
         private readonly string _name;
-        private readonly RandomBufferGenerator _byteGenerator = new RandomBufferGenerator((int)ByteHelper.GigaByte);
+        private readonly RandomBufferGenerator _byteGenerator = new RandomBufferGenerator((int)ByteHelper.MegaByte*10);
         private int _tableCount;
         private int _docCollectionCount;
         private XmlWriter _fileIndexWriter;
@@ -25,12 +26,12 @@ namespace NEA.Testing
             _basePath = basePath;
             _name = name;
             InitIndexWriter();
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}");
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1");
             AddIndices();
             AddSchemas();
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Tables");
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Documents");
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\ContextDocumentation");
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Tables");
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Documents");
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\ContextDocumentation");
             _tableCount = 0;
             _docCollectionCount = 0;
 
@@ -41,8 +42,8 @@ namespace NEA.Testing
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
             settings.Encoding = Encoding.UTF8;
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Indices\\fileIndex.xml", new MockFileData("", Encoding.UTF8));
-            _fileIndexWriter = XmlWriter.Create(_fileSystem.FileStream.Create($"{_basePath}\\{_name}\\Indices\\fileIndex.xml", System.IO.FileMode.Create), settings);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Indices\\fileIndex.xml", new MockFileData("", Encoding.UTF8));
+            _fileIndexWriter = XmlWriter.Create(_fileSystem.FileStream.Create($"{_basePath}\\{_name}\\{_name}.1\\Indices\\fileIndex.xml", System.IO.FileMode.Create), settings);
             _fileIndexWriter.WriteStartDocument();
             _fileIndexWriter.WriteStartElement("fileIndex", "http://www.sa.dk/xmlns/diark/1.0");
             _fileIndexWriter.WriteAttributeString("xmlns", "xsi", null, "http://www.w3.org/2001/XMLSchema-instance");
@@ -53,37 +54,37 @@ namespace NEA.Testing
             var data = new MockFileData(_byteGenerator.GenerateBufferFromSeed((int)ByteHelper.MegaByte));
             var dataChecksum = GetChecksum(data);
 
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Indices");
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Indices\\archiveIndex.xml", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Indices\\archiveIndex.xml", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Indices\\contextDocumentationIndex.xml", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Indices\\contextDocumentationIndex.xml", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Indices\\docIndex.xml", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Indices\\docIndex.xml", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Indices\\tableIndex.xml", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Indices\\tableIndex.xml", dataChecksum);
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Indices");
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Indices\\archiveIndex.xml", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Indices\\archiveIndex.xml", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Indices\\contextDocumentationIndex.xml", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Indices\\contextDocumentationIndex.xml", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Indices\\docIndex.xml", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Indices\\docIndex.xml", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Indices\\tableIndex.xml", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Indices\\tableIndex.xml", dataChecksum);
         }
         private void AddSchemas()
         {
             var data = new MockFileData(_byteGenerator.GenerateBufferFromSeed((int)ByteHelper.MegaByte));
             var dataChecksum = GetChecksum(data);
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Schemas");
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Schemas\\standard");
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Schemas\\localShared");
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Schemas\\standard\\archiveIndex.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Schemas\\standard\\archiveIndex.xsd", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Schemas\\standard\\contextDocumentationIndex.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Schemas\\standard\\contextDocumentationIndex.xsd", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Schemas\\standard\\docIndex.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Schemas\\standard\\docIndex.xsd", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Schemas\\standard\\fileIndex.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Schemas\\standard\\fileIndex.xsd", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Schemas\\standard\\researchIndex.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Schemas\\standard\\researchIndex.xsd", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Schemas\\standard\\tableIndex.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Schemas\\standard\\tableIndex.xsd", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Schemas\\standard\\XMLSchema.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Schemas\\standard\\XMLSchema.xsd", dataChecksum);
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Schemas");
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard");
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\localShared");
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\archiveIndex.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\archiveIndex.xsd", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\contextDocumentationIndex.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\contextDocumentationIndex.xsd", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\docIndex.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\docIndex.xsd", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\fileIndex.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\fileIndex.xsd", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\researchIndex.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\researchIndex.xsd", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\tableIndex.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\tableIndex.xsd", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\XMLSchema.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Schemas\\standard\\XMLSchema.xsd", dataChecksum);
         }
         public IArchiveFactory AddTables(int amount, int fileSize = (int)ByteHelper.MegaByte)
         {
@@ -98,33 +99,33 @@ namespace NEA.Testing
             var data = new MockFileData(_byteGenerator.GenerateBufferFromSeed(fileSize));
             var dataChecksum = GetChecksum(data);
             var tableName = $"table{_tableCount + 1}";
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Tables\\{tableName}");
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Tables\\{tableName}\\{tableName}.xsd", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Tables\\{tableName}\\{tableName}.xsd", dataChecksum);
-            _fileSystem.AddFile($"{_basePath}\\{_name}\\Tables\\{tableName}\\{tableName}.xml", data);
-            AddToFileindex($"{_basePath}\\{_name}\\Tables\\{tableName}\\{tableName}.xml", dataChecksum);
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Tables\\{tableName}");
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Tables\\{tableName}\\{tableName}.xsd", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Tables\\{tableName}\\{tableName}.xsd", dataChecksum);
+            _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Tables\\{tableName}\\{tableName}.xml", data);
+            AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Tables\\{tableName}\\{tableName}.xml", dataChecksum);
             _tableCount++;
             return this;
         }
         public IArchiveFactory AddDocCollection(int numberOfFiles, int fileSize = (int)ByteHelper.MegaByte)
         {
             var collectionName = $"doc{_docCollectionCount + 1}";
-            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\Documents\\{collectionName}");
+            _fileSystem.AddDirectory($"{_basePath}\\{_name}\\{_name}.1\\Documents\\{collectionName}");
             var data = new MockFileData(_byteGenerator.GenerateBufferFromSeed(fileSize));
             var dataChecksum = GetChecksum(data);
             for (int i = 0; i <= numberOfFiles; i++)
             {
-                _fileSystem.AddFile($"{_basePath}\\{_name}\\Documents\\{collectionName}\\document-{i}.tif", data);
-                AddToFileindex($"{_basePath}\\{_name}\\Documents\\{collectionName}\\document-{i}.tif", dataChecksum);
+                _fileSystem.AddFile($"{_basePath}\\{_name}\\{_name}.1\\Documents\\{collectionName}\\document-{i}.tif", data);
+                AddToFileindex($"{_basePath}\\{_name}\\{_name}.1\\Documents\\{collectionName}\\document-{i}.tif", dataChecksum);
             }
             _docCollectionCount++;
             return this;
         }
-        public ArchiveFileSystemFactory Done()
+        public IFileSystem Done()
         {
             _fileIndexWriter.WriteEndDocument();
             _fileIndexWriter.Close();
-            return _parrent;
+            return _fileSystem;
         }
 
         private string GetChecksum(MockFileData data)
