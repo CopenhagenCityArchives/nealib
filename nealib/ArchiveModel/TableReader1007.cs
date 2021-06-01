@@ -17,11 +17,11 @@ namespace NEA.ArchiveModel
         private readonly XNamespace xmlnsxsi = "http://www.w3.org/2001/XMLSchema-instance";
         private readonly IFileSystem _fileSystem;
 
-        public TableReader1007(tableType table, ArchiveVersion av, IFileSystem fileSystem)
+        public TableReader1007(tableType table, ArchiveVersion av, string mediaId,IFileSystem fileSystem)
         {
             _table = table;
             _fileSystem = fileSystem;
-            _stream = _fileSystem.File.OpenRead(table.GetTableRowsPath(av.Info.FolderPath));
+            _stream = _fileSystem.File.OpenRead(table.GetTableRowsPath(av.Info.Medias[mediaId]));
             _xmlReader = XmlReader.Create(_stream);            
         }
 

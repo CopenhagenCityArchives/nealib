@@ -84,8 +84,12 @@ namespace NEA.ArchiveModel
             set => tableIndex = value;
         }
         #endregion
+
+        private readonly string _indexFolderPath;
+
         public ArchiveVersion1007(ArchiveVersionInfo info, IFileSystem fileSystem = null) : base(info, fileSystem)
         {
+            _indexFolderPath = $"{Info.Medias[Info.Id + ".1"]}\\Indices";
         }
         #region Load
         public override void Load()
@@ -98,7 +102,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadArchiveIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\archiveIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead(_indexFolderPath+ "\\archiveIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(archiveIndex));
                 ArchiveIndex = (archiveIndex)serializer.Deserialize(stream);
@@ -106,7 +110,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadContextDocumentationIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\contextDocumentationIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead(_indexFolderPath + "\\contextDocumentationIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(contextDocumentationIndex));
                 ContextDocumentationIndex = (contextDocumentationIndex)serializer.Deserialize(stream);
@@ -114,7 +118,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadDocIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\docIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead(_indexFolderPath + "\\docIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(docIndexType));
                 DocIndex = (docIndexType)serializer.Deserialize(stream);
@@ -122,7 +126,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadFileIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\fileIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead(_indexFolderPath + "\\fileIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(fileIndexType));
                 FileIndex = (fileIndexType)serializer.Deserialize(stream);
@@ -130,7 +134,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadTableIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead($"{Info.FolderPath}\\Indices\\tableIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead(_indexFolderPath + "\\tableIndex.xml"))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(siardDiark));
                 TableIndex = (siardDiark)serializer.Deserialize(stream);
@@ -145,7 +149,7 @@ namespace NEA.ArchiveModel
                 return FileIndex.f.ToDictionary(f => $"{f.foN}\\{f.fiN}", f => f.md5);
             }
             //Otherwise we stream it in from the xml to keep down memory usage
-            using (var stream = _fileSystem.FileStream.Create($"{Info.FolderPath}\\Indices\\fileIndex.xml", FileMode.Open))
+            using (var stream = _fileSystem.FileStream.Create(_indexFolderPath + "\\fileIndex.xml", FileMode.Open))
             {
                 var fileindex = XDocument.Load(stream);
                 var ns = fileindex.Root.Name.Namespace;
@@ -153,38 +157,9 @@ namespace NEA.ArchiveModel
                     .ToDictionary(f => $"{f.Element(ns.GetName("foN")).Value}\\{f.Element(ns.GetName("fiN")).Value}", f => ByteHelper.ParseHex(f.Element(ns.GetName("md5")).Value));
             }
         }
-        public override TableReader GetTableReader(string tableName)
+        public override TableReader GetTableReader(string tableName, string mediaId)
         {
-            return new TableReader1007(TableIndex.tables.FirstOrDefault(x => x.name == tableName), this, _fileSystem);
-        }
-
-        public override GetFilesResult GetFiles()
-        {
-            var metadata = Enumerable.Empty<string>();
-            var tables = Enumerable.Empty<string>();
-            var documents = Enumerable.Empty<string>();
-            if (Info.Medias.Any())
-            {
-                foreach (var media in Info.Medias)
-                {
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles(media));
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\Indices", "*", System.IO.SearchOption.AllDirectories));
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
-                    metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{media}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
-                    tables = tables.Concat(_fileSystem.Directory.GetFiles($"{media}\\Tables", "*", System.IO.SearchOption.AllDirectories));
-                    documents = documents.Concat(_fileSystem.Directory.GetFiles($"{media}\\Documents", "*", System.IO.SearchOption.AllDirectories));
-                }
-            }
-            else
-            {
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles(Info.FolderPath).AsEnumerable());
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Indices", "*", System.IO.SearchOption.AllDirectories));
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Schemas", "*", System.IO.SearchOption.AllDirectories));
-                metadata = metadata.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\ContextDocumentation", "*", System.IO.SearchOption.AllDirectories));
-                tables = tables.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Tables", "*", System.IO.SearchOption.AllDirectories));
-                documents = documents.Concat(_fileSystem.Directory.GetFiles($"{Info.FolderPath}\\Documents", "*", System.IO.SearchOption.AllDirectories));
-            }     
-            return new GetFilesResult(metadata.ToArray(), tables.ToArray(), documents.ToArray());
-        }
+            return new TableReader1007(TableIndex.tables.FirstOrDefault(x => x.name == tableName), this, mediaId, _fileSystem);
+        }        
     }
 }

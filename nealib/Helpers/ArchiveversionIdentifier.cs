@@ -9,9 +9,7 @@ namespace NEA.Helpers
 {
     public class ArchiveVersionIdentifier
     {
-        private readonly string _folderPattern1007 = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}$";
         private readonly string _folderPattern1007FirstMedia = @"^AVID\.[A-ZØÆÅ]{2,4}\.\d{1,5}.1$";
-        private readonly string _folderPattern342 = @"^000\d{5}$";
         private readonly string _folderPattern342FirstMedia = @"^\d{5}001$";
 
         private readonly IFileSystem _fileSystem;
@@ -36,37 +34,16 @@ namespace NEA.Helpers
         {
             var curDir = _fileSystem.DirectoryInfo.FromDirectoryName(path);
             avInfo = null;
-
-            /*
-             * Archiveversion 1007 with base folder
-             */
-            if (Regex.IsMatch(curDir.Name, _folderPattern1007, RegexOptions.IgnoreCase))
-            {
-                avInfo = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG1007);
-                return true;
-            }
-            /*
-             * Archiveversion 342 with base folder
-             */
-            else if (Regex.IsMatch(curDir.Name, _folderPattern342, RegexOptions.IgnoreCase))
-            {
-                var mainFile = _fileSystem.FileInfo.FromFileName(Path.Combine(curDir.FullName, curDir.Name.Substring(3) + "001", "arkver.tab"));
-                if (mainFile.Exists)
-                {
-                    avInfo = new ArchiveVersionInfo(curDir.Name, curDir.FullName, AVRuleSet.BKG342);
-                    return true;
-                }
-            }
             /*
              * Archiveversion 1007 without base folder
              */
-            else if (Regex.IsMatch(curDir.Name, _folderPattern1007FirstMedia, RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(curDir.Name, _folderPattern1007FirstMedia, RegexOptions.IgnoreCase))
             {
                 var mainDir = _fileSystem.DirectoryInfo.FromDirectoryName(Path.Combine(curDir.FullName, "Indices"));
                 if (mainDir.Exists)
                 {
-                    avInfo = new ArchiveVersionInfo(curDir.Name.Substring(0, curDir.Name.Length - 2), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG1007);
-                    avInfo.Medias = GetArciveversionMediaFolders(avInfo);
+                    var id = curDir.Name.Substring(0, curDir.Name.Length - 2);
+                    avInfo = new ArchiveVersionInfo(id, GetArciveversionMediaFolders(id,Directory.GetParent(curDir.FullName).FullName), AVRuleSet.BKG1007);
                     return true;
                 }
             }
@@ -78,7 +55,8 @@ namespace NEA.Helpers
                 var mainFile = _fileSystem.FileInfo.FromFileName(curDir.FullName + "\\arkver.tab");
                 if (mainFile.Exists)
                 {
-                    avInfo = new ArchiveVersionInfo("000" + curDir.Name.Substring(0, curDir.Name.Length - 3), Directory.GetParent(curDir.FullName).FullName, AVRuleSet.BKG342);
+                    var id = "000" + curDir.Name.Substring(0, curDir.Name.Length - 3);
+                    avInfo = new ArchiveVersionInfo(id, GetArciveversionMediaFolders(id, Directory.GetParent(curDir.FullName).FullName), AVRuleSet.BKG342);
                     return true;
                 }
             }
@@ -107,18 +85,19 @@ namespace NEA.Helpers
             avList.Sort((x, y) => string.Compare(x.Info.Id, y.Info.Id));
             return avList;
         }
-        private List<string> GetArciveversionMediaFolders(ArchiveVersionInfo avInfo)
+        private Dictionary<string, string> GetArciveversionMediaFolders(string id, string folder)
         {
-            List<string> medias = new List<string>();
-            string folderToCheck = avInfo.FolderPath;
+            Dictionary<string, string> medias = new Dictionary<string, string>();
 
-            foreach (string potentialPath in _fileSystem.Directory.EnumerateDirectories(folderToCheck))
+            foreach (string potentialPath in _fileSystem.Directory.EnumerateDirectories(folder))
             {
                 var directory = _fileSystem.DirectoryInfo.FromDirectoryName(potentialPath);
 
-                if (Regex.IsMatch(directory.Name, _folderPattern1007FirstMedia) && potentialPath.Contains(avInfo.Id))
+                if (Regex.IsMatch(directory.Name, _folderPattern1007FirstMedia) && potentialPath.Contains(id))
                 {
-                    medias.Add(directory.FullName);
+                    var path = directory.FullName;
+                    var mediaId = Path.GetFileName(path);
+                    medias.Add(mediaId, path);
                 }
             }
 

@@ -49,11 +49,11 @@ namespace NEA.Helpers
         {
             return BitConverter.ToString(CalculateChecksum(filepath)).Replace("-", "");
         }
-        public async Task<Dictionary<string, bool>> VerifyChecksumsAsync(ArchiveVersion av, bool includeDocuments = true)
+        public async Task<Dictionary<string, bool>> VerifyChecksumsAsync(ArchiveVersion av, List<string> files)
         {
             return await Task.Run(() =>
             {
-                return VerifyChecksums(av, includeDocuments);                
+                return VerifyChecksums(av, files);                
             });
         }
         /// <summary>
@@ -62,25 +62,18 @@ namespace NEA.Helpers
         /// <param name="av">The archive version to be checked</param>
         /// <param name="includeDocuments">Indicate wether documents files should also be verified</param>
         /// <returns>A dictionary of (key)filepaths and (value)verification result</returns>
-        public Dictionary<string, bool> VerifyChecksums(ArchiveVersion av, bool includeDocuments = true)
+        public Dictionary<string, bool> VerifyChecksums(ArchiveVersion av, List<string> files)
         {
-            var avFiles = av.GetFiles();
-            var checkFiles = avFiles.MetadataData.Concat(avFiles.TableData);
-            if (includeDocuments)
-            {
-                checkFiles = checkFiles.Concat(avFiles.Documents);
-            }
-
             int checkedFiles = 0;
             int failedChecks = 0;
-            int notifyFrequency = (int)Math.Ceiling((decimal)checkFiles.Count() / 100); //We want to notify at least for each 1% of files processed
+            int notifyFrequency = (int)Math.Ceiling((decimal)files.Count() / 100); //We want to notify at least for each 1% of files processed
             var resultDict = new ConcurrentDictionary<string, bool>();
             var expectedChecksums = av.GetChecksumDict();
 
-            Parallel.ForEach(checkFiles, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, file =>
+            Parallel.ForEach(files, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, file =>
             {
                 Interlocked.Increment(ref checkedFiles);
-
+                
                 var result = CalculateChecksum(file) == expectedChecksums.FirstOrDefault(x => x.Key == av.GetRelativeFilePath(file)).Value;
 
                 if (!resultDict.TryAdd(file, result))
