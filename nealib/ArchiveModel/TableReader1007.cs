@@ -21,7 +21,7 @@ namespace NEA.ArchiveModel
         {
             _table = table;
             _fileSystem = fileSystem;
-            _stream = _fileSystem.File.OpenRead(table.GetTableRowsPath(av.Info.Medias[1]));
+            _stream = _fileSystem.File.OpenRead(table.GetTableRowsPath(av.Info.Medias[1].FullPath));
             _xmlReader = XmlReader.Create(_stream);            
         }
 
