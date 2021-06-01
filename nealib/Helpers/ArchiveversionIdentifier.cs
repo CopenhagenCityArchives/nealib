@@ -90,22 +90,22 @@ namespace NEA.Helpers
         /// </summary>
         /// <param name="path">Directory path to check</param>
         /// <returns>A list of archive version information objects</returns>
-        public List<ArchiveVersionInfo> GetArchiveVersionFolders(string path)
+        public List<ArchiveVersion> GetArchiveVersionFolders(string path)
         {
             var dirs = _fileSystem.DirectoryInfo.FromDirectoryName(path).GetDirectories();
-            List<string> archiveVersionDirectories = new List<string>();
-            List<ArchiveVersionInfo> avFolderList = new List<ArchiveVersionInfo>();
+            var archiveVersionDirectories = new List<string>();
+            var avList = new List<ArchiveVersion>();
 
             foreach (var curDir in dirs)
             {
                 // ArchiveVersionFolderIdType avFolder = new ArchiveVersionFolderIdType();
                 if (TryGetAvFolder(out ArchiveVersionInfo avFolder, curDir.ToString()))
                 {
-                    avFolderList.Add(avFolder);
+                    avList.Add(ArchiveVersion.Create(avFolder, _fileSystem));
                 }
             }
-            avFolderList.Sort((x, y) => string.Compare(x.Id, y.Id));
-            return avFolderList;
+            avList.Sort((x, y) => string.Compare(x.Info.Id, y.Info.Id));
+            return avList;
         }
         private List<string> GetArciveversionMediaFolders(ArchiveVersionInfo avInfo)
         {

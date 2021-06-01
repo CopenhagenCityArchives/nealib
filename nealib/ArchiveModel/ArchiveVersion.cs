@@ -74,6 +74,19 @@ namespace NEA.ArchiveModel
             return filepath.Remove(removeIndex, removeString.Length);
         }
         public abstract TableReader GetTableReader(string tableName);
+
+        public static ArchiveVersion Create(ArchiveVersionInfo info, IFileSystem fileSystem = null)
+        {
+            switch (info.AvRuleSet)
+            {
+                case AVRuleSet.BKG1007:
+                    return new ArchiveVersion1007(info, fileSystem);
+                case AVRuleSet.BKG342:                   
+                case AVRuleSet.BKG128:
+                default:
+                    throw new ArgumentOutOfRangeException($"{info.Id} has unsuported AV ruleset: {info.AvRuleSet}");
+            }
+        }
     }
-    
+
 }
