@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>NEA.Testing</RootNamespace>
 
     <IsPackable>false</IsPackable>
-
-    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
