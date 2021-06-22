@@ -41,8 +41,16 @@ namespace NEA.ArchiveModel
         {
             var mediaId = filepath.Split('\\').LastOrDefault(x => x.Contains(Info.Id));
             var removeString = _fileSystem.Directory.GetParent(Info.Medias[mediaId]).FullName;
+            
             var removeIndex = filepath.IndexOf(removeString);
-            return filepath.Remove(removeIndex, removeString.Length);
+            var path = filepath.Remove(removeIndex, removeString.Length);
+            
+            if(path.IndexOf("\\") == 0)
+            {
+                return path.Substring(1);
+            }
+
+            return path;
         }
         /// <summary>
         /// Gets a files absolute path based on one relative to the archive version
