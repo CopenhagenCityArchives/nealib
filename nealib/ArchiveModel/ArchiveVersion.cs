@@ -43,12 +43,7 @@ namespace NEA.ArchiveModel
             var removeString = _fileSystem.Directory.GetParent(Info.Medias[mediaId]).FullName;
             
             var removeIndex = filepath.IndexOf(removeString);
-            var path = filepath.Remove(removeIndex, removeString.Length);
-            
-            if(path.IndexOf("\\") == 0)
-            {
-                return path.Substring(1);
-            }
+            var path = filepath.Remove(removeIndex, removeString.Length).TrimStart('\\');
 
             return path;
         }
