@@ -14,6 +14,10 @@ namespace NEA.ArchiveModel
         protected readonly IFileSystem _fileSystem;
         protected static readonly log4net.ILog _log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        public string FileIndexPath { get { return GetFileIndexPath(); } }
+
+        protected abstract string GetFileIndexPath();
+
         public ArchiveVersionInfo Info { get; set; }
 
         protected ArchiveVersion(ArchiveVersionInfo info, IFileSystem fileSystem = null)

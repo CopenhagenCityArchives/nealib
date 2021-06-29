@@ -86,10 +86,12 @@ namespace NEA.ArchiveModel
         #endregion
 
         private readonly string _indexFolderPath;
+        private readonly string _fileIndexPath;
 
         public ArchiveVersion1007(ArchiveVersionInfo info, IFileSystem fileSystem = null) : base(info, fileSystem)
         {
             _indexFolderPath = $"{Info.Medias[Info.Id + ".1"]}\\Indices";
+            _fileIndexPath = _indexFolderPath + "\\fileIndex.xml";
         }
         #region Load
         public override void Load()
@@ -126,7 +128,7 @@ namespace NEA.ArchiveModel
         }
         public void LoadFileIndex()
         {
-            using (var stream = _fileSystem.File.OpenRead(_indexFolderPath + "\\fileIndex.xml"))
+            using (var stream = _fileSystem.File.OpenRead(FileIndexPath))
             {
                 XmlSerializer serializer = new XmlSerializer(typeof(fileIndexType));
                 FileIndex = (fileIndexType)serializer.Deserialize(stream);
@@ -149,7 +151,7 @@ namespace NEA.ArchiveModel
                 return FileIndex.f.ToDictionary(f => $"{f.foN}\\{f.fiN}", f => f.md5);
             }
             //Otherwise we stream it in from the xml to keep down memory usage
-            using (var stream = _fileSystem.FileStream.Create(_indexFolderPath + "\\fileIndex.xml", FileMode.Open))
+            using (var stream = _fileSystem.FileStream.Create(FileIndexPath, FileMode.Open))
             {
                 var fileindex = XDocument.Load(stream);
                 var ns = fileindex.Root.Name.Namespace;
@@ -160,6 +162,11 @@ namespace NEA.ArchiveModel
         public override TableReader GetTableReader(string tableName, string mediaId)
         {
             return new TableReader1007(TableIndex.tables.FirstOrDefault(x => x.name == tableName), this, mediaId, _fileSystem);
-        }        
+        }
+
+        protected override string GetFileIndexPath()
+        {
+            return _fileIndexPath;
+        }
     }
 }
