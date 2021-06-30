@@ -8,6 +8,7 @@ namespace NEA.ArchiveModel
         public AVRuleSet AvRuleSet { get; private set; }
         public string Id { get; private set; }
         public Dictionary<string,string> Medias { get; set; }
+        public string FirstMediaPath { get { return Medias[Id + ".1"]; } }
 
         public ArchiveVersionInfo(string id, Dictionary<string, string> medias, AVRuleSet avRuleSet)
         {
